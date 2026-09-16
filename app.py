@@ -135,7 +135,7 @@ n_paths = st.sidebar.select_slider("Trajectoires Monte Carlo",
 st.sidebar.markdown("---")
 produit = st.sidebar.radio(
     "Page",
-    ["Comparateur", "Laboratoire modele", "Cout de couverture", "Glossaire",
+    ["Accueil", "Comparateur", "Laboratoire modele", "Cout de couverture", "Glossaire",
      "1 - Tracker Certificate", "2 - Capital Protection",
      "3 - Barrier Reverse Convertible", "4 - Autocall Phoenix",
      "5 - Bonus Certificate", "6 - Twin-Win"])
@@ -183,10 +183,65 @@ def bandeau_modele():
 
 
 # =====================================================================
+# ACCUEIL
+# =====================================================================
+
+if produit == "Accueil":
+    st.title("Sliders Produits Structures")
+    st.markdown(
+        "**Tom Uzan** — EDHEC BBA, Finance Major — objectif Sales en produits "
+        "structures sur desk institutionnel.")
+
+    st.markdown("---")
+    st.markdown("""
+### A quoi sert cet outil
+
+Comprendre les produits structures en manipulant leurs parametres plutot qu'en lisant
+des formules. **Rien n'est choisi a la main** : la participation d'un capital garanti et
+le coupon d'un BRC ou d'un autocall sont calcules a partir du budget disponible, comme
+le ferait un structureur. Quand tu bouges les taux, la volatilite ou la barriere, tu vois
+ce que le desk peut reellement offrir ce jour-la.
+
+### Par ou commencer
+
+| Page | Ce qu'on y voit |
+|---|---|
+| **Comparateur** | Les quatre structures principales cote a cote, sous la meme vue de marche |
+| **1 a 6** | Un produit par page, avec son profil de remboursement et ses trajectoires |
+| **Laboratoire modele** | Ce que change le choix du modele de pricing : pres de 3 points de coupon |
+| **Cout de couverture** | Pourquoi la marge n'est pas un simple prelevement |
+| **Glossaire** | Tout le vocabulaire, avec ce que chaque terme implique pour un Sales |
+
+Tous les parametres de marche sont dans la barre laterale a gauche et alimentent
+l'ensemble des produits. Chaque curseur a une infobulle qui explique son effet.
+
+### Ce qu'il y a sous le capot
+
+- **Deux modeles** : Black-Scholes avec skew impose, et Bates (volatilite stochastique
+  de Heston + sauts de Merton), qui genere le skew au lieu de le postuler.
+- **Barrieres continues traitees par pont brownien**, ce qui evite le biais classique
+  des simulations discretes.
+- **Risque emetteur** : intensite de defaut deduite du spread de credit, avec taux de
+  recouvrement.
+- **Paniers worst-of** avec correlation, sur la page Autocall.
+- **Couverture en delta** simulee avec rebalancement discret et frais de transaction.
+
+### Ce que ce n'est pas
+
+Les parametres sont regles au curseur, **pas calibres** sur des prix d'options cotees.
+Un desk recalibre son modele chaque matin. Les niveaux affiches sont donc des ordres de
+grandeur pedagogiques, pas des prix de marche. La liste complete des limites est en bas
+de chaque page.
+""")
+    st.info("Outil pedagogique. Aucune valeur d'offre, aucune recommandation "
+            "d'investissement.")
+
+
+# =====================================================================
 # COMPARATEUR
 # =====================================================================
 
-if produit == "Comparateur":
+elif produit == "Comparateur":
     st.title("Comparateur")
     bandeau_modele()
 
