@@ -179,24 +179,60 @@ st.sidebar.title("Parametres de marche")
 st.sidebar.caption("Une seule vue de marche alimente tous les produits, "
                    "comme sur un desk.")
 
-r = st.sidebar.slider("Taux sans risque (%)", 0.0, 7.0, 3.0, 0.25) / 100
-q = st.sidebar.slider("Taux de dividende (%)", 0.0, 7.0, 2.5, 0.25) / 100
-vol_atm = st.sidebar.slider("Volatilite implicite ATM (%)", 8.0, 70.0, 22.0, 1.0) / 100
-skew = st.sidebar.slider("Skew (pts de vol / -10% de strike)", 0.0, 6.0, 2.0, 0.5,
-                         help="Mets 0 pour voir disparaitre l'effet du skew "
-                              "sur les coupons.")
-marge = st.sidebar.slider("Marge banque (% par an)", 0.0, 2.5, 0.8, 0.1) / 100
+r = st.sidebar.slider(
+    "Taux sans risque (%)", 0.0, 7.0, 3.0, 0.25,
+    help="Le taux auquel la banque place ou emprunte du cash sans risque. "
+         "C'est le carburant de tout produit structure : plus il est haut, plus la "
+         "banque a de budget pour acheter des options, donc plus le produit est "
+         "genereux. Taux haut = capital garanti attractif.") / 100
+
+q = st.sidebar.slider(
+    "Taux de dividende (%)", 0.0, 7.0, 2.5, 0.25,
+    help="Ce que verse le sous-jacent chaque annee. Le client d'un produit structure "
+         "ne le touche PAS : le dividende reste a la banque et finance la structure. "
+         "Dividende eleve = plus de budget = meilleures conditions.") / 100
+
+vol_atm = st.sidebar.slider(
+    "Volatilite implicite ATM (%)", 8.0, 70.0, 22.0, 1.0,
+    help="La vol implicite n'est PAS une prevision. C'est le prix d'une option exprime "
+         "dans une autre unite. ATM = at the money = strike au niveau du spot actuel. "
+         "Vol haute = options cheres = coupons eleves sur les produits ou le client "
+         "vend de l'optionalite (BRC, autocall), mais participation degradee sur le "
+         "capital garanti ou le client en achete.") / 100
+
+skew = st.sidebar.slider(
+    "Skew (pts de vol / -10% de strike)", 0.0, 6.0, 2.0, 0.5,
+    help="Sur actions, les puts bas coutent plus cher en vol que les options a la "
+         "monnaie. Deux raisons : les actions tombent plus vite qu'elles ne montent, "
+         "et les institutionnels achetent massivement des puts sans vendeur naturel "
+         "en face. Mets 0 pour voir le coupon du BRC s'effondrer : c'est la "
+         "demonstration que le skew profite au vendeur de protection.")
+
+marge = st.sidebar.slider(
+    "Marge banque (% par an)", 0.0, 2.5, 0.8, 0.1,
+    help="Prelevee sur le budget option, invisible dans le termsheet du client. "
+         "Elle sort directement du coupon ou de la participation offerte. "
+         "Reglementairement il faut la divulguer (PRIIP, guidelines SSPA sur les "
+         "couts), mais elle ne se lit pas dans le payoff.") / 100
 
 st.sidebar.markdown("---")
-nominal = float(st.sidebar.select_slider("Nominal (CHF)",
-                                         [1000, 10000, 100000, 1000000], 1000))
-n_paths = st.sidebar.select_slider("Trajectoires Monte Carlo",
-                                   [10000, 30000, 60000], 30000)
+nominal = float(st.sidebar.select_slider(
+    "Nominal (CHF)", [1000, 10000, 100000, 1000000], 1000,
+    help="Montant investi. Ne change rien aux pourcentages, seulement l'echelle des "
+         "montants affiches. Sur un desk institutionnel les tickets sont rarement "
+         "sous 1 million."))
+
+n_paths = st.sidebar.select_slider(
+    "Trajectoires Monte Carlo", [10000, 30000, 60000], 30000,
+    help="Nombre de scenarios simules pour calculer les prix. Plus il y en a, plus le "
+         "resultat est stable, mais plus c'est lent. 30 000 est un bon compromis "
+         "pedagogique ; un desk en utilise des centaines de milliers.")
 
 st.sidebar.markdown("---")
 produit = st.sidebar.radio(
     "Produit",
     ["Comparateur",
+     "Glossaire",
      "1 - Tracker Certificate",
      "2 - Capital Protection",
      "3 - Barrier Reverse Convertible",
@@ -226,7 +262,9 @@ if produit == "Comparateur":
     st.caption("Meme sous-jacent, meme maturite, meme vue de marche. "
                "Ce que chaque structure donne, et ce qu'elle prend.")
 
-    T = st.slider("Maturite (annees)", 1.0, 5.0, 2.0, 0.5)
+    T = st.slider("Maturite (annees)", 1.0, 5.0, 2.0, 0.5,
+                  help="Maturite commune imposee aux quatre structures pour que la "
+                       "comparaison ait un sens.")
     n_steps = max(int(252 * T), 60)
 
     ch_atm = simule(S0, T, r, q, vol_atm, n_paths, n_steps)
@@ -289,6 +327,267 @@ if produit == "Comparateur":
 
 
 # =====================================================================
+# GLOSSAIRE
+# =====================================================================
+
+elif produit == "Glossaire":
+    st.title("Glossaire")
+    st.caption("Tout le vocabulaire de l'appli, et ce que chaque terme implique "
+               "concretement pour un Sales.")
+
+    onglets = st.tabs(["Parametres de marche", "Mecaniques produit",
+                       "Les grecques", "Volatilite", "Jargon de desk"])
+
+    with onglets[0]:
+        st.markdown("""
+### Taux sans risque (r)
+Le taux auquel la banque place ou emprunte du cash sans risque.
+**Pourquoi ca compte** : c'est le carburant du budget option. Pour garantir 1 000 CHF
+dans 5 ans a 3%, la banque ne met que 861 aujourd'hui. Les 139 restants achetent des
+options. A 0.5%, elle doit mettre 975 et il ne reste que 25.
+**Consequence commerciale** : taux hauts = capital garanti vendable. Taux bas = le
+marche bascule vers BRC et autocalls.
+
+### Taux de dividende (q)
+Ce que verse le sous-jacent chaque annee. Le detenteur d'un produit structure ne le
+touche pas.
+**Pourquoi ca compte** : le dividende abandonne finance la structure. Sur un tracker
+3 ans avec 2.5% de dividende, le client abandonne environ 7.8% de rendement sans le
+voir. C'est la source de financement la plus invisible et la plus importante.
+
+### Nominal
+Le montant investi. Sur un desk institutionnel, rarement sous 1 million.
+Ne change aucun pourcentage, seulement l'echelle.
+
+### Marge banque
+Prelevee sur le budget option. Elle sort directement du coupon ou de la participation
+offerte. Reglementairement divulguee (PRIIP, guidelines SSPA sur les couts), mais
+elle ne se lit jamais dans le payoff.
+
+### Monte Carlo
+Methode de pricing : on simule des dizaines de milliers de trajectoires possibles du
+sous-jacent, on calcule le payoff dans chacune, on fait la moyenne actualisee.
+Indispensable des qu'un produit depend du **chemin** et pas seulement du prix final.
+
+### Univers risque-neutre
+Dans les simulations, le sous-jacent monte en moyenne au taux (r - q), pas selon une
+prevision de marche.
+**Ce n'est pas une prevision.** C'est la seule hypothese qui interdit l'arbitrage.
+Un pricing n'est jamais un pari directionnel.
+""")
+
+    with onglets[1]:
+        st.markdown("""
+### Sous-jacent
+L'actif dont depend le produit : une action, un indice, un panier.
+
+### Spot
+Le prix actuel du sous-jacent. Ici fixe a 100 pour que tout se lise en pourcentage.
+
+### Strike
+Le niveau de reference qui decide du remboursement. Standard : 100% du spot initial.
+
+### Barriere
+Un niveau qui declenche un changement de regime. Trois choses a savoir :
+- **Toucher une barriere ne fait pas perdre.** Ca arme le risque. C'est le strike qui
+  decide a la fin.
+- **Observation continue (americaine)** : la barriere compte a tout moment, meme une
+  meche intraday. C'est le standard marche.
+- **Observation europeenne** : seul le niveau a l'echeance compte. Bien plus favorable
+  au client, donc coupon plus faible.
+
+### Knock-in / Knock-out
+- **Knock-in** : l'option s'active quand la barriere est franchie (le put d'un BRC).
+- **Knock-out** : l'option disparait quand la barriere est franchie (le put d'un Bonus
+  ou d'un Twin-Win).
+
+### Participation
+Le ratio de suivi du sous-jacent. 70% de participation = si le sous-jacent fait +20%,
+le client touche +14%.
+
+### Coupon
+**Ce n'est pas un interet.** C'est le prix d'une option que le client vend a la banque.
+Coupon eleve = option chere = sinistre probable. Jamais une bonne affaire.
+
+### Coupon conditionnel vs inconditionnel
+- **Inconditionnel** (BRC) : paye quoi qu'il arrive.
+- **Conditionnel** (Phoenix) : paye seulement si le sous-jacent est au-dessus de la
+  barriere de coupon a la date d'observation.
+
+### Effet memoire
+Les coupons manques sont mis de cote et rattrapes au premier paiement suivant.
+Excellent argument de vente : un trou passager ne coute rien si le sous-jacent remonte.
+
+### Trigger de rappel (autocall)
+Si le sous-jacent est au-dessus a une date d'observation, le produit s'arrete et le
+client est rembourse.
+**Le piege a connaitre** : le rappel coupe tous les coupons futurs. Un client qui
+compare un coupon de 8% p.a. a une obligation se trompe : il ne le touchera peut-etre
+qu'une fois.
+
+### Livraison physique
+Si la barriere casse et que le sous-jacent finit sous le strike, le client recoit des
+actions au lieu de son cash. Il devient actionnaire malgre lui.
+
+### Worst-of
+Panier ou le **plus mauvais** des sous-jacents decide de tout. Coupon bien plus eleve,
+risque bien plus eleve. C'est la version dominante des autocalls vendus.
+
+### Risque emetteur
+Un produit structure est une **dette de la banque**, pas une detention d'actions.
+En 2008, les porteurs de produits Lehman ont tout perdu alors que leurs barrieres
+tenaient. C'est le premier point sur lequel un institutionnel te challengera.
+""")
+
+    with onglets[2]:
+        st.markdown("""
+Les grecques mesurent la sensibilite du prix a un parametre. Un Sales ne les calcule
+pas, mais doit savoir ce qu'elles impliquent sur le prix qu'il obtient de son desk.
+
+### Delta
+**Sensibilite au prix du sous-jacent.**
+C'est le nombre d'actions que le trader doit detenir pour etre couvert. Il le rajuste
+tous les jours : c'est le delta-hedging.
+*Pour toi* : un delta qui bouge beaucoup = couverture coûteuse = prix degrade.
+
+### Gamma
+**Vitesse a laquelle le delta change.**
+Pres d'une barriere, le delta bascule d'un coup : le trader doit acheter ou vendre des
+volumes enormes en peu de temps. On appelle ca le pin risk.
+*Pour toi* : c'est LA raison pour laquelle une barriere proche du spot est mal pricee,
+et pourquoi un sous-jacent illiquide peut etre refuse.
+
+### Vega
+**Sensibilite a la volatilite implicite.**
+*Pour toi* : c'est ta grecque. Vol haute au moment du pricing = coupon eleve. Ton
+timing commercial se lit sur la vol implicite, pas sur la direction du marche.
+
+### Theta
+**Erosion du prix avec le temps.**
+Le vendeur d'option gagne du theta chaque jour qui passe. Un client qui achete un BRC
+est structurellement long theta.
+
+### Rho
+**Sensibilite aux taux.**
+Determinante sur le capital garanti, secondaire sur les produits a coupon.
+
+### Bump and revalue
+La methode utilisee dans l'appli : on decale un parametre de peu, on repricent, on
+regarde l'ecart.
+**Le detail technique qui compte** : il faut reutiliser exactement les memes tirages
+aleatoires pour les deux evaluations (common random numbers). Sinon le bruit Monte
+Carlo domine completement et la grecque est inexploitable.
+""")
+
+    with onglets[3]:
+        st.markdown("""
+### Volatilite implicite
+**Ce n'est pas une prevision.** C'est le prix d'une option exprime dans une autre unite.
+Une option vaut 55 CHF, ou elle vaut 22% de vol : c'est la meme information. On utilise
+la vol parce que ca permet de comparer des options sur des sous-jacents differents.
+Vol implicite qui monte = option plus chere. Point.
+
+### ATM, ITM, OTM
+- **ATM** (at the money) : strike au niveau du spot.
+- **ITM** (in the money) : l'option a de la valeur intrinseque.
+- **OTM** (out of the money) : elle n'en a pas encore.
+
+### Skew
+Constat de marche : les puts bas coutent plus cher **en vol** que les options a la
+monnaie. Exemple typique sur indice a 1 an : put 70% a 26% de vol, ATM a 18%, call
+110% a 16%.
+
+**Deux raisons, les deux valides** :
+1. Les actions ne baissent pas comme elles montent. Un krach de -20% en une semaine
+   existe, une hausse de +20% en une semaine non. La distribution reelle a une queue
+   gauche epaisse.
+2. Les institutionnels achetent massivement des puts de protection, sans vendeur
+   naturel en face.
+
+**Ce que ca change pour toi** :
+- Sur un BRC ou un autocall, le client vend un put bas : il est price avec une vol
+  elevee, donc **le coupon monte**.
+- Sur un capital garanti, la banque achete un call ATM : vol plus basse, donc
+  **participation meilleure**.
+Le skew profite au client dans les deux cas, pour des raisons opposees.
+
+### Terme structure
+La vol varie aussi avec la maturite. En regime normal, la vol longue est au-dessus de
+la vol courte. En periode de stress, ca s'inverse : la vol 1 mois explose alors que la
+vol 2 ans bouge peu, parce que le marche sait que la panique retombera.
+*Pour toi* : en periode de stress, les BRC courts offrent des coupons exceptionnels.
+C'est le moment d'appeler tes clients.
+
+### Surface de volatilite
+Skew (par strike) + terme structure (par maturite) = une surface a deux dimensions.
+C'est l'ecran du trader et la matiere premiere du structureur.
+
+### Vol implicite vs vol realisee
+- **Implicite** : ce que le marche fait payer aujourd'hui pour l'avenir.
+- **Realisee** : ce qui s'est effectivement passe, mesure apres coup.
+
+L'implicite est structurellement **au-dessus** de la realisee, de 2 a 4 points sur les
+indices. Cet ecart s'appelle la **variance risk premium**.
+
+**C'est la raison d'etre economique des BRC et autocalls.** Un client qui achete ces
+produits capture systematiquement cette prime. Ce n'est ni un hasard ni une anomalie :
+c'est la remuneration de celui qui accepte d'etre expose aux krachs. Il gagne 9 annees
+sur 10, et perd beaucoup la dixieme.
+""")
+
+    with onglets[4]:
+        st.markdown("""
+### Qui fait quoi sur un desk
+
+**Sales (toi)** : interface client. Tu traduis une vue de marche en parametres, tu fais
+pricer en interne, tu ramenes le prix. **Tu ne portes aucun risque.**
+
+**Structureur** : assemble le produit, calcule ce que la banque peut offrir, redige le
+termsheet.
+
+**Trader** : porte le risque et le couvre. Quand un client achete un BRC, la banque se
+retrouve acheteuse d'un put qu'elle doit gerer pendant toute la duree du produit.
+
+### Termsheet
+Le document contractuel du produit : sous-jacent, dates, barrieres, coupon, emetteur.
+C'est ce que le client signe.
+
+### Autocall / Phoenix
+**Autocall** : tout produit avec rappel anticipe automatique.
+**Phoenix** : autocall dont les coupons sont conditionnels a une barriere, avec
+generalement effet memoire. C'est la structure la plus vendue.
+
+### Reverse convertible
+Produit ou le client vend de l'optionalite en echange d'un coupon. Le "reverse" vient
+de la : contrairement a une convertible classique, c'est l'emetteur qui a le droit de
+livrer les actions, pas le client.
+
+### Call spread
+Achat d'un call + vente d'un call de strike plus haut. Moins cher qu'un call seul, mais
+plafonne le gain. C'est ce qui permet de capper un capital garanti pour remonter la
+participation.
+
+### SSPA
+Swiss Structured Products Association. La reference du marche suisse, premier marche
+mondial des produits structures. Publie la Swiss Derivative Map (taxonomie officielle)
+et les guidelines de transparence des couts.
+
+### PRIIP / KID
+Reglementation europeenne imposant un document d'information standardise (Key
+Information Document) pour tout produit structure vendu a un investisseur de detail.
+
+### Delta-hedging
+L'activite quotidienne du trader : ajuster sa position en actions pour rester neutre
+a la direction du marche et ne gagner que sa marge.
+
+### Pin risk
+Le risque de couverture quand le sous-jacent stagne autour d'une barriere. Le delta
+oscille violemment, le trader doit trader des volumes enormes. C'est ce qui rend les
+barrieres proches du spot cheres.
+""")
+
+
+# =====================================================================
 # 1 - TRACKER
 # =====================================================================
 
@@ -297,9 +596,18 @@ elif produit.startswith("1"):
     st.caption("Exposition lineaire. Produit d'acces, pas produit de rendement.")
 
     c1, c2, c3 = st.columns(3)
-    T = c1.slider("Maturite (annees)", 1.0, 10.0, 3.0, 0.5)
-    participation = c2.slider("Participation (%)", 50, 150, 100, 5)
-    frais_pa = c3.slider("Frais annuels (%)", 0.0, 2.0, 0.6, 0.1)
+    T = c1.slider("Maturite (annees)", 1.0, 10.0, 3.0, 0.5,
+                  help="Duree de vie du produit. Sur un tracker elle joue peu sur le "
+                       "payoff, mais beaucoup sur le cumul des frais et des dividendes "
+                       "abandonnes.")
+    participation = c2.slider("Participation (%)", 50, 150, 100, 5,
+                              help="Le ratio de suivi du sous-jacent. 100% = 1:1. "
+                                   "Au-dessus de 100% on parle d'outperformance "
+                                   "certificate : la banque finance le levier en "
+                                   "capturant les dividendes.")
+    frais_pa = c3.slider("Frais annuels (%)", 0.0, 2.0, 0.6, 0.1,
+                         help="Souvent invisibles pour le client car finances par les "
+                              "dividendes non reverses. C'est le vrai cout du produit.")
 
     spots = np.linspace(30, 180, 400)
     perf = spots / S0 - 1
@@ -339,8 +647,16 @@ elif produit.startswith("2"):
     st.caption("La participation n'est pas un choix commercial. C'est un reste de budget.")
 
     c1, c2, c3 = st.columns(3)
-    T = c1.slider("Maturite (annees)", 1.0, 10.0, 5.0, 0.5)
-    protection = c2.slider("Niveau de protection (%)", 80, 100, 100, 5)
+    T = c1.slider("Maturite (annees)", 1.0, 10.0, 5.0, 0.5,
+                  help="Parametre CLE ici. Plus la maturite est longue, moins la banque "
+                       "doit mettre de cote aujourd'hui pour garantir le nominal, donc "
+                       "plus le budget option est gros. Allonger la maturite est le "
+                       "premier levier pour remonter une participation trop faible.")
+    protection = c2.slider("Niveau de protection (%)", 80, 100, 100, 5,
+                           help="90% = le client accepte de perdre 10% maximum. Chaque "
+                                "point de protection abandonne libere du budget et "
+                                "remonte la participation. C'est l'arbitrage central "
+                                "a poser au client.")
     cap = c3.slider("Cap sur la hausse (%)", 110, 300, 300, 10,
                     help="300 = pas de cap en pratique. Capper libere du budget "
                          "et remonte la participation.")
@@ -406,9 +722,20 @@ elif produit.startswith("3"):
     st.caption("Le client ne recoit pas un interet. Il encaisse une prime d'assurance.")
 
     c1, c2, c3 = st.columns(3)
-    T = c1.slider("Maturite (annees)", 0.25, 3.0, 1.0, 0.25)
-    bar = c2.slider("Barriere (% du spot)", 50, 95, 70, 5)
-    strike = c3.slider("Strike (% du spot)", 80, 110, 100, 5)
+    T = c1.slider("Maturite (annees)", 0.25, 3.0, 1.0, 0.25,
+                  help="Plus c'est long, plus le sous-jacent a de temps pour toucher la "
+                       "barriere. Les BRC courts (3 a 6 mois) se vendent surtout en "
+                       "periode de stress, quand la vol courte explose.")
+    bar = c2.slider("Barriere (% du spot)", 50, 95, 70, 5,
+                    help="Le niveau qui, s'il est franchi, ARME le risque de perte. "
+                         "Le toucher ne fait pas perdre : ce qui decide a la fin, c'est "
+                         "le strike. Barriere plus proche du spot = coupon plus eleve "
+                         "et risque plus eleve. Sous 60% le trader a du mal a couvrir "
+                         "et degrade son prix.")
+    strike = c3.slider("Strike (% du spot)", 80, 110, 100, 5,
+                       help="Le niveau de reference pour le remboursement si la barriere "
+                            "a ete touchee. Standard : 100%. Un strike abaisse a 90% "
+                            "reduit la perte du client mais fait baisser le coupon.")
 
     obs = st.radio("Observation de la barriere",
                    ["Continue (americaine)", "A l'echeance (europeenne)"],
@@ -513,15 +840,32 @@ elif produit.startswith("4"):
                "barriere de capital a l'echeance.")
 
     c1, c2, c3 = st.columns(3)
-    T = c1.slider("Maturite maximale (annees)", 1.0, 6.0, 3.0, 0.5)
+    T = c1.slider("Maturite maximale (annees)", 1.0, 6.0, 3.0, 0.5,
+                  help="Duree MAXIMALE : dans les faits le produit est presque toujours "
+                       "rappele bien avant. Regarde la duree de vie moyenne calculee "
+                       "juste en dessous.")
     freq = c1.selectbox("Frequence d'observation",
-                        ["Trimestrielle", "Semestrielle", "Annuelle"])
-    trigger = c2.slider("Trigger de rappel (%)", 80, 110, 100, 5)
-    bar_cp = c2.slider("Barriere de coupon (%)", 50, 100, 70, 5)
-    bar_cap = c3.slider("Barriere de capital (%)", 40, 90, 60, 5)
+                        ["Trimestrielle", "Semestrielle", "Annuelle"],
+                        help="Les dates ou on regarde le sous-jacent pour decider du "
+                             "rappel et du coupon. Trimestriel = plus d'occasions "
+                             "d'etre rappele tot, donc duree de vie plus courte.")
+    trigger = c2.slider("Trigger de rappel (%)", 80, 110, 100, 5,
+                        help="Si le sous-jacent est au-dessus a une date d'observation, "
+                             "le produit s'arrete et le client est rembourse. Trigger "
+                             "bas = rappel plus frequent = duree courte = coupon plus "
+                             "faible (la banque paie moins longtemps).")
+    bar_cp = c2.slider("Barriere de coupon (%)", 50, 100, 70, 5,
+                       help="Le coupon n'est paye QUE si le sous-jacent est au-dessus de "
+                            "ce niveau a la date d'observation. C'est ce qui distingue "
+                            "un Phoenix d'un BRC : ici le coupon est conditionnel.")
+    bar_cap = c3.slider("Barriere de capital (%)", 40, 90, 60, 5,
+                        help="Observee uniquement A L'ECHEANCE. Si le sous-jacent finit "
+                             "en dessous, le client encaisse toute la baisse. C'est le "
+                             "vrai risque du produit, et le principal moteur du coupon.")
     memoire = c3.checkbox("Effet memoire", value=True,
-                          help="Les coupons manques sont rattrapes au premier "
-                               "paiement suivant.")
+                          help="Les coupons manques sont mis de cote et rattrapes au "
+                               "premier paiement suivant. Tres bon argument de vente : "
+                               "un trou passager ne coute rien au client s'il remonte.")
 
     par_an = {"Trimestrielle": 4, "Semestrielle": 2, "Annuelle": 1}[freq]
     n_obs = max(int(T * par_an), 1)
@@ -623,8 +967,14 @@ elif produit.startswith("5"):
     st.caption("Un niveau bonus garanti si la barriere tient, et la hausse reste illimitee.")
 
     c1, c2 = st.columns(2)
-    T = c1.slider("Maturite (annees)", 0.5, 4.0, 2.0, 0.25)
-    bar = c2.slider("Barriere (% du spot)", 50, 90, 70, 5)
+    T = c1.slider("Maturite (annees)", 0.5, 4.0, 2.0, 0.25,
+                  help="Plus long = plus de dividendes captures par la banque = bonus "
+                       "plus eleve finançable. Mais aussi plus de temps pour toucher "
+                       "la barriere.")
+    bar = c2.slider("Barriere (% du spot)", 50, 90, 70, 5,
+                    help="Observee en continu. Si elle casse, le bonus disparait "
+                         "definitivement et le client se retrouve avec un simple "
+                         "tracker. Barriere basse = bonus plus faible mais plus sur.")
 
     n_steps = max(int(252 * T), 60)
     vol_eff = vol_au_strike(bar / 100, vol_atm, skew)
@@ -681,8 +1031,13 @@ else:
     st.caption("Gagne a la hausse ET a la baisse moderee, tant que la barriere tient.")
 
     c1, c2 = st.columns(2)
-    T = c1.slider("Maturite (annees)", 0.5, 4.0, 2.0, 0.25)
-    bar = c2.slider("Barriere (% du spot)", 50, 90, 65, 5)
+    T = c1.slider("Maturite (annees)", 0.5, 4.0, 2.0, 0.25,
+                  help="Le budget vient des dividendes abandonnes : plus la maturite "
+                       "est longue, plus la participation a la baisse est elevee.")
+    bar = c2.slider("Barriere (% du spot)", 50, 90, 65, 5,
+                    help="Sous ce niveau, tout le mecanisme de gain a la baisse "
+                         "disparait d'un coup. La discontinuite est brutale : c'est "
+                         "le profil le plus dangereux a mal expliquer a un client.")
 
     n_steps = max(int(252 * T), 60)
     vol_eff = vol_au_strike(bar / 100, vol_atm, skew)
