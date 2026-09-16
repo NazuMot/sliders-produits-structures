@@ -53,6 +53,23 @@ def sim_defaut(n, T, spread_bps, recovery, seed=123):
 # BARRE LATERALE
 # =====================================================================
 
+PAGES = {
+    "Accueil": "Accueil",
+    "Comparateur des produits": "Comparateur",
+    "1 - Tracker Certificate": "1 - Tracker Certificate",
+    "2 - Capital Protection": "2 - Capital Protection",
+    "3 - Barrier Reverse Convertible": "3 - Barrier Reverse Convertible",
+    "4 - Autocall Phoenix": "4 - Autocall Phoenix",
+    "5 - Bonus Certificate": "5 - Bonus Certificate",
+    "6 - Twin-Win": "6 - Twin-Win",
+    "Laboratoire modele": "Laboratoire modele",
+    "Cout de couverture": "Cout de couverture",
+    "Glossaire": "Glossaire",
+}
+
+produit = PAGES[st.sidebar.selectbox("Page", list(PAGES.keys()), index=0)]
+
+st.sidebar.markdown("---")
 st.sidebar.title("Parametres de marche")
 
 modele = st.sidebar.radio(
@@ -132,15 +149,6 @@ nominal = float(st.sidebar.select_slider("Nominal (CHF)",
 n_paths = st.sidebar.select_slider("Trajectoires Monte Carlo",
                                    [5000, 10000, 20000, 40000], 10000)
 
-st.sidebar.markdown("---")
-produit = st.sidebar.radio(
-    "Page",
-    ["Accueil", "Comparateur", "Laboratoire modele", "Cout de couverture", "Glossaire",
-     "1 - Tracker Certificate", "2 - Capital Protection",
-     "3 - Barrier Reverse Convertible", "4 - Autocall Phoenix",
-     "5 - Bonus Certificate", "6 - Twin-Win"])
-
-st.sidebar.markdown("---")
 st.sidebar.caption("Sous-jacent initial fixe a 100.")
 
 
