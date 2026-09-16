@@ -1,7 +1,7 @@
 """
 =======================================================================
 MOTEUR DE PRICING - module partage
-Tom Uzan - EDHEC BBA Finance
+Tom Uzan
 =======================================================================
 
 Contient les trois modeles et les pricers. Separe de l'interface pour

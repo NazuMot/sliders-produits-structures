@@ -1,7 +1,7 @@
 """
 =======================================================================
 SLIDERS PRODUITS STRUCTURES  -  v4
-Tom Uzan - EDHEC BBA Finance
+Tom Uzan
 =======================================================================
 
 Interface. Le pricing est dans moteur.py.
@@ -196,9 +196,7 @@ def bandeau_modele():
 
 if produit == "Accueil":
     st.title("Sliders Produits Structures")
-    st.markdown(
-        "**Tom Uzan** — EDHEC BBA, Finance Major — objectif Sales en produits "
-        "structures sur desk institutionnel.")
+    st.markdown("Tom Uzan")
 
     st.markdown("---")
     st.markdown("""
@@ -1323,4 +1321,4 @@ schema de type QE (Andersen) serait plus propre pour des maturites longues.
 Sur un vrai BRC le gamma explose autour de la barriere. Le cout affiche est un plancher.
 """)
 
-st.caption("Tom Uzan - EDHEC BBA Finance - outil pedagogique, aucune valeur d'offre.")
+st.caption("Tom Uzan — outil pedagogique, aucune valeur d'offre.")
