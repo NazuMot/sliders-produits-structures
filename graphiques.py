@@ -74,6 +74,12 @@ def applique_style():
     })
 
 
+def figure(largeur=10.5, hauteur=5.4, n=1):
+    """Figure au format standard de l'appli."""
+    fig, ax = plt.subplots(1, n, figsize=(largeur, hauteur))
+    return fig, ax
+
+
 def bande_densite(ax, echantillon, x_min, x_max, hauteur=0.11, seuil=None):
     """
     Bande de densite sous l'axe : ou le sous-jacent finit reellement.

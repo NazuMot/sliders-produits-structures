@@ -411,3 +411,95 @@ def vol_implicite_bates(chemins, T, r, q, strikes_pct, spot0=S0):
                 lo = mid
         out.append((lo + hi) / 2)
     return out
+
+
+# ---------------------------------------------------------------------
+# Options a barriere en formule fermee, et grecques
+# ---------------------------------------------------------------------
+
+def bs_put(S, K, T, r, sigma, q=0.0):
+    if T <= 1e-9 or sigma <= 0:
+        return max(K - S, 0.0)
+    d1 = (math.log(S / K) + (r - q + 0.5 * sigma ** 2) * T) / (sigma * math.sqrt(T))
+    d2 = d1 - sigma * math.sqrt(T)
+    return K * math.exp(-r * T) * norm_cdf(-d2) - S * math.exp(-q * T) * norm_cdf(-d1)
+
+
+def put_down_and_in(S, K, H, T, r, sigma, q=0.0):
+    """
+    Put down-and-in en formule fermee (Reiner-Rubinstein).
+
+    C'est l'option que le client d'un BRC vend a la banque : elle ne
+    s'active que si le sous-jacent franchit la barriere H.
+
+    On la veut en formule fermee et non par Monte Carlo, parce qu'on va
+    en deriver les grecques par differences finies : avec du bruit de
+    simulation, un gamma est inexploitable.
+    """
+    if T <= 1e-9:
+        return max(K - S, 0.0) if S <= H else 0.0
+    if S <= H:                      # barriere deja franchie : put vanille
+        return bs_put(S, K, T, r, sigma, q)
+
+    st_ = sigma * math.sqrt(T)
+    mu = (r - q - 0.5 * sigma ** 2) / sigma ** 2
+    phi, eta = -1.0, 1.0
+
+    x1 = math.log(S / K) / st_ + (1 + mu) * st_
+    x2 = math.log(S / H) / st_ + (1 + mu) * st_
+    y1 = math.log(H ** 2 / (S * K)) / st_ + (1 + mu) * st_
+    y2 = math.log(H / S) / st_ + (1 + mu) * st_
+
+    dq, dr = math.exp(-q * T), math.exp(-r * T)
+    A = phi * S * dq * norm_cdf(phi * x1) - phi * K * dr * norm_cdf(phi * (x1 - st_))
+    B = phi * S * dq * norm_cdf(phi * x2) - phi * K * dr * norm_cdf(phi * (x2 - st_))
+    C = (phi * S * dq * (H / S) ** (2 * (mu + 1)) * norm_cdf(eta * y1)
+         - phi * K * dr * (H / S) ** (2 * mu) * norm_cdf(eta * (y1 - st_)))
+    D = (phi * S * dq * (H / S) ** (2 * (mu + 1)) * norm_cdf(eta * y2)
+         - phi * K * dr * (H / S) ** (2 * mu) * norm_cdf(eta * (y2 - st_)))
+
+    # Combinaison Reiner-Rubinstein, validee contre Monte Carlo et contre
+    # l'identite DI + DO = put vanille.
+    #
+    # Si la barriere est AU-DESSUS du strike, le cas se resout tout seul :
+    # toute trajectoire finissant dans la monnaie a forcement franchi la
+    # barriere en descendant. L'option vaut alors le put vanille.
+    if K <= H:
+        return bs_put(S, K, T, r, sigma, q)
+    return max(B - C + D, 0.0)
+
+
+def grecques(prix, S, T, sigma, r, **kw):
+    """
+    Les cinq grecques par differences finies centrees sur une formule
+    fermee. Exactes a la precision numerique pres, et valables aussi bien
+    pour un put vanille que pour un put a barriere.
+
+    Conventions de marche, celles qu'un desk affiche :
+      delta  variation pour +1 point de sous-jacent
+      gamma  variation du delta pour +1 point de sous-jacent
+      vega   variation pour +1 point de volatilite
+      theta  variation pour un jour qui passe
+      rho    variation pour +1 point de taux
+    """
+    h = max(S * 0.005, 0.01)
+    p0 = prix(S=S, T=T, sigma=sigma, r=r, **kw)
+    pu = prix(S=S + h, T=T, sigma=sigma, r=r, **kw)
+    pd = prix(S=S - h, T=T, sigma=sigma, r=r, **kw)
+
+    delta = (pu - pd) / (2 * h)
+    gamma = (pu - 2 * p0 + pd) / (h ** 2)
+
+    hv = 0.005
+    vega = (prix(S=S, T=T, sigma=sigma + hv, r=r, **kw)
+            - prix(S=S, T=T, sigma=max(sigma - hv, 1e-4), r=r, **kw)) / (2 * hv) / 100.0
+
+    dt = 1.0 / 365.0
+    theta = (prix(S=S, T=max(T - dt, 1e-9), sigma=sigma, r=r, **kw) - p0)
+
+    hr = 0.0005
+    rho = (prix(S=S, T=T, sigma=sigma, r=r + hr, **kw)
+           - prix(S=S, T=T, sigma=sigma, r=max(r - hr, 0.0), **kw)) / (2 * hr) / 100.0
+
+    return {"prix": p0, "delta": delta, "gamma": gamma,
+            "vega": vega, "theta": theta, "rho": rho}
