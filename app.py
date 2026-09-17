@@ -232,11 +232,8 @@ l'ensemble des produits. Chaque curseur a une infobulle qui explique son effet.
 
 Les parametres sont regles au curseur, **pas calibres** sur des prix d'options cotees.
 Un desk recalibre son modele chaque matin. Les niveaux affiches sont donc des ordres de
-grandeur pedagogiques, pas des prix de marche. La liste complete des limites est en bas
-de chaque page.
+grandeur, pas des prix de marche. La liste complete des limites est en bas de chaque page.
 """)
-    st.info("Outil pedagogique. Aucune valeur d'offre, aucune recommandation "
-            "d'investissement.")
 
 
 # =====================================================================
@@ -1026,7 +1023,7 @@ produits, un modele a volatilite locale (Dupire) qui reproduit exactement la sur
 observee. Pour les worst-of, un modele multi-actifs avec correlation calibree.
 
 Les parametres de cette appli sont regles a la main, pas calibres sur un marche reel.
-C'est la difference honnete entre un outil pedagogique et un pricer de production.
+C'est la difference entre cet outil et un pricer de production.
 """)
 
     with o[5]:
@@ -1681,4 +1678,4 @@ schema de type QE (Andersen) serait plus propre pour des maturites longues.
 Sur un vrai BRC le gamma explose autour de la barriere. Le cout affiche est un plancher.
 """)
 
-st.caption("Tom Uzan — outil pedagogique, aucune valeur d'offre.")
+st.caption("Tom Uzan")
