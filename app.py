@@ -16,9 +16,11 @@ import matplotlib.pyplot as plt
 import streamlit as st
 
 import moteur as M
+import graphiques as G
 from moteur import S0
 
 st.set_page_config(page_title="Sliders Produits Structures", layout="wide")
+G.applique_style()
 
 ROUGE, VERT, BLEU, GRIS, ORANGE = "#C8102E", "#2E7D32", "#1565C0", "#6E6E6E", "#E07B00"
 MAX_CACHE = 6
@@ -170,13 +172,6 @@ def defauts(n, T):
     return sim_defaut(n, T, spread, recovery) if spread > 0 else None
 
 
-def cadre(ax):
-    ax.axhline(nominal, color=GRIS, lw=0.7)
-    ax.axvline(S0, color=GRIS, lw=0.7)
-    ax.set_xlabel("Sous-jacent a l'echeance")
-    ax.set_ylabel("Remboursement (CHF)")
-    ax.legend(fontsize=9)
-    ax.grid(alpha=0.28)
 
 
 def bandeau_modele():
@@ -295,14 +290,27 @@ elif produit == "Comparateur":
 
     spots = np.linspace(30, 190, 400)
     perf = spots / S0 - 1
-    fig, ax = plt.subplots(figsize=(11, 5.5))
-    ax.plot(spots, nominal * (1 + perf), color="black", ls="--", lw=1.2, label="Direct")
-    ax.plot(spots, nominal * (1 + part * np.maximum(perf, 0)), lw=2.2, color=BLEU,
-            label=f"Capital Protection ({part*100:,.0f}%)")
+    direct = nominal * (1 + perf)
+    fig, ax = plt.subplots(figsize=(11, 5.6))
+    ax.plot(spots, direct, color=G.DIRECT, ls="--", lw=1.5, zorder=4,
+            label="Detention directe du sous-jacent")
+    ax.plot(spots, nominal * (1 + part * np.maximum(perf, 0)), lw=2.8, color=G.ACCENT,
+            zorder=3, label=f"Capital Protection — plancher, {part*100:,.0f}% de la hausse")
     ax.plot(spots, np.where(spots < 70, nominal * spots / S0, nominal)
-            + cpn_brc * nominal * T, lw=2.2, color=ROUGE,
-            label="BRC (cas barriere touchee)")
-    cadre(ax)
+            + cpn_brc * nominal * T, lw=2.8, color=G.PRODUIT, zorder=3,
+            label=f"BRC — coupon {cpn_brc*100:,.2f}%, capital a risque sous 70")
+    ax.axhline(nominal, color="#D8D8D8", lw=1.0, zorder=0)
+    ax.set_xlim(spots.min(), spots.max())
+    G.style(ax, "Trois facons d'exprimer la meme vue de marche",
+            "Chaque courbe protege quelque part et abandonne ailleurs",
+            "Niveau du sous-jacent a l'echeance", "Remboursement (CHF)")
+    G.format_chf(ax)
+    G.niveau_vertical(ax, 70, "barriere du BRC  70")
+    G.niveau_vertical(ax, S0, f"depart  {S0:,.0f}")
+    leg = ax.legend(fontsize=9.5, loc="upper left", frameon=True, framealpha=0.95,
+                    edgecolor="#E0E0E0")
+    leg.get_frame().set_linewidth(0.8)
+    fig.tight_layout()
     st.pyplot(fig)
     plt.close(fig)
 
@@ -340,15 +348,26 @@ elif produit == "Laboratoire modele":
     st.subheader("1. Le smile genere par le modele")
     ks = [0.70, 0.80, 0.90, 1.00, 1.10, 1.20]
     vols = M.vol_implicite_bates(ch_bt, T, r, q, ks)
-    fig, ax = plt.subplots(figsize=(9, 4.2))
-    ax.plot([k * 100 for k in ks], [v * 100 for v in vols], "o-", lw=2.2, color=ROUGE,
-            label="Vol implicite generee par Bates")
-    ax.axhline(vol_atm * 100, color=GRIS, ls="--", lw=1.2,
-               label="Vol unique de Black-Scholes")
-    ax.set_xlabel("Strike (% du spot)")
-    ax.set_ylabel("Volatilite implicite (%)")
-    ax.legend(fontsize=9)
-    ax.grid(alpha=0.28)
+    fig, ax = plt.subplots(figsize=(10.5, 4.6))
+    xs = [k * 100 for k in ks]
+    ys = [v * 100 for v in vols]
+    ax.fill_between(xs, [vol_atm * 100] * len(xs), ys, color=G.PRODUIT, alpha=0.10)
+    ax.plot(xs, ys, "o-", lw=2.8, color=G.PRODUIT, ms=7, mfc="white", mew=2,
+            label="Volatilite implicite generee par Bates", zorder=3)
+    ax.axhline(vol_atm * 100, color=G.DIRECT, ls="--", lw=1.5,
+               label="Volatilite unique de Black-Scholes", zorder=2)
+    ax.annotate(f"{(vols[0]-vols[3])*100:+.1f} pts\nde skew", (xs[0], ys[0]),
+                textcoords="offset points", xytext=(32, -4), fontsize=9.5,
+                color=G.PRODUIT, fontweight="bold",
+                arrowprops=dict(arrowstyle="->", color=G.PRODUIT, lw=1.3))
+    G.style(ax, "Bates genere le skew, Black-Scholes l'ignore",
+            "Les puts bas coutent plus cher en vol que les options a la monnaie",
+            "Strike (% du spot)", "Volatilite implicite (%)")
+    G.niveau_vertical(ax, 100, "a la monnaie")
+    leg = ax.legend(fontsize=9.5, loc="upper right", frameon=True, framealpha=0.95,
+                    edgecolor="#E0E0E0")
+    leg.get_frame().set_linewidth(0.8)
+    fig.tight_layout()
     st.pyplot(fig)
     plt.close(fig)
 
@@ -367,16 +386,23 @@ elif produit == "Laboratoire modele":
     c[2].metric("1er centile BS", f"{np.percentile(st_bs, 1):,.1f}")
     c[3].metric("1er centile Bates", f"{np.percentile(st_bt, 1):,.1f}")
 
-    fig, ax = plt.subplots(figsize=(10, 4.2))
+    fig, ax = plt.subplots(figsize=(10.5, 4.6))
     bins = np.linspace(20, 200, 120)
-    ax.hist(st_bs, bins=bins, alpha=0.55, color=GRIS, label="Black-Scholes", density=True)
-    ax.hist(st_bt, bins=bins, alpha=0.55, color=ROUGE, label="Bates", density=True)
-    ax.axvline(bar, color="black", ls=":", lw=1.6)
-    ax.text(bar, ax.get_ylim()[1] * 0.9, " barriere", fontsize=8)
-    ax.set_xlabel("Sous-jacent a l'echeance")
-    ax.set_ylabel("Densite")
-    ax.legend(fontsize=9)
-    ax.grid(alpha=0.28)
+    ax.hist(st_bs, bins=bins, alpha=0.45, color=G.DIRECT,
+            label="Black-Scholes", density=True)
+    ax.hist(st_bt, bins=bins, alpha=0.55, color=G.PRODUIT,
+            label="Bates", density=True)
+    ax.axvspan(20, bar, color=G.FOND_PERTE, alpha=0.08, zorder=0)
+    ax.set_xlim(20, 200)
+    G.style(ax, "Bates produit des krachs, Black-Scholes presque pas",
+            f"Sous la barriere : {(st_bs < bar).mean()*100:,.1f}% des scenarios en "
+            f"Black-Scholes contre {(st_bt < bar).mean()*100:,.1f}% en Bates",
+            "Sous-jacent a l'echeance", "Densite de probabilite")
+    G.niveau_vertical(ax, bar, f"barriere  {bar:,.0f}", G.PERTE)
+    leg = ax.legend(fontsize=9.5, loc="upper right", frameon=True, framealpha=0.95,
+                    edgecolor="#E0E0E0")
+    leg.get_frame().set_linewidth(0.8)
+    fig.tight_layout()
     st.pyplot(fig)
     plt.close(fig)
 
@@ -519,18 +545,23 @@ elif produit == "Cout de couverture":
     m[2].metric("Frais de transaction moyens", f"{frais.mean():,.1f} CHF")
     m[3].metric("Pire cas sur 5%", f"{np.percentile(pnl, 5):+,.1f} CHF")
 
-    fig, axes = plt.subplots(1, 2, figsize=(14, 4.6))
-    ax = axes[0]
-    ax.hist(pnl, bins=70, color=ROUGE, alpha=0.75)
-    ax.axvline(0, color="black", lw=1.4)
-    ax.axvline(pnl.mean(), color=VERT, lw=1.8, ls="--", label="Moyenne")
-    ax.set_xlabel("Resultat de couverture (CHF)")
-    ax.set_ylabel("Frequence")
-    ax.set_title("Distribution du resultat")
-    ax.legend(fontsize=8)
-    ax.grid(alpha=0.28)
+    fig, ax = plt.subplots(figsize=(10.5, 4.6))
+    n_, bins_, patches = ax.hist(pnl, bins=70, alpha=0.85)
+    for b, p in zip(bins_[:-1], patches):
+        p.set_facecolor(G.GAIN if b >= 0 else G.PERTE)
+    ax.axvline(0, color=G.DIRECT, lw=1.6, zorder=4)
+    ax.axvline(pnl.mean(), color=G.DIRECT, lw=2.0, ls="--", zorder=4)
+    ax.annotate(f"moyenne  {pnl.mean():+,.0f}", (pnl.mean(), ax.get_ylim()[1] * 0.92),
+                textcoords="offset points", xytext=(10, 0), fontsize=9.5,
+                color=G.DIRECT, fontweight="bold")
+    G.style(ax, "Couvrir ne garantit pas un resultat nul",
+            f"{(pnl < 0).mean()*100:,.0f}% des scenarios se terminent en perte pour "
+            "le trader, malgre une position couverte",
+            "Resultat de couverture (CHF)", "Nombre de scenarios")
+    fig.tight_layout()
+    st.pyplot(fig)
+    plt.close(fig)
 
-    ax = axes[1]
     freqs = [12, 26, 52, 104, 252]
     moy, ect = [], []
     for f in freqs:
@@ -538,14 +569,22 @@ elif produit == "Cout de couverture":
                              r, q, nominal, 3000)
         moy.append(p.mean())
         ect.append(p.std())
-    ax.plot(freqs, moy, "o-", color=VERT, lw=2, label="Resultat moyen")
-    ax.plot(freqs, ect, "s-", color=ORANGE, lw=2, label="Ecart-type (risque)")
+    fig, ax = plt.subplots(figsize=(10.5, 4.4))
+    ax.plot(freqs, ect, "s-", color=G.ACCENT, lw=2.6, ms=7, mfc="white", mew=2,
+            label="Risque : ecart-type du resultat")
+    ax.plot(freqs, moy, "o-", color=G.PRODUIT, lw=2.6, ms=7, mfc="white", mew=2,
+            label="Resultat moyen (ronge par les frais)")
+    ax.axhline(0, color="#D8D8D8", lw=1.0, zorder=0)
     ax.set_xscale("log")
-    ax.set_xlabel("Rebalancements par an")
-    ax.set_ylabel("CHF")
-    ax.set_title("L'arbitrage du trader")
-    ax.legend(fontsize=8)
-    ax.grid(alpha=0.28)
+    ax.set_xticks(freqs)
+    ax.set_xticklabels([str(f) for f in freqs])
+    G.style(ax, "Couvrir plus souvent reduit le risque mais coute plus cher",
+            "C'est l'arbitrage quotidien du trader, et il depend du cout de transaction",
+            "Rebalancements par an", "CHF")
+    leg = ax.legend(fontsize=9.5, loc="center right", frameon=True, framealpha=0.95,
+                    edgecolor="#E0E0E0")
+    leg.get_frame().set_linewidth(0.8)
+    fig.tight_layout()
     st.pyplot(fig)
     plt.close(fig)
 
@@ -834,10 +873,18 @@ elif produit.startswith("1"):
     perf = spots / S0 - 1
     payoff = nominal * (1 + participation / 100 * perf) * (1 - frais_pa / 100 * T)
 
-    fig, ax = plt.subplots(figsize=(10, 5))
-    ax.plot(spots, nominal * spots / S0, color="black", ls="--", lw=1.1, label="Direct")
-    ax.plot(spots, payoff, lw=2.6, color=ROUGE, label="Tracker")
-    cadre(ax)
+    direct = nominal * spots / S0
+    perte_frais = frais_pa / 100 * T * 100
+    fig = G.payoff(
+        spots, payoff, direct, nominal, "Ce que touche le client",
+        titre=("Le tracker suit le sous-jacent, moins les frais"
+               if participation == 100 else
+               f"Le tracker suit le sous-jacent a {participation}%"),
+        sous_titre=f"Ecart permanent de {perte_frais:,.1f}% du au cumul des frais "
+                   f"sur {T:,.1f} ans",
+        niveaux=[(S0, f"depart  {S0:,.0f}")],
+        echantillon=trajectoires(T, 1.0)[0][:, -1])
+    G.legende_zones(fig.axes[0])
     st.pyplot(fig)
     plt.close(fig)
 
@@ -905,11 +952,22 @@ elif produit.startswith("2"):
 
     spots = np.linspace(30, 220, 500)
     perf = np.minimum(spots / S0 - 1, cap / 100 - 1)
-    fig, ax = plt.subplots(figsize=(10, 5))
-    ax.plot(spots, nominal * spots / S0, color="black", ls="--", lw=1.1, label="Direct")
-    ax.plot(spots, nominal * (protection / 100 + part * np.maximum(perf, 0)),
-            lw=2.6, color=ROUGE, label="Capital Protection")
-    cadre(ax)
+    pay = nominal * (protection / 100 + part * np.maximum(perf, 0))
+    direct = nominal * spots / S0
+    niv = [(S0, f"depart  {S0:,.0f}")]
+    if cap < 300:
+        niv.append((cap / 100 * S0, f"cap  {cap:,.0f}"))
+    fig = G.payoff(
+        spots, pay, direct, nominal, "Ce que touche le client",
+        titre=f"Plancher a {protection}% du nominal, {part*100:,.0f}% de la hausse",
+        sous_titre="Le client est protege a la baisse et abandonne une partie de la "
+                   "hausse : c'est le meme arbitrage vu des deux cotes",
+        niveaux=niv,
+        echantillon=trajectoires(T, 1.0)[0][:, -1])
+    ax = fig.axes[0]
+    G.niveau_horizontal(ax, nominal * protection / 100,
+                        f"plancher  {nominal*protection/100:,.0f}", G.GAIN)
+    G.legende_zones(ax)
     st.pyplot(fig)
     plt.close(fig)
 
@@ -973,34 +1031,76 @@ elif produit.startswith("3"):
     rng = np.random.default_rng(3)
     touche = rng.random(len(p_no)) > p_no
 
-    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
-    ax = axes[0]
-    ech = rng.choice(len(ST), min(2500, len(ST)), replace=False)
-    pay = np.where(touche & (ST < strike / 100 * S0),
-                   nominal * ST / (strike / 100 * S0), nominal) + cpn * nominal * T
-    ax.scatter(ST[ech][~touche[ech]], pay[ech][~touche[ech]], s=4, alpha=0.4,
-               color=VERT, label="Barriere intacte")
-    ax.scatter(ST[ech][touche[ech]], pay[ech][touche[ech]], s=4, alpha=0.4,
-               color=ROUGE, label="Barriere touchee")
-    ax.plot(np.sort(ST), nominal * np.sort(ST) / S0, color="black", ls="--", lw=1,
-            label="Direct")
-    ax.axvline(bar / 100 * S0, color=GRIS, ls=":", lw=1.6)
-    ax.set_xlabel("Sous-jacent a l'echeance")
-    ax.set_ylabel("Remboursement (CHF)")
-    ax.set_title("Meme spot final, resultat different")
-    ax.legend(fontsize=8)
-    ax.grid(alpha=0.28)
+    # --- graphe 1 : le payoff theorique du BRC
+    spots = np.linspace(30, 190, 500)
+    plafond = nominal + cpn * nominal * T
+    pay_intact = np.full_like(spots, plafond)
+    pay_touche = np.where(spots >= strike / 100 * S0, plafond,
+                          nominal * spots / (strike / 100 * S0) + cpn * nominal * T)
+    direct = nominal * spots / S0
 
-    ax = axes[1]
-    tt = np.linspace(0, T, ch.shape[1])
-    for i in range(45):
-        ax.plot(tt, ch[i], lw=0.7, alpha=0.65, color=ROUGE if touche[i] else VERT)
-    ax.axhline(bar / 100 * S0, color=GRIS, ls=":", lw=1.6)
-    ax.axhline(S0, color="black", lw=0.8)
-    ax.set_xlabel("Temps (annees)")
-    ax.set_ylabel("Sous-jacent")
-    ax.set_title("Le chemin compte")
-    ax.grid(alpha=0.28)
+    fig = G.payoff(
+        spots, pay_touche, direct, nominal, "Si la barriere a ete touchee",
+        titre=f"Coupon de {cpn*100:,.2f}% quoi qu'il arrive, capital a risque sous "
+              f"{strike/100*S0:,.0f}",
+        sous_titre="Le coupon est plafonne : meme si le sous-jacent double, le client "
+                   "touche le meme montant",
+        niveaux=[(bar / 100 * S0, f"barriere  {bar/100*S0:,.0f}"),
+                 (strike / 100 * S0, f"strike  {strike/100*S0:,.0f}")],
+        label_direct="S'il avait achete le sous-jacent")
+    ax = fig.axes[0]
+    ax.plot(spots, pay_intact, color=G.GAIN, lw=2.4, ls="-", zorder=5,
+            label="Si la barriere n'a jamais ete touchee")
+    G.niveau_horizontal(ax, plafond, f"plafond  {plafond:,.0f}", G.GAIN, x=0.30)
+    leg = ax.legend(fontsize=9.5, loc="upper left", frameon=True, framealpha=0.95,
+                    edgecolor="#E0E0E0")
+    leg.get_frame().set_linewidth(0.8)
+    G.legende_zones(ax)
+    st.pyplot(fig)
+    plt.close(fig)
+
+    # --- graphe 2 : deux clients, meme niveau final, resultats differents
+    cible = 0.88 * S0
+    cand_i = np.where((np.abs(ST - cible) < 1.2) & ~touche)[0]
+    cand_t = np.where((np.abs(ST - cible) < 1.2) & touche)[0]
+    if len(cand_i) and len(cand_t):
+        fig, ax = plt.subplots(figsize=(10.5, 5.0))
+        ax.axhspan(0, bar / 100 * S0, color=G.FOND_PERTE, alpha=0.07, zorder=0)
+        tt = np.linspace(0, T, ch.shape[1])
+        i_ok = cand_i[np.argmax(ch[cand_i].min(axis=1))]
+        i_ko = cand_t[np.argmin(ch[cand_t].min(axis=1))]
+        ax.plot(tt, ch[i_ok], lw=2.4, color=G.GAIN, zorder=3,
+                label=f"Client A — barriere intacte, recoit {plafond:,.0f}")
+        pay_ko = nominal * ST[i_ko] / (strike / 100 * S0) + cpn * nominal * T
+        ax.plot(tt, ch[i_ko], lw=2.4, color=G.PERTE, zorder=3,
+                label=f"Client B — barriere touchee, recoit {pay_ko:,.0f}")
+        ax.scatter([T, T], [ch[i_ok, -1], ch[i_ko, -1]], s=70, zorder=5,
+                   color=["white", "white"], edgecolor=[G.GAIN, G.PERTE], lw=2)
+        ax.set_xlim(0, T * 1.02)
+        bas = min(ch[i_ok].min(), ch[i_ko].min(), bar / 100 * S0)
+        haut = max(ch[i_ok].max(), ch[i_ko].max(), S0)
+        ax.set_ylim(bas * 0.90, haut * 1.10)
+        G.style(ax, "Deux clients, le meme niveau final, deux resultats",
+                "Le chemin decide, pas seulement l'arrivee",
+                "Temps (annees)", "Niveau du sous-jacent")
+        G.niveau_horizontal(ax, bar / 100 * S0, f"barriere  {bar/100*S0:,.0f}", G.PERTE)
+        G.niveau_horizontal(ax, S0, f"depart  {S0:,.0f}", G.NIVEAU, x=0.16)
+        leg = ax.legend(fontsize=9.5, loc="lower left", frameon=True, framealpha=0.95,
+                        edgecolor="#E0E0E0")
+        leg.get_frame().set_linewidth(0.8)
+        fig.tight_layout()
+        st.pyplot(fig)
+        plt.close(fig)
+
+    # --- graphe 3 : le faisceau complet
+    couleurs = [G.PERTE if touche[i] else G.GAIN for i in range(45)]
+    fig = G.trajectoires(
+        ch, T, [(bar / 100 * S0, f"barriere  {bar/100*S0:,.0f}", G.PERTE),
+                (S0, f"depart  {S0:,.0f}", G.NIVEAU)],
+        couleurs,
+        f"{(1-p_no.mean())*100:,.0f}% des trajectoires franchissent la barriere",
+        "Rouge : barriere touchee. Vert : intacte.",
+        zone_sous=bar / 100 * S0)
     st.pyplot(fig)
     plt.close(fig)
 
@@ -1086,43 +1186,72 @@ elif produit.startswith("4"):
     m[3].metric("Proba de perte en capital", f"{p_perte*100:,.1f}%")
 
     indices = M.idx_obs(ch.shape[1] - 1, n_obs)
-    fig, axes = plt.subplots(1, 2, figsize=(14, 5))
-
-    ax = axes[0]
     tt = np.linspace(0, T, ch.shape[1])
-    for i in range(50):
+
+    # --- graphe 1 : trajectoires et rappels
+    fig, ax = plt.subplots(figsize=(10.5, 5.2))
+    ax.axhspan(0, bar_cap / 100 * S0, color=G.FOND_PERTE, alpha=0.07, zorder=0)
+    n_v = n_r = n_p = 0
+    for i in range(60):
         chem = ch[i]
         rappel_a = next((j for j in indices[:-1] if chem[j] >= trigger / 100 * S0), None)
         if rappel_a is not None:
-            ax.plot(tt[:rappel_a + 1], chem[:rappel_a + 1], lw=0.8, alpha=0.7, color=VERT)
-            ax.scatter([tt[rappel_a]], [chem[rappel_a]], s=20, color=VERT, zorder=5)
+            ax.plot(tt[:rappel_a + 1], chem[:rappel_a + 1], lw=0.9, alpha=0.75,
+                    color=G.GAIN, zorder=2,
+                    label="Rappele par anticipation" if n_r == 0 else None)
+            ax.scatter([tt[rappel_a]], [chem[rappel_a]], s=26, color=G.GAIN,
+                       zorder=5, edgecolor="white", lw=0.8)
+            n_r += 1
+        elif chem[-1] < bar_cap / 100 * S0:
+            ax.plot(tt, chem, lw=0.9, alpha=0.8, color=G.PERTE, zorder=3,
+                    label="Perte en capital" if n_p == 0 else None)
+            n_p += 1
         else:
-            ax.plot(tt, chem, lw=0.8, alpha=0.7,
-                    color=ROUGE if chem[-1] < bar_cap / 100 * S0 else GRIS)
-    ax.axhline(trigger / 100 * S0, color=VERT, ls="--", lw=1.2)
-    ax.axhline(bar_cp / 100 * S0, color=BLEU, ls=":", lw=1.2)
-    ax.axhline(bar_cap / 100 * S0, color=ROUGE, ls=":", lw=1.4)
-    ax.text(0.02, trigger / 100 * S0 + 2, "trigger", fontsize=7, color=VERT)
-    ax.text(0.02, bar_cp / 100 * S0 + 2, "barriere coupon", fontsize=7, color=BLEU)
-    ax.text(0.02, bar_cap / 100 * S0 - 6, "barriere capital", fontsize=7, color=ROUGE)
-    ax.set_xlabel("Temps (annees)")
-    ax.set_ylabel("Worst-of" if n_actifs > 1 else "Sous-jacent")
-    ax.set_title("Vert : rappele. Rouge : perte en capital.")
-    ax.grid(alpha=0.28)
+            ax.plot(tt, chem, lw=0.9, alpha=0.6, color=G.NIVEAU, zorder=1,
+                    label="Va au terme sans perte" if n_v == 0 else None)
+            n_v += 1
+    for j in indices[:-1]:
+        ax.axvline(tt[j], color="#DCDCDC", lw=0.9, zorder=0)
+    ax.set_xlim(0, T * 1.02)
+    G.style(ax, f"Duree de vie moyenne : {duree:,.2f} ans sur {T:,.1f} possibles",
+            "Les traits verticaux gris sont les dates d'observation",
+            "Temps (annees)", "Worst-of du panier" if n_actifs > 1 else "Sous-jacent")
+    G.niveau_horizontal(ax, trigger / 100 * S0,
+                        f"trigger de rappel  {trigger/100*S0:,.0f}", G.GAIN)
+    G.niveau_horizontal(ax, bar_cp / 100 * S0,
+                        f"barriere coupon  {bar_cp/100*S0:,.0f}", G.ACCENT, x=0.62)
+    G.niveau_horizontal(ax, bar_cap / 100 * S0,
+                        f"barriere capital  {bar_cap/100*S0:,.0f}", G.PERTE)
+    leg = ax.legend(fontsize=9.5, loc="upper left", frameon=True, framealpha=0.95,
+                    edgecolor="#E0E0E0")
+    leg.get_frame().set_linewidth(0.8)
+    fig.tight_layout()
+    st.pyplot(fig)
+    plt.close(fig)
 
-    ax = axes[1]
+    # --- graphe 2 : quand le produit se termine
     probas, vivant = [], np.ones(len(ch), dtype=bool)
     for j in indices[:-1]:
         rappel = vivant & (ch[:, j] >= trigger / 100 * S0)
         probas.append(rappel.mean())
         vivant = vivant & ~rappel
     probas.append(vivant.mean())
-    ax.bar([f"Obs {k+1}" for k in range(len(probas) - 1)] + ["Echeance"],
-           np.array(probas) * 100, color=[VERT] * (len(probas) - 1) + [GRIS])
-    ax.set_ylabel("Probabilite (%)")
-    ax.set_title("Quand le produit se termine")
-    ax.tick_params(axis="x", rotation=45, labelsize=7)
-    ax.grid(alpha=0.28, axis="y")
+    labels = [f"Obs {k+1}" for k in range(len(probas) - 1)] + ["Terme"]
+    couleurs = [G.GAIN] * (len(probas) - 1) + [G.NIVEAU]
+
+    fig, ax = plt.subplots(figsize=(10.5, 4.4))
+    barres = ax.bar(labels, np.array(probas) * 100, color=couleurs, width=0.68)
+    for b, p in zip(barres, probas):
+        if p > 0.012:
+            ax.text(b.get_x() + b.get_width() / 2, b.get_height() + 0.8,
+                    f"{p*100:,.0f}%", ha="center", fontsize=9,
+                    color="#444444", fontweight="bold")
+    ax.set_ylim(0, max(probas) * 118)
+    G.style(ax, f"{(1-probas[-1])*100:,.0f}% des scenarios se terminent avant l'echeance",
+            "Chaque rappel anticipe coupe tous les coupons restants",
+            None, "Probabilite (%)")
+    ax.tick_params(axis="x", rotation=45 if len(labels) > 8 else 0, labelsize=8.5)
+    fig.tight_layout()
     st.pyplot(fig)
     plt.close(fig)
 
@@ -1192,13 +1321,20 @@ elif produit.startswith("5"):
     m[2].metric("Proba de toucher la barriere", f"{(1-p_no.mean())*100:,.1f}%")
 
     spots = np.linspace(30, 200, 500)
-    fig, ax = plt.subplots(figsize=(10, 5))
-    ax.plot(spots, np.maximum(nominal * spots / S0, nominal * bonus), lw=2.6,
-            color=VERT, label="Barriere intacte")
-    ax.plot(spots, nominal * spots / S0, lw=2.2, color=ROUGE, label="Barriere touchee")
-    ax.axhline(nominal * bonus, color=GRIS, lw=0.8)
-    ax.axvline(bar / 100 * S0, color=GRIS, ls=":", lw=1.6)
-    cadre(ax)
+    intact = np.maximum(nominal * spots / S0, nominal * bonus)
+    direct = nominal * spots / S0
+    fig = G.payoff(
+        spots, intact, direct, nominal, "Si la barriere a tenu",
+        titre=f"Plancher a {bonus*100:,.0f}% tant que la barriere tient",
+        sous_titre="Si la barriere casse, la courbe rouge disparait et le client se "
+                   "retrouve avec la ligne noire : un simple tracker",
+        niveaux=[(bar / 100 * S0, f"barriere  {bar/100*S0:,.0f}"),
+                 (S0, f"depart  {S0:,.0f}")],
+        label_direct="Si la barriere a casse (ou detention directe)",
+        echantillon=ST, seuil_densite=bar / 100 * S0)
+    ax = fig.axes[0]
+    G.niveau_horizontal(ax, nominal * bonus, f"bonus  {nominal*bonus:,.0f}", G.GAIN)
+    G.legende_zones(ax)
     st.pyplot(fig)
     plt.close(fig)
 
@@ -1247,13 +1383,25 @@ else:
 
     spots = np.linspace(30, 200, 500)
     perf = spots / S0 - 1
-    fig, ax = plt.subplots(figsize=(10, 5))
-    ax.plot(spots, np.where(perf >= 0, nominal * (1 + perf),
-                            nominal * (1 + part_bas * (-perf))),
-            lw=2.6, color=VERT, label="Barriere intacte")
-    ax.plot(spots, nominal * spots / S0, lw=2.2, color=ROUGE, label="Barriere touchee")
-    ax.axvline(bar / 100 * S0, color=GRIS, ls=":", lw=1.6)
-    cadre(ax)
+    intact = np.where(perf >= 0, nominal * (1 + perf),
+                      nominal * (1 + part_bas * (-perf)))
+    direct = nominal * spots / S0
+    fig = G.payoff(
+        spots, intact, direct, nominal, "Si la barriere a tenu",
+        titre="La baisse rapporte, jusqu'a la barriere",
+        sous_titre=f"Entre {bar/100*S0:,.0f} et {S0:,.0f} le client gagne. Sous la "
+                   "barriere il perd d'un coup toute cette zone.",
+        niveaux=[(bar / 100 * S0, f"barriere  {bar/100*S0:,.0f}"),
+                 (S0, f"depart  {S0:,.0f}")],
+        label_direct="Si la barriere a casse (ou detention directe)",
+        echantillon=ST, seuil_densite=bar / 100 * S0)
+    ax = fig.axes[0]
+    y_bar = np.interp(bar / 100 * S0, spots, intact)
+    ax.annotate("chute brutale\nsi la barriere casse",
+                (bar / 100 * S0, y_bar), textcoords="offset points",
+                xytext=(46, 26), fontsize=8.5, color=G.PERTE, fontweight="bold",
+                arrowprops=dict(arrowstyle="->", color=G.PERTE, lw=1.3))
+    G.legende_zones(ax)
     st.pyplot(fig)
     plt.close(fig)
 
