@@ -271,7 +271,7 @@ elif produit == "Comparateur":
                                marge, tau_ac, recovery)
     duree, _, p_perte = M.stats_autocall(ch_ac, T, n_obs, 1.0, 0.65)
 
-    st.subheader("Ce que le desk peut offrir aujourd'hui")
+    st.subheader("Ce que le desk peut offrir")
     st.table([
         {"Produit": "Tracker", "Offre": "Participation 100%", "Protection": "aucune",
          "Plafond hausse": "aucun", "Vue client": "haussier franc"},
@@ -337,7 +337,7 @@ elif produit == "Laboratoire modele":
                    "utilisent des parametres typiques d'indice actions, a titre de "
                    "comparaison. Bascule le modele dans la barre laterale pour les regler.")
 
-    st.subheader("1. Le smile, genere et non postule")
+    st.subheader("1. Le smile genere par le modele")
     ks = [0.70, 0.80, 0.90, 1.00, 1.10, 1.20]
     vols = M.vol_implicite_bates(ch_bt, T, r, q, ks)
     fig, ax = plt.subplots(figsize=(9, 4.2))
@@ -358,7 +358,7 @@ elif produit == "Laboratoire modele":
         "Black-Scholes donne une droite plate — il price le put a 70 % au meme prix "
         "relatif que l'option a la monnaie, ce que le marche ne fait jamais.")
 
-    st.subheader("2. Les queues de distribution")
+    st.subheader("2. Queues de distribution")
     st_bs = ch_bs[:, -1].astype(float)
     st_bt = ch_bt[:, -1].astype(float)
     c = st.columns(4)
@@ -380,7 +380,7 @@ elif produit == "Laboratoire modele":
     st.pyplot(fig)
     plt.close(fig)
 
-    st.subheader("3. Ce que ca change sur le prix")
+    st.subheader("3. Effet sur le prix")
     lignes = []
     for nom, ch_, s_ in [("Black-Scholes, vol plate", ch_bs, vol_atm),
                          ("Bates (vol stochastique + sauts)", ch_bt, s_bt)]:
@@ -400,7 +400,7 @@ elif produit == "Laboratoire modele":
         "Inversement, un Sales qui recoit un coupon nettement au-dessus du marche doit se "
         "demander ce que le modele du desk suppose, ou quel est le spread de l'emetteur.")
 
-    st.subheader("4. Effet du spread emetteur")
+    st.subheader("4. Spread emetteur")
     lignes = []
     for sp in [0, 50, 100, 200, 400]:
         tau = M.tire_defaut(len(ch_bt), T, sp, recovery)
@@ -526,7 +526,7 @@ elif produit == "Cout de couverture":
     ax.axvline(pnl.mean(), color=VERT, lw=1.8, ls="--", label="Moyenne")
     ax.set_xlabel("Resultat de couverture (CHF)")
     ax.set_ylabel("Frequence")
-    ax.set_title("Le resultat du trader n'est pas certain")
+    ax.set_title("Distribution du resultat")
     ax.legend(fontsize=8)
     ax.grid(alpha=0.28)
 
@@ -913,7 +913,7 @@ elif produit.startswith("2"):
     st.pyplot(fig)
     plt.close(fig)
 
-    st.subheader("Sensibilite aux taux, tout le reste constant")
+    st.subheader("Sensibilite aux taux")
     lignes = []
     for t in [0.0, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06]:
         z = protection / 100 * math.exp(-(t + spread / 10000.0) * T)
@@ -987,7 +987,7 @@ elif produit.startswith("3"):
     ax.axvline(bar / 100 * S0, color=GRIS, ls=":", lw=1.6)
     ax.set_xlabel("Sous-jacent a l'echeance")
     ax.set_ylabel("Remboursement (CHF)")
-    ax.set_title("Meme spot final, resultats differents")
+    ax.set_title("Meme spot final, resultat different")
     ax.legend(fontsize=8)
     ax.grid(alpha=0.28)
 
@@ -999,7 +999,7 @@ elif produit.startswith("3"):
     ax.axhline(S0, color="black", lw=0.8)
     ax.set_xlabel("Temps (annees)")
     ax.set_ylabel("Sous-jacent")
-    ax.set_title("Le chemin compte, pas seulement l'arrivee")
+    ax.set_title("Le chemin compte")
     ax.grid(alpha=0.28)
     st.pyplot(fig)
     plt.close(fig)
@@ -1107,7 +1107,7 @@ elif produit.startswith("4"):
     ax.text(0.02, bar_cap / 100 * S0 - 6, "barriere capital", fontsize=7, color=ROUGE)
     ax.set_xlabel("Temps (annees)")
     ax.set_ylabel("Worst-of" if n_actifs > 1 else "Sous-jacent")
-    ax.set_title("Vert = rappele tot. Rouge = perte en capital.")
+    ax.set_title("Vert : rappele. Rouge : perte en capital.")
     ax.grid(alpha=0.28)
 
     ax = axes[1]
@@ -1126,7 +1126,7 @@ elif produit.startswith("4"):
     st.pyplot(fig)
     plt.close(fig)
 
-    if st.checkbox("Effet du nombre de sous-jacents et de la correlation"):
+    if st.checkbox("Effet du nombre de sous-jacents"):
         v_p = vol_atm if BATES else M.vol_au_strike(bar_cap / 100, vol_atm, skew)
         lignes = []
         for na in [1, 2, 3, 4]:
@@ -1270,9 +1270,9 @@ else:
 # =====================================================================
 
 st.markdown("---")
-with st.expander("Ce que ce modele fait, et ce qu'il ne fait pas"):
+with st.expander("Limites du modele"):
     st.markdown("""
-### Traite correctement
+### Traite
 
 **Volatilite stochastique et sauts.** Le modele de Bates genere le skew au lieu de le
 postuler, via la correlation spot-vol, et produit de vrais gaps a la baisse. C'est le
@@ -1293,7 +1293,7 @@ le parametre de pricing dominant, comme sur un vrai desk.
 **Cout de couverture.** Simulation de la couverture en delta avec rebalancement discret
 et frais de transaction. Montre que la marge n'est pas un simple prelevement.
 
-### Limites qui restent, et elles sont reelles
+### Limites
 
 **1. Parametres regles a la main, pas calibres.**
 C'est la difference principale avec un pricer de production. Un desk recalibre Bates
