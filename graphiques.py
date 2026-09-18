@@ -112,7 +112,7 @@ def bande_densite(ax, echantillon, x_min, x_max, hauteur=0.11, seuil=None):
                         color=col, alpha=0.45, lw=0, zorder=1)
 
     ax.plot([x_min, x_max], [plancher, plancher], color=GRILLE, lw=1.0, zorder=2)
-    # les graduations ne doivent pas descendre dans la bande : un "0 CHF"
+    # les graduations ne doivent pas descendre dans la bande : un "0 EUR"
     # affiche en face de l'histogramme n'a aucun sens
     ax.set_yticks([t for t in ax.get_yticks() if y0 - span * 0.01 <= t <= y1])
     ax.annotate("ou le sous-jacent finit reellement",
@@ -144,7 +144,7 @@ def style(ax, titre=None, sous_titre=None, xlabel=None, ylabel=None):
                     fontsize=9.5, color=ENCRE_2, va="bottom")
 
 
-def format_chf(ax):
+def format_eur(ax):
     ax.yaxis.set_major_formatter(FuncFormatter(lambda v, p: f"{v:,.0f}".replace(",", " ")))
 
 
@@ -206,7 +206,7 @@ def points_morts(spots, produit, direct, max_pts=2):
 
 
 def payoff(spots, produit, direct, nominal, label_produit,
-           titre=None, sous_titre=None, niveaux=None, ylabel="Remboursement (CHF)",
+           titre=None, sous_titre=None, niveaux=None, ylabel="Remboursement (EUR)",
            label_direct="S'il avait achete le sous-jacent", figsize=(10.5, 5.4),
            montrer_points_morts=True, echantillon=None, seuil_densite=None):
     """
@@ -227,7 +227,7 @@ def payoff(spots, produit, direct, nominal, label_produit,
     ax.axhline(nominal, color=GRILLE, lw=1.2, zorder=0)
     ax.set_xlim(spots.min(), spots.max())
     style(ax, titre, sous_titre, "Niveau du sous-jacent a l'echeance", ylabel)
-    format_chf(ax)
+    format_eur(ax)
 
     for x, txt in (niveaux or []):
         niveau_vertical(ax, x, txt)

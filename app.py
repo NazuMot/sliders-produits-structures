@@ -85,7 +85,7 @@ BATES = modele.startswith("Bates")
 
 r = st.sidebar.slider(
     "Taux sans risque (%)", 0.0, 7.0, 3.0, 0.25,
-    help="Carburant du budget option. Pour garantir 1 000 CHF dans 5 ans a 3%, la banque "
+    help="Carburant du budget option. Pour garantir 1 000 EUR dans 5 ans a 3%, la banque "
          "ne met que 861 aujourd'hui ; les 139 restants achetent des options. A 0,5% elle "
          "doit mettre 975 et il ne reste que 25.") / 100
 
@@ -147,7 +147,7 @@ marge = st.sidebar.slider("Marge banque (% par an)", 0.0, 2.5, 0.8, 0.1,
                                "payoff.") / 100
 
 st.sidebar.markdown("---")
-nominal = float(st.sidebar.select_slider("Nominal (CHF)",
+nominal = float(st.sidebar.select_slider("Nominal (EUR)",
                                          [1000, 10000, 100000, 1000000], 1000))
 n_paths = st.sidebar.select_slider("Trajectoires Monte Carlo",
                                    [5000, 10000, 20000, 40000], 10000)
@@ -301,8 +301,8 @@ elif produit == "Comparateur":
     ax.set_xlim(spots.min(), spots.max())
     G.style(ax, "Trois facons d'exprimer la meme vue de marche",
             "Chaque courbe protege quelque part et abandonne ailleurs",
-            "Niveau du sous-jacent a l'echeance", "Remboursement (CHF)")
-    G.format_chf(ax)
+            "Niveau du sous-jacent a l'echeance", "Remboursement (EUR)")
+    G.format_eur(ax)
     G.niveau_vertical(ax, 70, "barriere du BRC  70")
     G.niveau_vertical(ax, S0, f"depart  {S0:,.0f}")
     leg = ax.legend(fontsize=9.5, loc="upper left", frameon=True, framealpha=0.95,
@@ -536,7 +536,7 @@ elif produit == "Les grecques en mouvement":
     m[0].metric("Sous-jacent", f"{spot_i:,.1f}",
                 delta=f"{spot_i/S0-1:+.1%} depuis le depart")
     m[1].metric("Jours restants", f"{int((T_g - jours[i]) * 365)}")
-    m[2].metric("Valeur de la position", f"{G_['prix'][i] * n_opt:,.0f} CHF")
+    m[2].metric("Valeur de la position", f"{G_['prix'][i] * n_opt:,.0f} EUR")
     m[3].metric("Barriere", "franchie" if touche[i] else "intacte")
 
     st.subheader("Les cinq grecques a cet instant")
@@ -547,13 +547,13 @@ elif produit == "Les grecques en mouvement":
     g[1].metric("Gamma", f"{G_['gamma'][i]:+.4f}",
                 help="Variation du delta pour +1 point de sous-jacent. Gamma eleve "
                      "= le delta change vite = il faut rebalancer souvent.")
-    g[2].metric("Vega", f"{G_['vega'][i] * n_opt:+.1f} CHF",
+    g[2].metric("Vega", f"{G_['vega'][i] * n_opt:+.1f} EUR",
                 help="Gain ou perte de la position pour +1 point de volatilite "
                      "implicite.")
-    g[3].metric("Theta", f"{G_['theta'][i] * n_opt:+.2f} CHF",
+    g[3].metric("Theta", f"{G_['theta'][i] * n_opt:+.2f} EUR",
                 help="Ce que la position gagne ou perd par jour qui passe, "
                      "a marche inchange.")
-    g[4].metric("Rho", f"{G_['rho'][i] * n_opt:+.1f} CHF",
+    g[4].metric("Rho", f"{G_['rho'][i] * n_opt:+.1f} EUR",
                 help="Gain ou perte pour +1 point de taux sans risque.")
 
     st.subheader("Ce que le trader doit faire aujourd'hui")
@@ -597,9 +597,9 @@ elif produit == "Les grecques en mouvement":
                "Combien d'actions le trader doit detenir"),
               ("Gamma", G_["gamma"], G.PERTE,
                "A quelle vitesse cette quantite change"),
-              ("Vega  (CHF par point de vol)", G_["vega"] * n_opt, G.GAIN,
+              ("Vega  (EUR par point de vol)", G_["vega"] * n_opt, G.GAIN,
                "Sensibilite a la volatilite implicite"),
-              ("Theta  (CHF par jour)", G_["theta"] * n_opt, G.ACCENT,
+              ("Theta  (EUR par jour)", G_["theta"] * n_opt, G.ACCENT,
                "Ce que le temps coute ou rapporte")]
     for ax, (nom, serie, coul, sous) in zip(axes.ravel(), series):
         ax.plot(jours, serie, color=coul, lw=1.9, zorder=3)
@@ -749,10 +749,10 @@ elif produit == "Cout de couverture":
     pnl, frais, S = couverture(T, n_reb, vol_atm, vol_reelle, cout_bp, r, q, nominal)
 
     m = st.columns(4)
-    m[0].metric("Resultat moyen du trader", f"{pnl.mean():+,.1f} CHF")
-    m[1].metric("Ecart-type du resultat", f"{pnl.std():,.1f} CHF")
-    m[2].metric("Frais de transaction moyens", f"{frais.mean():,.1f} CHF")
-    m[3].metric("Pire cas sur 5%", f"{np.percentile(pnl, 5):+,.1f} CHF")
+    m[0].metric("Resultat moyen du trader", f"{pnl.mean():+,.1f} EUR")
+    m[1].metric("Ecart-type du resultat", f"{pnl.std():,.1f} EUR")
+    m[2].metric("Frais de transaction moyens", f"{frais.mean():,.1f} EUR")
+    m[3].metric("Pire cas sur 5%", f"{np.percentile(pnl, 5):+,.1f} EUR")
 
     fig, ax = plt.subplots(figsize=(10.5, 4.6))
     n_, bins_, patches = ax.hist(pnl, bins=70, alpha=0.85)
@@ -766,7 +766,7 @@ elif produit == "Cout de couverture":
     G.style(ax, "Couvrir ne garantit pas un resultat nul",
             f"{(pnl < 0).mean()*100:,.0f}% des scenarios se terminent en perte pour "
             "le trader, malgre une position couverte",
-            "Resultat de couverture (CHF)", "Nombre de scenarios")
+            "Resultat de couverture (EUR)", "Nombre de scenarios")
     fig.tight_layout()
     st.pyplot(fig)
     plt.close(fig)
@@ -789,7 +789,7 @@ elif produit == "Cout de couverture":
     ax.set_xticklabels([str(f) for f in freqs])
     G.style(ax, "Couvrir plus souvent reduit le risque mais coute plus cher",
             "C'est l'arbitrage quotidien du trader, et il depend du cout de transaction",
-            "Rebalancements par an", "CHF")
+            "Rebalancements par an", "EUR")
     leg = ax.legend(fontsize=9.5, loc="center right", frameon=True, framealpha=0.95,
                     edgecolor="#E0E0E0")
     leg.get_frame().set_linewidth(0.8)
@@ -832,7 +832,7 @@ elif produit == "Glossaire":
     with o[0]:
         st.markdown("""
 ### Taux sans risque (r)
-Carburant du budget option. Pour garantir 1 000 CHF dans 5 ans a 3%, la banque ne met
+Carburant du budget option. Pour garantir 1 000 EUR dans 5 ans a 3%, la banque ne met
 que 861 aujourd'hui. Les 139 restants achetent des options. A 0,5%, elle doit mettre 975
 et il ne reste que 25.
 
@@ -956,7 +956,7 @@ vrai sujet de desk.
         st.markdown("""
 ### Volatilite implicite
 **Pas une prevision.** Le prix d'une option exprime dans une autre unite. Une option vaut
-55 CHF, ou elle vaut 22% de vol : meme information.
+55 EUR, ou elle vaut 22% de vol : meme information.
 
 ### Skew
 Les puts bas coutent plus cher **en vol** que les options a la monnaie. Typiquement sur
@@ -1037,7 +1037,7 @@ C'est la difference entre cet outil et un pricer de production.
 | **Trader** | Porte le risque et le couvre. Quand un client achete un BRC, la banque se retrouve acheteuse d'un put qu'elle doit gerer pendant toute la duree. |
 
 ### Les deux ventes qu'il ne faut pas confondre
-**La vente commerciale** : toi vers le client. Il te donne 1 000 CHF, tu lui livres le
+**La vente commerciale** : toi vers le client. Il te donne 1 000 EUR, tu lui livres le
 produit. La seule qui apparait dans ton metier au quotidien.
 
 **La vente economique, cachee dans le produit** : le client vers ta banque. Il lui vend
