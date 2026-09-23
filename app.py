@@ -191,7 +191,7 @@ def bandeau_modele():
 # =====================================================================
 
 if produit == "Accueil":
-    st.title("Sliders Produits Structures")
+    st.title("Sliders Produits Structures", help="**Ce que fait cet outil.** Il calcule ce qu'un desk peut offrir sur six produits structures,\na partir des conditions de marche que tu regles a gauche.\n\n**Le point essentiel.** Rien n'est choisi a la main : la participation d'un capital garanti\net le coupon d'un BRC ou d'un autocall sont des *resultats*, pas des parametres. Ils\ndecoulent du budget disponible, exactement comme sur un desk.\n\n**Par ou commencer.** Le Comparateur pour la vue d'ensemble, puis les pages 1 a 6 dans\nl'ordre : chaque produit ajoute une brique au precedent.")
     st.markdown("Tom Uzan")
 
     st.markdown("---")
@@ -241,7 +241,7 @@ grandeur, pas des prix de marche. La liste complete des limites est en bas de ch
 # =====================================================================
 
 elif produit == "Comparateur":
-    st.title("Comparateur")
+    st.title("Comparateur", help="**Ce que tu regardes.** Quatre structures pricees sous la meme vue de marche, avec la meme\nmaturite, cote a cote.\n\n**Pourquoi c'est utile.** Un produit structure n'est jamais bon ou mauvais dans l'absolu :\nil est adapte ou non a une vue de marche. Le comparateur montre ce que chaque structure\ndonne et ce qu'elle prend en echange.\n\n**La regle a retenir.** Protection, participation, coupon : on n'en a jamais trois sur trois.\nLe budget est fixe, il ne fait que changer de forme.\n\n**Ce qu'il faut faire.** Bouge la volatilite ou les taux dans la barre laterale et regarde\nquelles offres s'ameliorent et lesquelles se degradent. Elles ne bougent pas toutes dans\nle meme sens.")
     bandeau_modele()
 
     T = st.slider("Maturite (annees)", 1.0, 5.0, 2.0, 0.5)
@@ -325,7 +325,7 @@ elif produit == "Comparateur":
 # =====================================================================
 
 elif produit == "Laboratoire modele":
-    st.title("Laboratoire modele")
+    st.title("Laboratoire modele", help="**Ce que tu regardes.** Le meme produit price par deux modeles differents : Black-Scholes a\nvolatilite constante, et Bates (volatilite stochastique + sauts).\n\n**Pourquoi c'est important.** Le choix du modele n'est pas un detail academique. Sur un BRC\na barriere 70%, il change le coupon de pres de 3 points. Black-Scholes sous-estime la\nprobabilite de toucher la barriere, donc sous-estime la valeur du put que vend le client,\ndonc affiche un coupon trop faible.\n\n**Les quatre blocs.**\n1. Le smile : Bates genere un skew realiste, Black-Scholes donne une droite plate.\n2. Les queues de distribution : Bates produit de vrais krachs.\n3. L'effet sur le prix du BRC.\n4. L'effet du spread emetteur sur le coupon.\n\n**A retenir.** Un coupon anormalement eleve doit faire poser deux questions : quel modele\nle desk utilise-t-il, et quelle est la signature de l'emetteur ?")
     st.caption("Pourquoi le choix du modele n'est pas un detail academique : "
                "il change le coupon de plusieurs points.")
 
@@ -448,7 +448,7 @@ elif produit == "Laboratoire modele":
 # =====================================================================
 
 elif produit == "Les grecques en mouvement":
-    st.title("Les grecques en mouvement")
+    st.title("Les grecques en mouvement", help="**Ce que tu regardes.** La position que porte la banque apres avoir vendu un BRC : elle est\nacheteuse du put a barriere que le client lui a vendu. On suit cette position jour par jour.\n\n**Comment l'utiliser.** Choisis un scenario, puis deplace le curseur *Jour*. A chaque\ninstant tu vois les cinq grecques et l'ordre exact que le trader doit passer pour rester\ncouvert.\n\n**Ce qu'il faut observer.**\n- Le **delta** bouge en permanence : c'est le delta-hedging quotidien.\n- Le **gamma** monte quand le sous-jacent s'approche de la barriere, surtout pres de\n  l'echeance : le trader doit alors rebalancer beaucoup et souvent.\n- Au moment ou la barriere casse, **toutes les courbes sautent en meme temps**. L'option\n  devient un put vanille, definitivement. C'est le gap risk.\n\n**Le meilleur scenario pour commencer.** *Franchissement puis rebond* : la rupture y est\nnette et visible sur les quatre graphes.")
     st.caption("Une trajectoire, jour par jour. Ce que mesure chaque grecque, "
                "et ce que le trader doit faire en face.")
 
@@ -659,7 +659,7 @@ elif produit == "Les grecques en mouvement":
 # =====================================================================
 
 elif produit == "Cout de couverture":
-    st.title("Cout de couverture")
+    st.title("Cout de couverture", help="**Ce que tu regardes.** Une simulation de ce que fait reellement le trader : couvrir sa\nposition en delta, avec un rebalancement discret et des frais a chaque transaction.\n\n**Pourquoi c'est la.** En theorie de Black-Scholes, une couverture continue et gratuite\ndonne un resultat exactement nul. Dans la realite il y a deux fuites : on ne rebalance\npas en continu, et chaque transaction coute.\n\n**Les trois sources du resultat du trader.**\n1. L'ecart entre la volatilite a laquelle il a achete l'option et celle qui se realise.\n2. L'erreur liee au rebalancement discret.\n3. Les frais de transaction, proportionnels au gamma.\n\n**Le graphe de droite.** Couvrir plus souvent reduit le risque mais coute plus cher en\nfrais. Il existe une frequence optimale, et elle depend du cout de transaction.\n\n**Ce que ca t'apprend.** Quand le desk degrade son prix sur un sous-jacent illiquide ou une\nbarriere proche, ce n'est pas de la mauvaise volonte : c'est ce cout-la, et il se mesure.")
     st.caption("Pourquoi la marge n'est pas un simple prelevement : le trader doit "
                "couvrir, et couvrir coute de l'argent.")
 
@@ -825,7 +825,7 @@ elif produit == "Cout de couverture":
 # =====================================================================
 
 elif produit == "Glossaire":
-    st.title("Glossaire")
+    st.title("Glossaire", help="**Ce que tu trouves ici.** Tout le vocabulaire de l'appli, classe en six onglets : parametres\nde marche, mecaniques produit, grecques, volatilite, modeles, jargon de desk.\n\n**Comment c'est ecrit.** Chaque terme est defini, puis relie a ce qu'il change\nconcretement : sur le prix, sur la couverture, ou sur la conversation avec un client.\n\n**Astuce.** Chaque curseur de l'appli a aussi sa propre infobulle. Le glossaire sert quand\ntu veux le contexte complet d'une notion.")
     o = st.tabs(["Parametres de marche", "Mecaniques produit", "Les grecques",
                  "Volatilite", "Modeles", "Jargon de desk"])
 
@@ -1067,7 +1067,7 @@ une protection contre la baisse, et le coupon est le prix qu'elle lui paie pour 
 # =====================================================================
 
 elif produit.startswith("1"):
-    st.title("Tracker Certificate")
+    st.title("Tracker Certificate", help="**Ce que c'est.** Un produit qui suit le sous-jacent a 100%, a la hausse comme a la baisse.\nPas de protection, pas de coupon.\n\n**Comment c'est construit.** Une simple exposition lineaire. Les dividendes du sous-jacent\nrestent a la banque et financent la structure et les frais.\n\n**Pourquoi un client l'achete.** Pour *l'acces*, pas pour le rendement : un panier\nthematique, un indice sur mesure, un marche difficile d'acces, en une seule ligne de\nportefeuille.\n\n**Ce qu'il faut regarder.** L'ecart entre la courbe du produit et la detention directe :\nc'est le cout cumule des frais et des dividendes abandonnes.\n\n**Le risque a nommer.** Le client est creancier de la banque, il ne detient pas les actions.\nC'est la difference majeure avec un ETF.")
     st.caption("Exposition lineaire. Produit d'acces, pas produit de rendement.")
 
     c1, c2, c3 = st.columns(3)
@@ -1116,7 +1116,7 @@ elif produit.startswith("1"):
 # =====================================================================
 
 elif produit.startswith("2"):
-    st.title("Capital Protection Certificate")
+    st.title("Capital Protection Certificate", help="**Ce que c'est.** Le client recupere au minimum son capital a l'echeance, et participe a une\npartie de la hausse.\n\n**Comment c'est construit.** Une obligation zero-coupon qui reconstitue le capital, plus un\ncall avec ce qui reste du budget.\n\n**Le mecanisme cle.** La participation n'est pas choisie, elle est calculee. La banque place\njuste ce qu'il faut pour rembourser le nominal ; ce qui reste achete des options. Plus les\ntaux sont hauts, plus ce reste est gros, plus la participation monte.\n\n**Pourquoi un client l'achete.** Vue haussiere, mais refus de risquer le capital.\n\n**Ce qu'il faut tester.** Baisse les taux dans la barre laterale et regarde la participation\ns'effondrer. C'est exactement pourquoi ces produits ont quasiment disparu entre 2015 et\n2021, avant de revenir avec la remontee des taux.")
     st.caption("La participation n'est pas un choix commercial. C'est un reste de budget.")
     bandeau_modele()
 
@@ -1205,7 +1205,7 @@ elif produit.startswith("2"):
 # =====================================================================
 
 elif produit.startswith("3"):
-    st.title("Barrier Reverse Convertible")
+    st.title("Barrier Reverse Convertible", help="**Ce que c'est.** Un coupon garanti eleve, et le capital rembourse *sauf* si le sous-jacent\nfranchit la barriere ET finit sous le strike.\n\n**Comment c'est construit.** Une obligation, plus la vente par le client d'un put\ndown-and-in a la banque.\n\n**Le point essentiel.** Le coupon n'est pas un interet. C'est la prime que la banque paie au\nclient pour l'assurer contre la baisse. Coupon eleve = sinistre probable, jamais bonne\naffaire.\n\n**Pourquoi un client l'achete.** Vue neutre : il pense que le sous-jacent ne va pas\nbeaucoup bouger et se fait payer pour ca.\n\n**Ce qu'il faut regarder.** Le graphe des trajectoires : deux chemins peuvent finir au meme\nniveau avec des resultats differents. Le chemin compte, pas seulement l'arrivee.")
     st.caption("Le client ne recoit pas un interet. Il encaisse une prime d'assurance.")
     bandeau_modele()
 
@@ -1337,7 +1337,7 @@ elif produit.startswith("3"):
 # =====================================================================
 
 elif produit.startswith("4"):
-    st.title("Autocall Phoenix")
+    st.title("Autocall Phoenix", help="**Ce que c'est.** Le produit phare des desks. Coupons conditionnels, et remboursement\nanticipe automatique si le sous-jacent est au-dessus d'un niveau a une date\nd'observation.\n\n**Les trois niveaux a distinguer.**\n- **Trigger** : au-dessus, le produit s'arrete et le client est rembourse.\n- **Barriere de coupon** : au-dessus, le coupon est paye.\n- **Barriere de capital** : observee a l'echeance seulement ; en dessous, le client encaisse\n  toute la baisse.\n\n**Le piege commercial.** Le rappel anticipe coupe les coupons futurs. Regarde la duree de\nvie moyenne : le produit dure rarement jusqu'au bout.\n\n**Le worst-of.** Active plusieurs sous-jacents : le plus mauvais decide de tout. Le coupon\ngrimpe, et la probabilite de perte aussi. C'est la version reellement dominante sur les\ndesks.")
     st.caption("Le produit phare des desks.")
     bandeau_modele()
 
@@ -1501,7 +1501,7 @@ elif produit.startswith("4"):
 # =====================================================================
 
 elif produit.startswith("5"):
-    st.title("Bonus Certificate")
+    st.title("Bonus Certificate", help="**Ce que c'est.** Un niveau de remboursement minimum (le bonus) tant que la barriere n'est\njamais touchee, plus toute la hausse du sous-jacent sans plafond.\n\n**Comment c'est construit.** Detention du sous-jacent sans dividendes, plus achat d'un put\ndown-and-out. Les dividendes abandonnes financent le put.\n\n**Ce qui le distingue du BRC.** Pas de plafond a la hausse : si le sous-jacent explose, le\nclient suit.\n\n**Pourquoi un client l'achete.** Vue neutre a haussiere, avec l'envie de garder le potentiel\nde hausse.\n\n**A ne jamais oublier.** La protection est conditionnelle. Si la barriere casse, le bonus\ndisparait definitivement et le client se retrouve avec un simple tracker. Ce n'est pas une\ngarantie.")
     st.caption("Un niveau bonus garanti si la barriere tient, hausse illimitee.")
     bandeau_modele()
 
@@ -1560,7 +1560,7 @@ elif produit.startswith("5"):
 # =====================================================================
 
 else:
-    st.title("Twin-Win")
+    st.title("Twin-Win", help="**Ce que c'est.** Le client gagne a la hausse ET a la baisse moderee, tant que la barriere\ntient.\n\n**Comment c'est construit.** Tracker plus achat d'un put down-and-out. Le put transforme la\nbaisse en gain, et s'evapore si la barriere casse.\n\n**Pourquoi un client l'achete.** Il pense que le marche va bouger sans savoir dans quel sens,\nmais sans krach.\n\n**Le point dangereux.** Entre la barriere et le niveau initial, le client gagne. Sous la\nbarriere, il perd d'un coup toute cette zone de gain. La discontinuite est brutale : c'est\nle profil le plus difficile a bien expliquer a un client.")
     st.caption("Gagne a la hausse ET a la baisse moderee, tant que la barriere tient.")
     bandeau_modele()
 
