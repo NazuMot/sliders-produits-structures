@@ -2,13 +2,19 @@
 
 import math
 import numpy as np
-import matplotlib.pyplot as plt
 import streamlit as st
 
 import moteur as M
 import graphiques as G
 from moteur import S0
 from communs import MAX_CACHE
+
+
+def _va_au_jour(cle):
+    """Clic sur un graphe : place le curseur Jour sur le point clique."""
+    idx = G.point_clique(cle)
+    if idx is not None:
+        st.session_state.jour_grecques = int(idx)
 
 
 def affiche(m):
@@ -90,8 +96,14 @@ def affiche(m):
 
     G_, touche = suite_grecques(chemin, T_g, K_g, H_g, vol_g, r, q)
 
-    i = st.slider("Jour", 0, n_pas, min(n_pas, int(n_pas * 0.55)),
-                  help="Deplace-toi dans la vie du produit. Tout se recalcule.")
+    # Le jour est pilote par le curseur ou par un clic sur un graphe : le clic
+    # ecrit dans la cle du curseur avant que celui-ci soit redessine.
+    if "jour_grecques" not in st.session_state:
+        st.session_state.jour_grecques = int(n_pas * 0.55)
+    st.session_state.jour_grecques = min(int(st.session_state.jour_grecques), n_pas)
+    i = st.slider("Jour", 0, n_pas, key="jour_grecques",
+                  help="Deplace-toi dans la vie du produit. Tout se recalcule. Tu peux "
+                       "aussi cliquer directement sur un des graphes ci-dessous.")
 
     n_opt = nominal / S0          # nombre d'options pour le nominal choisi
     spot_i = float(chemin[i])
@@ -143,50 +155,49 @@ def affiche(m):
                  "gap risk, et c'est ce qui rend les barrieres cheres a couvrir.")
 
     # ---------------- trajectoire
-    fig, ax = G.figure(10.5, 3.6)
-    ax.plot(jours, chemin, color=G.PRODUIT, lw=1.8, zorder=3)
-    ax.plot(jours[:i + 1], chemin[:i + 1], color=G.ACCENT, lw=2.4, zorder=4)
-    ax.scatter([jours[i]], [spot_i], s=70, color=G.ACCENT, ec=G.SURFACE, lw=2, zorder=6)
-    ax.axhspan(min(chemin.min() * 0.95, H_g * 0.9), H_g, color=G.FOND_PERTE,
-               alpha=0.06, lw=0, zorder=0)
-    ax.set_xlim(0, T_g)
-    G.niveau_horizontal(ax, H_g, f"barriere  {H_g:,.0f}", G.PERTE, x=0.30)
-    G.niveau_horizontal(ax, S0, f"strike  {S0:,.0f}", G.NIVEAU, x=0.12)
-    G.style(ax, scenario, "La partie orange est deja vecue ; le point est aujourd'hui",
-            "Temps (annees)", "Niveau du sous-jacent")
-    fig.tight_layout()
-    st.pyplot(fig)
-    plt.close(fig)
+    j_casse = int(np.argmax(touche)) if touche.any() else None
+    deja = np.where(np.arange(len(chemin)) <= i, chemin, np.nan)
+    infos_jour = [("Jour", [f"{k} sur {n_pas}" for k in range(n_pas + 1)]),
+                  ("Barriere", ["franchie" if t else "intacte" for t in touche])]
+    graphe = G.courbes(
+        jours, [{"nom": "Trajectoire du sous-jacent", "y": chemin, "couleur": G.PRODUIT,
+                 "epaisseur": 1.8},
+                {"nom": "Deja vecu", "y": deja, "couleur": G.ACCENT, "epaisseur": 2.6}],
+        scenario, "La partie orange est deja vecue ; le point est aujourd'hui. "
+                  "Clique sur le graphe pour aller a ce jour-la.",
+        "Temps (annees)", "Niveau du sous-jacent", nom_x="Date",
+        fmt_x=lambda v: f"{v:,.2f} an", fmt_y=lambda v: G.niveau(v, S0),
+        x_domaine=(0, T_g), zone_y=(min(chemin.min() * 0.95, H_g * 0.9), H_g, G.FOND_PERTE),
+        y_domaine=(min(chemin.min() * 0.95, H_g * 0.9), max(chemin.max(), S0) * 1.04),
+        niveaux_h=[(H_g, f"barriere  {H_g:,.0f}", G.PERTE),
+                   (S0, f"strike  {S0:,.0f}", G.NIVEAU)],
+        marqueurs=[(jours[i], spot_i, G.ACCENT)], lignes_infobulle=infos_jour,
+        legende=False, clic=True, hauteur=260)
+    G.affiche(graphe, cle="g_chemin", sur_clic=lambda: _va_au_jour("g_chemin"))
 
     # ---------------- les grecques dans le temps
-    fig, axes = plt.subplots(2, 2, figsize=(11.5, 6.4))
     series = [("Delta", G_["delta"], G.PRODUIT,
-               "Combien d'actions le trader doit detenir"),
+               "Combien d'actions le trader doit detenir", lambda v: f"{v:+.3f}"),
               ("Gamma", G_["gamma"], G.PERTE,
-               "A quelle vitesse cette quantite change"),
+               "A quelle vitesse cette quantite change", lambda v: f"{v:+.4f}"),
               ("Vega  (EUR par point de vol)", G_["vega"] * n_opt, G.GAIN,
-               "Sensibilite a la volatilite implicite"),
+               "Sensibilite a la volatilite implicite", lambda v: G.eur(v, signe=True)),
               ("Theta  (EUR par jour)", G_["theta"] * n_opt, G.ACCENT,
-               "Ce que le temps coute ou rapporte")]
-    for ax, (nom, serie, coul, sous) in zip(axes.ravel(), series):
-        ax.plot(jours, serie, color=coul, lw=1.9, zorder=3)
-        ax.axvline(jours[i], color=G.NIVEAU, lw=1.1, ls=(0, (3, 3)), zorder=2)
-        ax.scatter([jours[i]], [serie[i]], s=45, color=coul, ec=G.SURFACE, lw=1.6,
-                   zorder=5)
-        ax.axhline(0, color=G.GRILLE, lw=1.0, zorder=1)
-        if touche.any():
-            j = int(np.argmax(touche))
-            if j > 0:
-                ax.axvline(jours[j], color=G.PERTE, lw=1.2, alpha=0.6, zorder=2)
-                if nom == "Delta":
-                    ax.annotate("barriere franchie", xy=(jours[j], 0.06),
-                                xycoords=("data", "axes fraction"),
-                                xytext=(5, 0), textcoords="offset points",
-                                fontsize=8.5, color=G.PERTE)
-        G.style(ax, nom, sous, "Temps (annees)", None)
-    fig.tight_layout()
-    st.pyplot(fig)
-    plt.close(fig)
+               "Ce que le temps coute ou rapporte", lambda v: f"{v:+.2f} EUR")]
+    cols = st.columns(2)
+    for k, (nom, serie, coul, sous, fmt) in enumerate(series):
+        niv = [(jours[i], "aujourd'hui", G.NIVEAU)]
+        if j_casse:
+            niv.append((jours[j_casse], "barriere franchie" if k == 0 else "", G.PERTE))
+        graphe = G.courbes(
+            jours, [{"nom": nom, "y": serie, "couleur": coul, "epaisseur": 2.0}],
+            nom, sous, "Temps (annees)", None, nom_x="Date",
+            fmt_x=lambda v: f"{v:,.2f} an", fmt_y=fmt, x_domaine=(0, T_g),
+            niveaux_v=niv, marqueurs=[(jours[i], float(serie[i]), coul)],
+            lignes_infobulle=infos_jour, legende=False, zero=True, clic=True, hauteur=230)
+        cle = f"g_grecque_{k}"
+        with cols[k % 2]:
+            G.affiche(graphe, cle=cle, sur_clic=lambda c=cle: _va_au_jour(c))
 
     st.info(
         "**Comment lire ces quatre courbes.**\n\n"

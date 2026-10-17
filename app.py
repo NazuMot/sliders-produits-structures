@@ -12,13 +12,11 @@ Lancer avec :  streamlit run app.py
 
 import streamlit as st
 
-import graphiques as G
 from barre import barre_laterale
 from vues import (accueil, comparateur, tracker, capital_protection, brc, autocall,
                   bonus, twin_win, laboratoire, grecques, couverture, glossaire)
 
 st.set_page_config(page_title="Sliders Produits Structures", layout="wide")
-G.applique_style()
 
 # Pour ajouter une page : un fichier dans vues/ avec une fonction affiche(m),
 # puis une entree ici. L'ordre du dictionnaire est celui du menu.

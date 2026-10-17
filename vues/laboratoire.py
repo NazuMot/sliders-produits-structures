@@ -1,7 +1,6 @@
 """Laboratoire modele."""
 
 import numpy as np
-import matplotlib.pyplot as plt
 import streamlit as st
 
 import moteur as M
@@ -36,28 +35,24 @@ def affiche(m):
     st.subheader("1. Le smile genere par le modele")
     ks = [0.70, 0.80, 0.90, 1.00, 1.10, 1.20]
     vols = M.vol_implicite_bates(ch_bt, T, r, q, ks)
-    fig, ax = plt.subplots(figsize=(10.5, 4.6))
     xs = [k * 100 for k in ks]
     ys = [v * 100 for v in vols]
-    ax.fill_between(xs, [vol_atm * 100] * len(xs), ys, color=G.PRODUIT, alpha=0.10)
-    ax.plot(xs, ys, "o-", lw=2.8, color=G.PRODUIT, ms=7, mfc="white", mew=2,
-            label="Volatilite implicite generee par Bates", zorder=3)
-    ax.axhline(vol_atm * 100, color=G.DIRECT, ls="--", lw=1.5,
-               label="Volatilite unique de Black-Scholes", zorder=2)
-    ax.annotate(f"{(vols[0]-vols[3])*100:+.1f} pts\nde skew", (xs[0], ys[0]),
-                textcoords="offset points", xytext=(32, -4), fontsize=9.5,
-                color=G.PRODUIT, fontweight="bold",
-                arrowprops=dict(arrowstyle="->", color=G.PRODUIT, lw=1.3))
-    G.style(ax, "Bates genere le skew, Black-Scholes l'ignore",
-            "Les puts bas coutent plus cher en vol que les options a la monnaie",
-            "Strike (% du spot)", "Volatilite implicite (%)")
-    G.niveau_vertical(ax, 100, "a la monnaie")
-    leg = ax.legend(fontsize=9.5, loc="upper right", frameon=True, framealpha=0.95,
-                    edgecolor="#E0E0E0")
-    leg.get_frame().set_linewidth(0.8)
-    fig.tight_layout()
-    st.pyplot(fig)
-    plt.close(fig)
+    graphe = G.courbes(
+        xs, [{"nom": "Volatilite implicite generee par Bates", "y": ys, "couleur": G.PRODUIT,
+              "epaisseur": 2.8, "points": True},
+             {"nom": "Volatilite unique de Black-Scholes", "y": [vol_atm * 100] * len(xs),
+              "couleur": G.DIRECT, "trait": "tirete", "epaisseur": 1.6}],
+        "Bates genere le skew, Black-Scholes l'ignore",
+        "Les puts bas coutent plus cher en vol que les options a la monnaie",
+        "Strike (% du spot)", "Volatilite implicite (%)", nom_x="Strike",
+        fmt_x=lambda v: f"{v:.0f} % du spot", fmt_y=lambda v: G.pct(v, 1),
+        x_domaine=(66, 124), ticks_x=xs,
+        lignes_infobulle=[("Prime de skew sur Black-Scholes",
+                           [G.pct(y - vol_atm * 100, 1, signe=True) for y in ys])],
+        niveaux_v=[(100, "a la monnaie")],
+        notes=[(xs[0], ys[0], f"{(vols[0]-vols[3])*100:+.1f} pts de skew", G.PRODUIT, 10, 4)],
+        hauteur=340)
+    G.affiche(graphe)
 
     pente = (vols[0] - vols[3]) * 100
     st.markdown(
@@ -74,25 +69,28 @@ def affiche(m):
     c[2].metric("1er centile BS", f"{np.percentile(st_bs, 1):,.1f}")
     c[3].metric("1er centile Bates", f"{np.percentile(st_bt, 1):,.1f}")
 
-    fig, ax = plt.subplots(figsize=(10.5, 4.6))
-    bins = np.linspace(20, 200, 120)
-    ax.hist(st_bs, bins=bins, alpha=0.45, color=G.DIRECT,
-            label="Black-Scholes", density=True)
-    ax.hist(st_bt, bins=bins, alpha=0.55, color=G.PRODUIT,
-            label="Bates", density=True)
-    ax.axvspan(20, bar, color=G.FOND_PERTE, alpha=0.08, zorder=0)
-    ax.set_xlim(20, 200)
-    G.style(ax, "Bates produit des krachs, Black-Scholes presque pas",
-            f"Sous la barriere : {(st_bs < bar).mean()*100:,.1f}% des scenarios en "
-            f"Black-Scholes contre {(st_bt < bar).mean()*100:,.1f}% en Bates",
-            "Sous-jacent a l'echeance", "Densite de probabilite")
-    G.niveau_vertical(ax, bar, f"barriere  {bar:,.0f}", G.PERTE)
-    leg = ax.legend(fontsize=9.5, loc="upper right", frameon=True, framealpha=0.95,
-                    edgecolor="#E0E0E0")
-    leg.get_frame().set_linewidth(0.8)
-    fig.tight_layout()
-    st.pyplot(fig)
-    plt.close(fig)
+    bins = np.linspace(20, 200, 91)
+    h_bs = np.histogram(st_bs, bins=bins)[0] / len(st_bs) * 100
+    h_bt = np.histogram(st_bt, bins=bins)[0] / len(st_bt) * 100
+    larg = bins[1] - bins[0]
+    sous_bs = [(st_bs < b).mean() * 100 for b in bins[:-1]]
+    sous_bt = [(st_bt < b).mean() * 100 for b in bins[:-1]]
+    graphe = G.courbes(
+        bins[:-1], [{"nom": "Black-Scholes", "y": h_bs, "couleur": G.DIRECT, "aire": True,
+                     "epaisseur": 1.2, "interpolation": "step-after"},
+                    {"nom": "Bates", "y": h_bt, "couleur": G.PRODUIT, "aire": True,
+                     "epaisseur": 1.2}],
+        "Bates produit des krachs, Black-Scholes presque pas",
+        f"Sous la barriere : {(st_bs < bar).mean()*100:,.1f}% des scenarios en "
+        f"Black-Scholes contre {(st_bt < bar).mean()*100:,.1f}% en Bates",
+        "Sous-jacent a l'echeance", "Part des scenarios (%)", nom_x="Sous-jacent entre",
+        fmt_x=lambda v: f"{v:,.0f} et {v + larg:,.0f}", fmt_y=lambda v: G.pct(v, 2),
+        x_domaine=(20, 200), y_domaine=(0, max(h_bs.max(), h_bt.max()) * 1.1),
+        zone_x=(20, bar, G.FOND_PERTE), niveaux_v=[(bar, f"barriere  {bar:,.0f}", G.PERTE)],
+        lignes_infobulle=[("Black-Scholes : finir sous ce niveau", [G.pct(v, 1) for v in sous_bs]),
+                          ("Bates : finir sous ce niveau", [G.pct(v, 1) for v in sous_bt])],
+        hauteur=340)
+    G.affiche(graphe)
 
     st.subheader("3. Effet sur le prix")
     lignes = []

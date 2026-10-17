@@ -25,8 +25,8 @@ Tom (compte `NazuMot`). **Tout push sur `main` redéploie automatiquement le sit
 | `communs.py` | Couleurs, `MAX_CACHE`, simulations mises en cache (`sim_bs`, `sim_bates`…) |
 | `vues/*.py` | Une page par fichier, chacune avec une fonction `affiche(m)` |
 | `moteur.py` | Tout le pricing (aucun `import streamlit` ici) |
-| `graphiques.py` | Style et primitives de tracé matplotlib |
-| `requirements.txt` | `streamlit`, `numpy`, `matplotlib`, versions figées — rien d'autre |
+| `graphiques.py` | Graphes interactifs Altair : `payoff`, `courbes`, `trajectoires`, `barres`, `histogramme`, `affiche` |
+| `requirements.txt` | `streamlit`, `numpy`, `altair` (fourni avec Streamlit), versions figées — rien d'autre |
 | `tests/verifie.py` | Vérification complète (toutes les pages, deux modèles, chiffres de référence) |
 | `.github/workflows/tests.yml` | Relance `tests/verifie.py` sur GitHub à chaque push |
 
@@ -76,7 +76,7 @@ Chiffres de référence (paramètres par défaut) pour détecter une régression
   quotidiennement en float64.
 - **Vitesse** : les curseurs doivent réagir instantanément. Les calculs lourds (tableaux de
   sensibilité) sont derrière une case à cocher et en cache.
-- Toujours `plt.close(fig)` après `st.pyplot(fig)`.
+- Graphes : toujours via `graphiques.py` et `G.affiche(...)`. Plus de matplotlib dans l'appli.
 - Pas de dépendance nouvelle sans raison forte (pas de scipy : `norm_cdf_vec` existe).
 - Pas d'API payante : Tom a refusé l'idée d'un assistant IA intégré.
 
@@ -94,16 +94,26 @@ Chiffres de référence (paramètres par défaut) pour détecter une régression
 
 ## Conventions graphiques (`graphiques.py`)
 
+Graphes **interactifs** (Altair, déjà fourni avec Streamlit), demande explicite de Tom : « comme une
+appli de banque ». Au survol, une ligne verticale suit la souris et **une infobulle donne toutes
+les valeurs à cet endroit** (pas de nuage de points visibles). Les faisceaux de trajectoires
+mettent en avant la trajectoire survolée et donnent son issue pour le client. Page grecques :
+un **clic** sur un graphe place le curseur Jour sur ce point (`clic=True` + `G.affiche(...,
+cle=..., sur_clic=...)` + `G.point_clique`). Toute nouvelle courbe suit ce modèle.
+
 Une couleur = un seul sens dans toute l'appli :
 - bleu `PRODUIT` = le produit structuré
 - gris tireté `DIRECT` = détention directe
 - vert `GAIN` / rouge `PERTE` = **uniquement** zones de gain/perte relatives (et barrières en rouge)
 - gris `NIVEAU` = repères neutres
 
-Surface claire `SURFACE`, pas de fond blanc par défaut (l'appli peut être en thème sombre).
+Pas de couleur de texte ni de fond imposée : le thème Streamlit les gère (clair et sombre).
 Profils de payoff via `G.payoff(...)` : zones colorées, point mort, bande de densité Monte Carlo
-sous l'axe (« où le sous-jacent finit réellement »). Titres de graphes = ce que le graphe
-*montre* (« 41 % des trajectoires franchissent la barrière »), pas ce qu'il contient.
+sous l'axe (« où le sous-jacent finit réellement »), et dans l'infobulle la probabilité de finir
+sous le niveau survolé. Titres de graphes = ce que le graphe *montre* (« 41 % des trajectoires
+franchissent la barrière »), pas ce qu'il contient. Pour regarder un graphe avant de pousser :
+le rendre en PNG avec `vl-convert-python` (outil de test, pas dans requirements.txt) ou ouvrir
+l'appli en local.
 
 ## Procédure pour chaque modification
 

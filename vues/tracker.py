@@ -2,7 +2,6 @@
 
 import math
 import numpy as np
-import matplotlib.pyplot as plt
 import streamlit as st
 
 import graphiques as G
@@ -29,7 +28,7 @@ def affiche(m):
 
     direct = nominal * spots / S0
     perte_frais = frais_pa / 100 * T * 100
-    fig = G.payoff(
+    graphe = G.payoff(
         spots, payoff, direct, nominal, "Ce que touche le client",
         titre=("Le tracker suit le sous-jacent, moins les frais"
                if participation == 100 else
@@ -37,10 +36,8 @@ def affiche(m):
         sous_titre=f"Ecart permanent de {perte_frais:,.1f}% du au cumul des frais "
                    f"sur {T:,.1f} ans",
         niveaux=[(S0, f"depart  {S0:,.0f}")],
-        echantillon=trajectoires(T, 1.0)[0][:, -1])
-    G.legende_zones(fig.axes[0])
-    st.pyplot(fig)
-    plt.close(fig)
+        echantillon=trajectoires(T, 1.0)[0][:, -1], legende_zones=True)
+    G.affiche(graphe)
 
     st.table([{"Sous-jacent": f"{p:+d}%",
                "Tracker": f"{nominal*(1+participation/100*p/100)*(1-frais_pa/100*T):,.0f}",

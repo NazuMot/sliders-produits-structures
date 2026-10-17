@@ -2,7 +2,6 @@
 
 import math
 import numpy as np
-import matplotlib.pyplot as plt
 import streamlit as st
 
 import moteur as M
@@ -48,7 +47,8 @@ def affiche(m):
     intact = np.where(perf >= 0, nominal * (1 + perf),
                       nominal * (1 + part_bas * (-perf)))
     direct = nominal * spots / S0
-    fig = G.payoff(
+    y_bar = np.interp(bar / 100 * S0, spots, intact)
+    graphe = G.payoff(
         spots, intact, direct, nominal, "Si la barriere a tenu",
         titre="La baisse rapporte, jusqu'a la barriere",
         sous_titre=f"Entre {bar/100*S0:,.0f} et {S0:,.0f} le client gagne. Sous la "
@@ -56,16 +56,10 @@ def affiche(m):
         niveaux=[(bar / 100 * S0, f"barriere  {bar/100*S0:,.0f}"),
                  (S0, f"depart  {S0:,.0f}")],
         label_direct="Si la barriere a casse (ou detention directe)",
-        echantillon=ST, seuil_densite=bar / 100 * S0)
-    ax = fig.axes[0]
-    y_bar = np.interp(bar / 100 * S0, spots, intact)
-    ax.annotate("chute brutale\nsi la barriere casse",
-                (bar / 100 * S0, y_bar), textcoords="offset points",
-                xytext=(46, 26), fontsize=8.5, color=G.PERTE, fontweight="bold",
-                arrowprops=dict(arrowstyle="->", color=G.PERTE, lw=1.3))
-    G.legende_zones(ax)
-    st.pyplot(fig)
-    plt.close(fig)
+        echantillon=ST, seuil_densite=bar / 100 * S0,
+        notes=[(bar / 100 * S0, y_bar, "chute brutale\nsi la barriere casse", G.PERTE, 10, -10)],
+        legende_zones=True)
+    G.affiche(graphe)
 
     st.info(
         "**Decomposition** : tracker plus achat d'un put down-and-out. Le put transforme "

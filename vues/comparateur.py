@@ -2,7 +2,6 @@
 
 import math
 import numpy as np
-import matplotlib.pyplot as plt
 import streamlit as st
 
 import moteur as M
@@ -63,28 +62,24 @@ def affiche(m):
     spots = np.linspace(30, 190, 400)
     perf = spots / S0 - 1
     direct = nominal * (1 + perf)
-    fig, ax = plt.subplots(figsize=(11, 5.6))
-    ax.plot(spots, direct, color=G.DIRECT, ls="--", lw=1.5, zorder=4,
-            label="Detention directe du sous-jacent")
-    ax.plot(spots, nominal * (1 + part * np.maximum(perf, 0)), lw=2.8, color=G.ACCENT,
-            zorder=3, label=f"Capital Protection — plancher, {part*100:,.0f}% de la hausse")
-    ax.plot(spots, np.where(spots < 70, nominal * spots / S0, nominal)
-            + cpn_brc * nominal * T, lw=2.8, color=G.PRODUIT, zorder=3,
-            label=f"BRC — coupon {cpn_brc*100:,.2f}%, capital a risque sous 70")
-    ax.axhline(nominal, color="#D8D8D8", lw=1.0, zorder=0)
-    ax.set_xlim(spots.min(), spots.max())
-    G.style(ax, "Trois facons d'exprimer la meme vue de marche",
-            "Chaque courbe protege quelque part et abandonne ailleurs",
-            "Niveau du sous-jacent a l'echeance", "Remboursement (EUR)")
-    G.format_eur(ax)
-    G.niveau_vertical(ax, 70, "barriere du BRC  70")
-    G.niveau_vertical(ax, S0, f"depart  {S0:,.0f}")
-    leg = ax.legend(fontsize=9.5, loc="upper left", frameon=True, framealpha=0.95,
-                    edgecolor="#E0E0E0")
-    leg.get_frame().set_linewidth(0.8)
-    fig.tight_layout()
-    st.pyplot(fig)
-    plt.close(fig)
+    graphe = G.courbes(
+        spots,
+        [{"nom": "Detention directe du sous-jacent", "y": direct, "couleur": G.DIRECT,
+          "trait": "tirete", "epaisseur": 1.6},
+         {"nom": f"Capital Protection — plancher, {part*100:,.0f}% de la hausse",
+          "y": nominal * (1 + part * np.maximum(perf, 0)), "couleur": G.ACCENT,
+          "epaisseur": 2.8},
+         {"nom": f"BRC — coupon {cpn_brc*100:,.2f}%, capital a risque sous 70",
+          "y": np.where(spots < 70, nominal * spots / S0, nominal) + cpn_brc * nominal * T,
+          "couleur": G.PRODUIT, "epaisseur": 2.8}],
+        "Trois facons d'exprimer la meme vue de marche",
+        "Chaque courbe protege quelque part et abandonne ailleurs",
+        "Niveau du sous-jacent a l'echeance", "Remboursement (EUR)",
+        nom_x="Sous-jacent a l'echeance", fmt_x=lambda v: G.niveau(v, S0), fmt_y=G.eur,
+        axe_y_eur=True, nb_ticks_x=10,
+        niveaux_v=[(70, "barriere du BRC  70"), (S0, f"depart  {S0:,.0f}")],
+        niveaux_h=[(nominal, f"nominal  {nominal:,.0f}", G.NIVEAU)], hauteur=420)
+    G.affiche(graphe)
 
     st.info(
         "**La regle qui structure tout le metier** : protection, participation, coupon. "

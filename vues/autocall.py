@@ -1,7 +1,6 @@
 """4 - Autocall Phoenix."""
 
 import numpy as np
-import matplotlib.pyplot as plt
 import streamlit as st
 
 import moteur as M
@@ -76,45 +75,40 @@ def affiche(m):
     tt = np.linspace(0, T, ch.shape[1])
 
     # --- graphe 1 : trajectoires et rappels
-    fig, ax = plt.subplots(figsize=(10.5, 5.2))
-    ax.axhspan(0, bar_cap / 100 * S0, color=G.FOND_PERTE, alpha=0.07, zorder=0)
-    n_v = n_r = n_p = 0
+    couleurs, statuts, t_fin, rappels = [], [], [], []
     for i in range(60):
         chem = ch[i]
-        rappel_a = next((j for j in indices[:-1] if chem[j] >= trigger / 100 * S0), None)
+        rappel_a = next((k for k, j in enumerate(indices[:-1])
+                         if chem[j] >= trigger / 100 * S0), None)
         if rappel_a is not None:
-            ax.plot(tt[:rappel_a + 1], chem[:rappel_a + 1], lw=0.9, alpha=0.75,
-                    color=G.GAIN, zorder=2,
-                    label="Rappele par anticipation" if n_r == 0 else None)
-            ax.scatter([tt[rappel_a]], [chem[rappel_a]], s=26, color=G.GAIN,
-                       zorder=5, edgecolor="white", lw=0.8)
-            n_r += 1
+            j = indices[rappel_a]
+            couleurs.append(G.GAIN)
+            statuts.append(f"rappele a l'observation {rappel_a + 1} ({tt[j]:,.2f} an) : "
+                           "nominal rembourse + coupon")
+            t_fin.append(tt[j])
+            rappels.append({"t": tt[j], "y": float(chem[j]), "couleur": G.GAIN})
         elif chem[-1] < bar_cap / 100 * S0:
-            ax.plot(tt, chem, lw=0.9, alpha=0.8, color=G.PERTE, zorder=3,
-                    label="Perte en capital" if n_p == 0 else None)
-            n_p += 1
+            couleurs.append(G.PERTE)
+            statuts.append(f"perte en capital : rembourse {nominal * chem[-1] / S0:,.0f}")
+            t_fin.append(T)
         else:
-            ax.plot(tt, chem, lw=0.9, alpha=0.6, color=G.NIVEAU, zorder=1,
-                    label="Va au terme sans perte" if n_v == 0 else None)
-            n_v += 1
-    for j in indices[:-1]:
-        ax.axvline(tt[j], color="#DCDCDC", lw=0.9, zorder=0)
-    ax.set_xlim(0, T * 1.02)
-    G.style(ax, f"Duree de vie moyenne : {duree:,.2f} ans sur {T:,.1f} possibles",
-            "Les traits verticaux gris sont les dates d'observation",
-            "Temps (annees)", "Worst-of du panier" if n_actifs > 1 else "Sous-jacent")
-    G.niveau_horizontal(ax, trigger / 100 * S0,
-                        f"trigger de rappel  {trigger/100*S0:,.0f}", G.GAIN)
-    G.niveau_horizontal(ax, bar_cp / 100 * S0,
-                        f"barriere coupon  {bar_cp/100*S0:,.0f}", G.ACCENT, x=0.62)
-    G.niveau_horizontal(ax, bar_cap / 100 * S0,
-                        f"barriere capital  {bar_cap/100*S0:,.0f}", G.PERTE)
-    leg = ax.legend(fontsize=9.5, loc="upper left", frameon=True, framealpha=0.95,
-                    edgecolor="#E0E0E0")
-    leg.get_frame().set_linewidth(0.8)
-    fig.tight_layout()
-    st.pyplot(fig)
-    plt.close(fig)
+            couleurs.append(G.NIVEAU)
+            statuts.append("va au terme sans perte : nominal rembourse")
+            t_fin.append(T)
+    graphe = G.trajectoires(
+        ch, T, [(trigger / 100 * S0, f"trigger de rappel  {trigger/100*S0:,.0f}", G.GAIN),
+                (bar_cp / 100 * S0, f"barriere coupon  {bar_cp/100*S0:,.0f}", G.ACCENT,
+                 T * 0.62),
+                (bar_cap / 100 * S0, f"barriere capital  {bar_cap/100*S0:,.0f}", G.PERTE)],
+        couleurs, f"Duree de vie moyenne : {duree:,.2f} ans sur {T:,.1f} possibles",
+        "Les traits verticaux sont les dates d'observation. Survole une trajectoire "
+        "pour voir son issue.",
+        ylabel="Worst-of du panier" if n_actifs > 1 else "Sous-jacent", n_max=60,
+        zone_sous=bar_cap / 100 * S0, statuts=statuts, t_fin=t_fin, points=rappels,
+        dates_v=[tt[j] for j in indices[:-1]],
+        legende=[("Rappele par anticipation", G.GAIN), ("Perte en capital", G.PERTE),
+                 ("Va au terme sans perte", G.NIVEAU)])
+    G.affiche(graphe)
 
     # --- graphe 2 : quand le produit se termine
     probas, vivant = [], np.ones(len(ch), dtype=bool)
@@ -126,21 +120,14 @@ def affiche(m):
     labels = [f"Obs {k+1}" for k in range(len(probas) - 1)] + ["Terme"]
     couleurs = [G.GAIN] * (len(probas) - 1) + [G.NIVEAU]
 
-    fig, ax = plt.subplots(figsize=(10.5, 4.4))
-    barres = ax.bar(labels, np.array(probas) * 100, color=couleurs, width=0.68)
-    for b, p in zip(barres, probas):
-        if p > 0.012:
-            ax.text(b.get_x() + b.get_width() / 2, b.get_height() + 0.8,
-                    f"{p*100:,.0f}%", ha="center", fontsize=9,
-                    color="#444444", fontweight="bold")
-    ax.set_ylim(0, max(probas) * 118)
-    G.style(ax, f"{(1-probas[-1])*100:,.0f}% des scenarios se terminent avant l'echeance",
-            "Chaque rappel anticipe coupe tous les coupons restants",
-            None, "Probabilite (%)")
-    ax.tick_params(axis="x", rotation=45 if len(labels) > 8 else 0, labelsize=8.5)
-    fig.tight_layout()
-    st.pyplot(fig)
-    plt.close(fig)
+    cumul = np.cumsum(probas) * 100
+    graphe = G.barres(
+        labels, np.array(probas) * 100, couleurs,
+        f"{(1-probas[-1])*100:,.0f}% des scenarios se terminent avant l'echeance",
+        "Chaque rappel anticipe coupe tous les coupons restants", "Probabilite (%)",
+        nom_x="Observation", infos=[("Date", [f"{tt[j]:,.2f} an" for j in indices[:-1]] + [f"{T:,.2f} an"]),
+               ("Termine a cette date ou avant", [G.pct(v, 0) for v in cumul])])
+    G.affiche(graphe)
 
     if st.checkbox("Effet du nombre de sous-jacents"):
         v_p = vol_atm if BATES else M.vol_au_strike(bar_cap / 100, vol_atm, skew)

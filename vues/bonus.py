@@ -2,7 +2,6 @@
 
 import math
 import numpy as np
-import matplotlib.pyplot as plt
 import streamlit as st
 
 import moteur as M
@@ -44,7 +43,7 @@ def affiche(m):
     spots = np.linspace(30, 200, 500)
     intact = np.maximum(nominal * spots / S0, nominal * bonus)
     direct = nominal * spots / S0
-    fig = G.payoff(
+    graphe = G.payoff(
         spots, intact, direct, nominal, "Si la barriere a tenu",
         titre=f"Plancher a {bonus*100:,.0f}% tant que la barriere tient",
         sous_titre="Si la barriere casse, la courbe rouge disparait et le client se "
@@ -52,12 +51,10 @@ def affiche(m):
         niveaux=[(bar / 100 * S0, f"barriere  {bar/100*S0:,.0f}"),
                  (S0, f"depart  {S0:,.0f}")],
         label_direct="Si la barriere a casse (ou detention directe)",
-        echantillon=ST, seuil_densite=bar / 100 * S0)
-    ax = fig.axes[0]
-    G.niveau_horizontal(ax, nominal * bonus, f"bonus  {nominal*bonus:,.0f}", G.GAIN)
-    G.legende_zones(ax)
-    st.pyplot(fig)
-    plt.close(fig)
+        echantillon=ST, seuil_densite=bar / 100 * S0,
+        niveaux_h=[(nominal * bonus, f"bonus  {nominal*bonus:,.0f}", G.GAIN)],
+        legende_zones=True)
+    G.affiche(graphe)
 
     st.info(
         "**Decomposition** : detention du sous-jacent sans dividendes, plus achat d'un put "

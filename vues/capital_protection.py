@@ -2,7 +2,6 @@
 
 import math
 import numpy as np
-import matplotlib.pyplot as plt
 import streamlit as st
 
 import moteur as M
@@ -64,19 +63,17 @@ def affiche(m):
     niv = [(S0, f"depart  {S0:,.0f}")]
     if cap < 300:
         niv.append((cap / 100 * S0, f"cap  {cap:,.0f}"))
-    fig = G.payoff(
+    graphe = G.payoff(
         spots, pay, direct, nominal, "Ce que touche le client",
         titre=f"Plancher a {protection}% du nominal, {part*100:,.0f}% de la hausse",
         sous_titre="Le client est protege a la baisse et abandonne une partie de la "
                    "hausse : c'est le meme arbitrage vu des deux cotes",
         niveaux=niv,
-        echantillon=trajectoires(T, 1.0)[0][:, -1])
-    ax = fig.axes[0]
-    G.niveau_horizontal(ax, nominal * protection / 100,
-                        f"plancher  {nominal*protection/100:,.0f}", G.GAIN)
-    G.legende_zones(ax)
-    st.pyplot(fig)
-    plt.close(fig)
+        echantillon=trajectoires(T, 1.0)[0][:, -1],
+        niveaux_h=[(nominal * protection / 100,
+                    f"plancher  {nominal*protection/100:,.0f}", G.GAIN)],
+        legende_zones=True)
+    G.affiche(graphe)
 
     st.subheader("Sensibilite aux taux")
     lignes = []

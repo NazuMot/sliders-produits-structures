@@ -2,7 +2,6 @@
 
 import math
 import numpy as np
-import matplotlib.pyplot as plt
 import streamlit as st
 
 import moteur as M
@@ -109,22 +108,14 @@ def affiche(m):
     m[2].metric("Frais de transaction moyens", f"{frais.mean():,.1f} EUR")
     m[3].metric("Pire cas sur 5%", f"{np.percentile(pnl, 5):+,.1f} EUR")
 
-    fig, ax = plt.subplots(figsize=(10.5, 4.6))
-    n_, bins_, patches = ax.hist(pnl, bins=70, alpha=0.85)
-    for b, p in zip(bins_[:-1], patches):
-        p.set_facecolor(G.GAIN if b >= 0 else G.PERTE)
-    ax.axvline(0, color=G.DIRECT, lw=1.6, zorder=4)
-    ax.axvline(pnl.mean(), color=G.DIRECT, lw=2.0, ls="--", zorder=4)
-    ax.annotate(f"moyenne  {pnl.mean():+,.0f}", (pnl.mean(), ax.get_ylim()[1] * 0.92),
-                textcoords="offset points", xytext=(10, 0), fontsize=9.5,
-                color=G.DIRECT, fontweight="bold")
-    G.style(ax, "Couvrir ne garantit pas un resultat nul",
-            f"{(pnl < 0).mean()*100:,.0f}% des scenarios se terminent en perte pour "
-            "le trader, malgre une position couverte",
-            "Resultat de couverture (EUR)", "Nombre de scenarios")
-    fig.tight_layout()
-    st.pyplot(fig)
-    plt.close(fig)
+    graphe = G.histogramme(
+        pnl, 70, "Couvrir ne garantit pas un resultat nul",
+        f"{(pnl < 0).mean()*100:,.0f}% des scenarios se terminent en perte pour "
+        "le trader, malgre une position couverte",
+        "Resultat de couverture (EUR)",
+        couleur_bin=lambda c: G.GAIN if c >= 0 else G.PERTE,
+        niveaux=[(0, "", G.DIRECT), (pnl.mean(), f"moyenne  {pnl.mean():+,.0f}", G.DIRECT)])
+    G.affiche(graphe)
 
     freqs = [12, 26, 52, 104, 252]
     moy, ect = [], []
@@ -133,24 +124,17 @@ def affiche(m):
                              r, q, nominal, 3000)
         moy.append(p.mean())
         ect.append(p.std())
-    fig, ax = plt.subplots(figsize=(10.5, 4.4))
-    ax.plot(freqs, ect, "s-", color=G.ACCENT, lw=2.6, ms=7, mfc="white", mew=2,
-            label="Risque : ecart-type du resultat")
-    ax.plot(freqs, moy, "o-", color=G.PRODUIT, lw=2.6, ms=7, mfc="white", mew=2,
-            label="Resultat moyen (ronge par les frais)")
-    ax.axhline(0, color="#D8D8D8", lw=1.0, zorder=0)
-    ax.set_xscale("log")
-    ax.set_xticks(freqs)
-    ax.set_xticklabels([str(f) for f in freqs])
-    G.style(ax, "Couvrir plus souvent reduit le risque mais coute plus cher",
-            "C'est l'arbitrage quotidien du trader, et il depend du cout de transaction",
-            "Rebalancements par an", "EUR")
-    leg = ax.legend(fontsize=9.5, loc="center right", frameon=True, framealpha=0.95,
-                    edgecolor="#E0E0E0")
-    leg.get_frame().set_linewidth(0.8)
-    fig.tight_layout()
-    st.pyplot(fig)
-    plt.close(fig)
+    graphe = G.courbes(
+        freqs, [{"nom": "Risque : ecart-type du resultat", "y": ect, "couleur": G.ACCENT,
+                 "points": True},
+                {"nom": "Resultat moyen (ronge par les frais)", "y": moy,
+                 "couleur": G.PRODUIT, "points": True}],
+        "Couvrir plus souvent reduit le risque mais coute plus cher",
+        "C'est l'arbitrage quotidien du trader, et il depend du cout de transaction",
+        "Rebalancements par an", "EUR", nom_x="Rebalancements par an",
+        fmt_x=lambda v: f"{v:,.0f} par an", fmt_y=lambda v: G.eur(v, signe=True),
+        x_log=True, ticks_x=freqs, x_domaine=(10, 300), zero=True, hauteur=320)
+    G.affiche(graphe)
 
     ecart = (vol_atm - vol_reelle) * 100
     st.info(

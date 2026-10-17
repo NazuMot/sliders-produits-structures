@@ -1,7 +1,6 @@
 """3 - Barrier Reverse Convertible."""
 
 import numpy as np
-import matplotlib.pyplot as plt
 import streamlit as st
 
 import moteur as M
@@ -56,7 +55,7 @@ def affiche(m):
                           nominal * spots / (strike / 100 * S0) + cpn * nominal * T)
     direct = nominal * spots / S0
 
-    fig = G.payoff(
+    graphe = G.payoff(
         spots, pay_touche, direct, nominal, "Si la barriere a ete touchee",
         titre=f"Coupon de {cpn*100:,.2f}% quoi qu'il arrive, capital a risque sous "
               f"{strike/100*S0:,.0f}",
@@ -64,62 +63,53 @@ def affiche(m):
                    "touche le meme montant",
         niveaux=[(bar / 100 * S0, f"barriere  {bar/100*S0:,.0f}"),
                  (strike / 100 * S0, f"strike  {strike/100*S0:,.0f}")],
-        label_direct="S'il avait achete le sous-jacent")
-    ax = fig.axes[0]
-    ax.plot(spots, pay_intact, color=G.GAIN, lw=2.4, ls="-", zorder=5,
-            label="Si la barriere n'a jamais ete touchee")
-    G.niveau_horizontal(ax, plafond, f"plafond  {plafond:,.0f}", G.GAIN, x=0.30)
-    leg = ax.legend(fontsize=9.5, loc="upper left", frameon=True, framealpha=0.95,
-                    edgecolor="#E0E0E0")
-    leg.get_frame().set_linewidth(0.8)
-    G.legende_zones(ax)
-    st.pyplot(fig)
-    plt.close(fig)
+        label_direct="S'il avait achete le sous-jacent",
+        autres=[{"nom": "Si la barriere n'a jamais ete touchee", "y": pay_intact,
+                 "couleur": G.GAIN, "epaisseur": 2.4}],
+        niveaux_h=[(plafond, f"plafond  {plafond:,.0f}", G.GAIN)],
+        legende_zones=True)
+    G.affiche(graphe)
 
     # --- graphe 2 : deux clients, meme niveau final, resultats differents
     cible = 0.88 * S0
     cand_i = np.where((np.abs(ST - cible) < 1.2) & ~touche)[0]
     cand_t = np.where((np.abs(ST - cible) < 1.2) & touche)[0]
     if len(cand_i) and len(cand_t):
-        fig, ax = plt.subplots(figsize=(10.5, 5.0))
-        ax.axhspan(0, bar / 100 * S0, color=G.FOND_PERTE, alpha=0.07, zorder=0)
         tt = np.linspace(0, T, ch.shape[1])
         i_ok = cand_i[np.argmax(ch[cand_i].min(axis=1))]
         i_ko = cand_t[np.argmin(ch[cand_t].min(axis=1))]
-        ax.plot(tt, ch[i_ok], lw=2.4, color=G.GAIN, zorder=3,
-                label=f"Client A — barriere intacte, recoit {plafond:,.0f}")
         pay_ko = nominal * ST[i_ko] / (strike / 100 * S0) + cpn * nominal * T
-        ax.plot(tt, ch[i_ko], lw=2.4, color=G.PERTE, zorder=3,
-                label=f"Client B — barriere touchee, recoit {pay_ko:,.0f}")
-        ax.scatter([T, T], [ch[i_ok, -1], ch[i_ko, -1]], s=70, zorder=5,
-                   color=["white", "white"], edgecolor=[G.GAIN, G.PERTE], lw=2)
-        ax.set_xlim(0, T * 1.02)
         bas = min(ch[i_ok].min(), ch[i_ko].min(), bar / 100 * S0)
         haut = max(ch[i_ok].max(), ch[i_ko].max(), S0)
-        ax.set_ylim(bas * 0.90, haut * 1.10)
-        G.style(ax, "Deux clients, le meme niveau final, deux resultats",
-                "Le chemin decide, pas seulement l'arrivee",
-                "Temps (annees)", "Niveau du sous-jacent")
-        G.niveau_horizontal(ax, bar / 100 * S0, f"barriere  {bar/100*S0:,.0f}", G.PERTE)
-        G.niveau_horizontal(ax, S0, f"depart  {S0:,.0f}", G.NIVEAU, x=0.16)
-        leg = ax.legend(fontsize=9.5, loc="lower left", frameon=True, framealpha=0.95,
-                        edgecolor="#E0E0E0")
-        leg.get_frame().set_linewidth(0.8)
-        fig.tight_layout()
-        st.pyplot(fig)
-        plt.close(fig)
+        graphe = G.courbes(
+            tt, [{"nom": f"Client A — barriere intacte, recoit {plafond:,.0f}",
+                  "y": ch[i_ok], "couleur": G.GAIN, "epaisseur": 2.4},
+                 {"nom": f"Client B — barriere touchee, recoit {pay_ko:,.0f}",
+                  "y": ch[i_ko], "couleur": G.PERTE, "epaisseur": 2.4}],
+            "Deux clients, le meme niveau final, deux resultats",
+            "Le chemin decide, pas seulement l'arrivee",
+            "Temps (annees)", "Niveau du sous-jacent", nom_x="Date",
+            fmt_x=lambda v: f"{v:,.2f} an", fmt_y=lambda v: G.niveau(v, S0),
+            x_domaine=(0, T * 1.02), y_domaine=(bas * 0.90, haut * 1.10),
+            zone_y=(bas * 0.90, bar / 100 * S0, G.FOND_PERTE),
+            niveaux_h=[(bar / 100 * S0, f"barriere  {bar/100*S0:,.0f}", G.PERTE),
+                       (S0, f"depart  {S0:,.0f}", G.NIVEAU)])
+        G.affiche(graphe)
 
     # --- graphe 3 : le faisceau complet
     couleurs = [G.PERTE if touche[i] else G.GAIN for i in range(45)]
-    fig = G.trajectoires(
+    statuts = [f"barriere touchee : rembourse {min(nominal * ST[i] / (strike / 100 * S0), nominal) + cpn * nominal * T:,.0f}"
+               if touche[i] else f"barriere intacte : rembourse {plafond:,.0f}"
+               for i in range(45)]
+    graphe = G.trajectoires(
         ch, T, [(bar / 100 * S0, f"barriere  {bar/100*S0:,.0f}", G.PERTE),
                 (S0, f"depart  {S0:,.0f}", G.NIVEAU)],
         couleurs,
         f"{(1-p_no.mean())*100:,.0f}% des trajectoires franchissent la barriere",
-        "Rouge : barriere touchee. Vert : intacte.",
-        zone_sous=bar / 100 * S0)
-    st.pyplot(fig)
-    plt.close(fig)
+        "Survole une trajectoire pour voir ce que touche le client.",
+        zone_sous=bar / 100 * S0, statuts=statuts,
+        legende=[("Barriere touchee", G.PERTE), ("Barriere intacte", G.GAIN)])
+    G.affiche(graphe)
 
     if st.checkbox("Decomposer le coupon"):
         base = M.coupon_brc(ch, T, r, nominal, bar / 100, strike / 100, continu,
