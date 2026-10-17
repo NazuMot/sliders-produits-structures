@@ -36,9 +36,12 @@ def affiche(m):
         ["Marche calme", "Glissade vers la barriere", "Franchissement puis rebond",
          "Krach"],
         help="Quatre trajectoires choisies parmi des milliers de simulations, "
-             "selon ce qu'elles font par rapport a la barriere.")
-    T_g = c2.slider("Maturite (annees)", 0.5, 2.0, 1.0, 0.5)
-    bar_g = c3.slider("Barriere (% du spot)", 50, 90, 70, 5)
+             "selon ce qu'elles font par rapport a la barriere.",
+             key="gr_scenario", bind="query-params")
+    T_g = c2.slider("Maturite (annees)", 0.5, 2.0, 1.0, 0.5,
+                    key="gr_maturite", bind="query-params")
+    bar_g = c3.slider("Barriere (% du spot)", 50, 90, 70, 5,
+                      key="gr_barriere", bind="query-params")
 
     K_g = S0
     H_g = bar_g / 100 * S0
@@ -103,7 +106,8 @@ def affiche(m):
     st.session_state.jour_grecques = min(int(st.session_state.jour_grecques), n_pas)
     i = st.slider("Jour", 0, n_pas, key="jour_grecques",
                   help="Deplace-toi dans la vie du produit. Tout se recalcule. Tu peux "
-                       "aussi cliquer directement sur un des graphes ci-dessous.")
+                       "aussi cliquer directement sur un des graphes ci-dessous.",
+                       bind="query-params")
 
     n_opt = nominal / S0          # nombre d'options pour le nominal choisi
     spot_i = float(chemin[i])
@@ -211,7 +215,8 @@ def affiche(m):
         "Le **theta** est le miroir du gamma. Celui qui possede du gamma paie du theta "
         "chaque jour, et inversement. Un trader ne choisit jamais l'un sans l'autre.")
 
-    if st.checkbox("Voir pourquoi une barriere proche de l'echeance est intenable"):
+    if st.checkbox("Voir pourquoi une barriere proche de l'echeance est intenable",
+                   key="gr_voir_echeance", bind="query-params"):
         lignes = []
         for tau in [1.0, 0.25, 0.08, 0.02]:
             for S in [H_g * 1.15, H_g * 1.04, H_g * 1.01]:

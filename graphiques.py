@@ -235,7 +235,7 @@ def courbes(x, series, titre=None, sous_titre=None, xlabel=None, ylabel=None,
     ech_x = alt.Scale(domain=list(x_domaine), type="log" if x_log else "linear",
                       nice=False, zero=False)
     axe_x = alt.Axis(title=xlabel, values=ticks_x or alt.Undefined,
-                     tickCount=nb_ticks_x or alt.Undefined)
+                     tickCount=nb_ticks_x or 10)
     ech_y = alt.Scale(domain=list(y_domaine), nice=False, zero=False)
     axe_y = alt.Axis(title=ylabel, labelExpr=AXE_EUR if axe_y_eur else alt.Undefined,
                      values=ticks_y or alt.Undefined)

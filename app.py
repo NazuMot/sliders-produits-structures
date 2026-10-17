@@ -35,7 +35,8 @@ PAGES = {
     "Glossaire": glossaire,
 }
 
-page = PAGES[st.sidebar.selectbox("Page", list(PAGES.keys()), index=0)]
+page = PAGES[st.sidebar.selectbox("Page", list(PAGES.keys()), index=0,
+                                  key="page", bind="query-params")]
 m = barre_laterale()
 page.affiche(m)
 

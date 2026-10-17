@@ -17,7 +17,8 @@ def affiche(m):
     st.title("Comparateur", help="**Ce que tu regardes.** Quatre structures pricees sous la meme vue de marche, avec la meme\nmaturite, cote a cote.\n\n**Pourquoi c'est utile.** Un produit structure n'est jamais bon ou mauvais dans l'absolu :\nil est adapte ou non a une vue de marche. Le comparateur montre ce que chaque structure\ndonne et ce qu'elle prend en echange.\n\n**La regle a retenir.** Protection, participation, coupon : on n'en a jamais trois sur trois.\nLe budget est fixe, il ne fait que changer de forme.\n\n**Ce qu'il faut faire.** Bouge la volatilite ou les taux dans la barre laterale et regarde\nquelles offres s'ameliorent et lesquelles se degradent. Elles ne bougent pas toutes dans\nle meme sens.")
     bandeau_modele()
 
-    T = st.slider("Maturite (annees)", 1.0, 5.0, 2.0, 0.5)
+    T = st.slider("Maturite (annees)", 1.0, 5.0, 2.0, 0.5,
+                  key="comp_maturite", bind="query-params")
 
     ch_brc, s_brc = trajectoires(T, 0.70)
     ch_ac, s_ac = trajectoires(T, 0.65, seed=43)

@@ -88,6 +88,10 @@ Chiffres de référence (paramètres par défaut) pour détecter une régression
   (« Limites du modèle », pas « Limites qui restent, et elles sont réelles »).
 - **Pas d'objectif de carrière affiché** : le nom seul, « Tom Uzan ».
 - Garder la section « Limites du modèle » : c'est du contenu technique, pas une précaution.
+- **Lien partageable** (demande de Tom : le lien rouvre le site comme on l'a laissé) : chaque
+  widget a une `key` courte et unique (préfixe de page, ex. `brc_barriere`) et
+  `bind="query-params"`. Tout nouveau widget suit cette règle, sinon son réglage ne passe pas
+  dans le lien.
 - Chaque curseur a un `help=` ; chaque `st.title` a un `help=` long (ce que c'est, comment c'est
   construit, pourquoi un client l'achète, quoi regarder). Tout nouvel élément doit suivre ça.
 - Textes en français sans accents dans le code (existant), en restant cohérent avec le fichier.

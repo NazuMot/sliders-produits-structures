@@ -20,12 +20,15 @@ def affiche(m):
     c1, c2, c3 = st.columns(3)
     T = c1.slider("Maturite (annees)", 1.0, 10.0, 5.0, 0.5,
                   help="Parametre cle : plus c'est long, moins la banque doit mettre de "
-                       "cote, donc plus le budget option est gros.")
+                       "cote, donc plus le budget option est gros.",
+                       key="cp_maturite", bind="query-params")
     protection = c2.slider("Niveau de protection (%)", 80, 100, 100, 5,
                            help="90% = le client accepte de perdre 10% maximum. Chaque "
-                                "point abandonne remonte la participation.")
+                                "point abandonne remonte la participation.",
+                                key="cp_protection", bind="query-params")
     cap = c3.slider("Cap sur la hausse (%)", 110, 300, 300, 10,
-                    help="Capper vend un call de strike haut, ce qui libere du budget.")
+                    help="Capper vend un call de strike haut, ce qui libere du budget.",
+                    key="cp_cap", bind="query-params")
 
     # le spread emetteur reduit le cout de la garantie : la banque actualise
     # a son propre taux de financement

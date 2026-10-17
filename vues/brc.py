@@ -17,15 +17,19 @@ def affiche(m):
     bandeau_modele()
 
     c1, c2, c3 = st.columns(3)
-    T = c1.slider("Maturite (annees)", 0.25, 3.0, 1.0, 0.25)
+    T = c1.slider("Maturite (annees)", 0.25, 3.0, 1.0, 0.25,
+                  key="brc_maturite", bind="query-params")
     bar = c2.slider("Barriere (% du spot)", 50, 95, 70, 5,
                     help="Le niveau qui ARME le risque. Le toucher ne fait pas perdre : "
-                         "c'est le strike qui decide a la fin.")
-    strike = c3.slider("Strike (% du spot)", 80, 110, 100, 5)
+                         "c'est le strike qui decide a la fin.",
+                         key="brc_barriere", bind="query-params")
+    strike = c3.slider("Strike (% du spot)", 80, 110, 100, 5,
+                       key="brc_strike", bind="query-params")
 
     continu = st.radio("Observation de la barriere",
                        ["Continue (americaine)", "A l'echeance (europeenne)"],
-                       horizontal=True).startswith("Continue")
+                       horizontal=True,
+                       key="brc_observation", bind="query-params").startswith("Continue")
 
     ch, sg = trajectoires(T, bar / 100)
     tau = defauts(len(ch), T)
@@ -111,7 +115,7 @@ def affiche(m):
         legende=[("Barriere touchee", G.PERTE), ("Barriere intacte", G.GAIN)])
     G.affiche(graphe)
 
-    if st.checkbox("Decomposer le coupon"):
+    if st.checkbox("Decomposer le coupon", key="brc_voir_decomposition", bind="query-params"):
         base = M.coupon_brc(ch, T, r, nominal, bar / 100, strike / 100, continu,
                             marge, sg, None, recovery)
         st.table([

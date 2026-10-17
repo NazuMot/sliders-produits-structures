@@ -24,15 +24,17 @@ def affiche(m):
         "et sans frais, le resultat est exactement nul. On enleve ces deux hypotheses.")
 
     c1, c2, c3 = st.columns(3)
-    T = c1.slider("Maturite (annees)", 0.25, 2.0, 1.0, 0.25)
+    T = c1.slider("Maturite (annees)", 0.25, 2.0, 1.0, 0.25,
+                  key="couv_maturite", bind="query-params")
     freq_h = c2.select_slider("Rebalancement",
                               ["Mensuel", "Hebdomadaire", "2x par semaine", "Quotidien"],
                               "Hebdomadaire",
                               help="Plus on couvre souvent, plus l'erreur de couverture "
-                                   "est faible, mais plus on paie de frais.")
+                                   "est faible, mais plus on paie de frais.",
+                                   key="couv_rebalancement", bind="query-params")
     cout_bp = c3.slider("Cout de transaction (bp par transaction)", 0, 50, 10, 1,
                         help="Fourchette achat-vente plus impact de marche, en points "
-                             "de base du montant echange.")
+                             "de base du montant echange.", key="couv_frais", bind="query-params")
 
     par_an = {"Mensuel": 12, "Hebdomadaire": 52, "2x par semaine": 104, "Quotidien": 252}[freq_h]
     n_reb = max(int(round(par_an * T)), 4)
@@ -40,7 +42,8 @@ def affiche(m):
     vol_reelle = st.slider(
         "Volatilite realisee (%)", 5.0, 60.0, vol_atm * 100, 1.0,
         help="Ce qui se passe VRAIMENT. La banque a vendu le produit sur la base de la "
-             "vol implicite. L'ecart entre les deux est son resultat principal.") / 100
+             "vol implicite. L'ecart entre les deux est son resultat principal.",
+             key="couv_vol_realisee", bind="query-params") / 100
 
     @st.cache_data(show_spinner=False, max_entries=MAX_CACHE)
     def couverture(T, n_reb, vol_impl, vol_reel, cout_bp, r, q, nominal, n_sim=4000):

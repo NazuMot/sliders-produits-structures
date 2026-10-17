@@ -15,12 +15,15 @@ def affiche(m):
     st.caption("Exposition lineaire. Produit d'acces, pas produit de rendement.")
 
     c1, c2, c3 = st.columns(3)
-    T = c1.slider("Maturite (annees)", 1.0, 10.0, 3.0, 0.5)
+    T = c1.slider("Maturite (annees)", 1.0, 10.0, 3.0, 0.5,
+                  key="tracker_maturite", bind="query-params")
     participation = c2.slider("Participation (%)", 50, 150, 100, 5,
                               help="100% = 1:1. Au-dessus, on parle d'outperformance "
                                    "certificate : la banque finance le levier en "
-                                   "capturant les dividendes.")
-    frais_pa = c3.slider("Frais annuels (%)", 0.0, 2.0, 0.6, 0.1)
+                                   "capturant les dividendes.",
+                                   key="tracker_participation", bind="query-params")
+    frais_pa = c3.slider("Frais annuels (%)", 0.0, 2.0, 0.6, 0.1,
+                         key="tracker_frais", bind="query-params")
 
     spots = np.linspace(30, 180, 400)
     perf = spots / S0 - 1

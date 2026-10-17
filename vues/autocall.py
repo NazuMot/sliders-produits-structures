@@ -20,31 +20,35 @@ def affiche(m):
 
     c1, c2, c3 = st.columns(3)
     T = c1.slider("Maturite maximale (annees)", 1.0, 6.0, 3.0, 0.5,
-                  help="Duree MAXIMALE : le produit est presque toujours rappele avant.")
+                  help="Duree MAXIMALE : le produit est presque toujours rappele avant.",
+                  key="ac_maturite", bind="query-params")
     freq = c1.selectbox("Frequence d'observation",
-                        ["Trimestrielle", "Semestrielle", "Annuelle"])
-    trigger = c2.slider("Trigger de rappel (%)", 80, 110, 100, 5)
+                        ["Trimestrielle", "Semestrielle", "Annuelle"],
+                        key="ac_frequence", bind="query-params")
+    trigger = c2.slider("Trigger de rappel (%)", 80, 110, 100, 5,
+                        key="ac_trigger", bind="query-params")
     bar_cp = c2.slider("Barriere de coupon (%)", 50, 100, 70, 5,
                        help="Le coupon n'est paye que si le sous-jacent est au-dessus a "
                             "la date d'observation. C'est ce qui distingue un Phoenix "
-                            "d'un BRC.")
+                            "d'un BRC.", key="ac_bar_coupon", bind="query-params")
     bar_cap = c3.slider("Barriere de capital (%)", 40, 90, 60, 5,
-                        help="Observee uniquement A L'ECHEANCE. Le vrai risque du produit.")
-    memoire = c3.checkbox("Effet memoire", value=True)
+                        help="Observee uniquement A L'ECHEANCE. Le vrai risque du produit.",
+                        key="ac_bar_capital", bind="query-params")
+    memoire = c3.checkbox("Effet memoire", value=True, key="ac_memoire", bind="query-params")
 
     st.markdown("---")
     w1, w2 = st.columns(2)
     n_actifs = w1.select_slider(
         "Nombre de sous-jacents (worst-of)", [1, 2, 3, 4], 1,
         help="Le plus mauvais des sous-jacents decide de tout. C'est la structure "
-             "reellement dominante sur les desks.")
+             "reellement dominante sur les desks.", key="ac_sous_jacents", bind="query-params")
     correl = w2.slider(
         "Correlation entre sous-jacents", 0.0, 0.95, 0.60, 0.05,
         disabled=(n_actifs == 1),
         help="Le parametre de pricing dominant sur un worst-of. Correlation haute : les "
              "actifs bougent ensemble, le panier ressemble a un actif unique, coupon "
              "faible. Correlation basse : il y a presque toujours un trainard, coupon "
-             "eleve et risque eleve.")
+             "eleve et risque eleve.", key="ac_correlation", bind="query-params")
 
     par_an = {"Trimestrielle": 4, "Semestrielle": 2, "Annuelle": 1}[freq]
     n_obs = max(int(T * par_an), 1)
@@ -129,7 +133,7 @@ def affiche(m):
                ("Termine a cette date ou avant", [G.pct(v, 0) for v in cumul])])
     G.affiche(graphe)
 
-    if st.checkbox("Effet du nombre de sous-jacents"):
+    if st.checkbox("Effet du nombre de sous-jacents", key="ac_voir_worst_of", bind="query-params"):
         v_p = vol_atm if BATES else M.vol_au_strike(bar_cap / 100, vol_atm, skew)
         lignes = []
         for na in [1, 2, 3, 4]:

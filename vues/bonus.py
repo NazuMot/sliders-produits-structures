@@ -17,8 +17,10 @@ def affiche(m):
     bandeau_modele()
 
     c1, c2 = st.columns(2)
-    T = c1.slider("Maturite (annees)", 0.5, 4.0, 2.0, 0.25)
-    bar = c2.slider("Barriere (% du spot)", 50, 90, 70, 5)
+    T = c1.slider("Maturite (annees)", 0.5, 4.0, 2.0, 0.25,
+                  key="bonus_maturite", bind="query-params")
+    bar = c2.slider("Barriere (% du spot)", 50, 90, 70, 5,
+                    key="bonus_barriere", bind="query-params")
 
     ch, sg = trajectoires(T, bar / 100)
     ST = ch[:, -1].astype(np.float64)

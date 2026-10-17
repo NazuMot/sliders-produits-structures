@@ -18,8 +18,10 @@ def affiche(m):
     st.caption("Pourquoi le choix du modele n'est pas un detail academique : "
                "il change le coupon de plusieurs points.")
 
-    T = st.slider("Maturite (annees)", 0.5, 3.0, 1.0, 0.25)
-    bar = st.slider("Barriere du BRC de reference (%)", 50, 90, 70, 5)
+    T = st.slider("Maturite (annees)", 0.5, 3.0, 1.0, 0.25,
+                  key="labo_maturite", bind="query-params")
+    bar = st.slider("Barriere du BRC de reference (%)", 50, 90, 70, 5,
+                    key="labo_barriere", bind="query-params")
 
     ch_bs, s_bs = sim_bs(S0, T, r, q, vol_atm, n_paths)
     if BATES:
