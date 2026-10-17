@@ -20,12 +20,15 @@ Tom (compte `NazuMot`). **Tout push sur `main` redéploie automatiquement le sit
 
 | Fichier | Rôle |
 |---|---|
-| `app.py` | Interface Streamlit : barre latérale + 12 pages |
+| `app.py` | Point d'entrée : menu `PAGES`, appel de la page choisie, pied de page |
+| `barre.py` | Barre latérale : `barre_laterale()` renvoie tous les réglages de marché (objet `m`) |
+| `communs.py` | Couleurs, `MAX_CACHE`, simulations mises en cache (`sim_bs`, `sim_bates`…) |
+| `vues/*.py` | Une page par fichier, chacune avec une fonction `affiche(m)` |
 | `moteur.py` | Tout le pricing (aucun `import streamlit` ici) |
 | `graphiques.py` | Style et primitives de tracé matplotlib |
-| `requirements.txt` | `streamlit`, `numpy`, `matplotlib` — rien d'autre |
-
-Le dossier `.devcontainer` est inutile mais inoffensif.
+| `requirements.txt` | `streamlit`, `numpy`, `matplotlib`, versions figées — rien d'autre |
+| `tests/verifie.py` | Vérification complète (toutes les pages, deux modèles, chiffres de référence) |
+| `.github/workflows/tests.yml` | Relance `tests/verifie.py` sur GitHub à chaque push |
 
 ## Pages (sélecteur en haut de la barre latérale, dictionnaire `PAGES` dans `app.py`)
 
@@ -34,8 +37,10 @@ Convertible · 4 Autocall Phoenix (avec worst-of 1 à 4 sous-jacents + corrélat
 Certificate · 6 Twin-Win · Laboratoire modèle (Black-Scholes vs Bates) · Les grecques en
 mouvement · Coût de couverture · Glossaire (6 onglets).
 
-Pour ajouter une page : une entrée dans `PAGES` + un bloc `elif produit == ...`. Ne pas toucher
-aux autres pages.
+Pour ajouter une page : un fichier `vues/<nom>.py` avec `def affiche(m):`, puis une entrée dans
+`PAGES` (`app.py`). En tête de `affiche`, la page déballe les réglages dont elle a besoin
+(`r, q = m.r, m.q`). Ne pas toucher aux autres pages. Les tests lisent `PAGES` : une nouvelle page
+est testée automatiquement.
 
 ## Barre latérale (vue de marché unique pour toutes les pages)
 
@@ -57,8 +62,10 @@ spread émetteur + taux de recouvrement, marge banque, nominal, nombre de trajec
   et identité `DI + DO = put vanille` vérifiée. Si on y touche, revalider.
 - `grecques` : différences finies sur formule fermée (delta, gamma, vega /pt, theta /jour, rho /pt).
 
-Chiffres de référence (paramètres par défaut) pour détecter une régression :
-- Capital garanti 5 ans, r = 3 % : participation ≈ 69 %
+Chiffres de référence (paramètres par défaut) pour détecter une régression, contrôlés par
+`tests/verifie.py` :
+- Capital garanti 5 ans, r = 3 %, marge banque 0,8 %/an : participation ≈ 55 %
+  (l'ancien chiffre de 69 % correspondait à une marge de 0,3 %/an)
 - BRC 1 an barrière 70 % : coupon ≈ 5,9 % sous BS plat, ≈ 8,7 % sous Bates
 - Autocall worst-of 3 sous-jacents : coupon et proba de perte montent quand la corrélation baisse
 
@@ -101,11 +108,12 @@ sous l'axe (« où le sous-jacent finit réellement »). Titres de graphes = ce 
 ## Procédure pour chaque modification
 
 1. Modifier.
-2. Vérifier la syntaxe : `python -c "import ast; [ast.parse(open(f).read()) for f in ['app.py','moteur.py','graphiques.py']]"`
-3. Tester **toutes** les pages sous les **deux** modèles avec `streamlit.testing.v1.AppTest`
-   (sélectionner chaque page via le selectbox « Page », puis le radio « Modele de pricing »).
-   Aucune exception tolérée.
-4. Si le pricing a changé : recontrôler les chiffres de référence ci-dessus.
+2. Lancer `python tests/verifie.py` (sur une copie à part) : toutes les pages sous les **deux**
+   modèles, cases décochées puis cochées, plus les chiffres de référence. Aucune exception
+   tolérée. Une nouvelle fonctionnalité derrière un réglage s'ajoute au script.
+3. Si un chiffre de référence change volontairement : mettre à jour le script et ce fichier,
+   en expliquant pourquoi.
+4. Après le push, GitHub relance le même script (onglet Actions du dépôt) : vérifier qu'il est vert.
 5. Si un graphe a changé : le rendre en PNG et le regarder avant de pousser.
 6. Commit clair en français, push sur `main`. Dire à Tom en une phrase ce qui a changé et
    qu'il peut recharger le site d'ici 1 à 2 minutes.

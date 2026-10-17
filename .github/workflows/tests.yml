@@ -1,0 +1,20 @@
+# Relance la verification complete de l'appli a chaque push sur GitHub.
+# Une croix rouge sur le commit = une page plante ou un chiffre de reference a bouge.
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  verifie:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: python tests/verifie.py
