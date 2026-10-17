@@ -1,15 +1,11 @@
-"""Glossaire."""
+"""Glossaire, avec recherche dans les six onglets."""
+
+import unicodedata
 
 import streamlit as st
 
 
-def affiche(m):
-    st.title("Glossaire", help="**Ce que tu trouves ici.** Tout le vocabulaire de l'appli, classe en six onglets : parametres\nde marche, mecaniques produit, grecques, volatilite, modeles, jargon de desk.\n\n**Comment c'est ecrit.** Chaque terme est defini, puis relie a ce qu'il change\nconcretement : sur le prix, sur la couverture, ou sur la conversation avec un client.\n\n**Astuce.** Chaque curseur de l'appli a aussi sa propre infobulle. Le glossaire sert quand\ntu veux le contexte complet d'une notion.")
-    o = st.tabs(["Parametres de marche", "Mecaniques produit", "Les grecques",
-                 "Volatilite", "Modeles", "Jargon de desk"])
-
-    with o[0]:
-        st.markdown("""
+PARAMETRES = """
 ### Taux sans risque (r)
 Carburant du budget option. Pour garantir 1 000 EUR dans 5 ans a 3%, la banque ne met
 que 861 aujourd'hui. Les 139 restants achetent des options. A 0,5%, elle doit mettre 975
@@ -49,10 +45,9 @@ Correction appliquee aux barrieres. Une simulation a pas discrets rate les franc
 entre deux observations : elle sous-estime la probabilite de toucher. Le pont brownien la
 calcule analytiquement entre deux points. Plus rapide **et** plus juste qu'une simulation
 quotidienne.
-""")
+"""
 
-    with o[1]:
-        st.markdown("""
+MECANIQUES = """
 ### Strike
 Niveau de reference qui decide du remboursement. Standard : 100% du spot initial.
 
@@ -105,10 +100,9 @@ basse, il y a presque toujours un trainard, donc coupon eleve et risque eleve.
 **Un produit structure est une dette de la banque**, pas une detention d'actions.
 En 2008, les porteurs de produits Lehman ont tout perdu alors que leurs barrieres
 tenaient. Premier point sur lequel un institutionnel te challengera.
-""")
+"""
 
-    with o[2]:
-        st.markdown("""
+GRECQUES = """
 | Grecque | Ce que c'est | Ce que ca change pour toi |
 |---|---|---|
 | **Delta** | Sensibilite au prix du sous-jacent | Le nombre d'actions que le trader detient pour etre couvert. Il l'ajuste tous les jours : delta-hedging. |
@@ -129,10 +123,9 @@ En theorie de Black-Scholes, une couverture continue et sans frais donne un resu
 exactement nul. Dans la vraie vie, deux fuites : le rebalancement est discret, et chaque
 transaction coute. Vois la page Cout de couverture : l'arbitrage frequence / frais est un
 vrai sujet de desk.
-""")
+"""
 
-    with o[3]:
-        st.markdown("""
+VOLATILITE = """
 ### Volatilite implicite
 **Pas une prevision.** Le prix d'une option exprime dans une autre unite. Une option vaut
 55 EUR, ou elle vaut 22% de vol : meme information.
@@ -166,10 +159,9 @@ indices. Cet ecart s'appelle la **variance risk premium**.
 **C'est la raison d'etre economique des BRC et des autocalls.** Le client capture cette
 prime. Ni hasard ni anomalie : c'est la remuneration de celui qui accepte d'etre expose
 aux krachs. Il gagne neuf annees sur dix, et perd beaucoup la dixieme.
-""")
+"""
 
-    with o[4]:
-        st.markdown("""
+MODELES = """
 ### Black-Scholes
 Une seule volatilite, constante, pour toutes les options d'un meme sous-jacent.
 
@@ -203,10 +195,9 @@ observee. Pour les worst-of, un modele multi-actifs avec correlation calibree.
 
 Les parametres de cette appli sont regles a la main, pas calibres sur un marche reel.
 C'est la difference entre cet outil et un pricer de production.
-""")
+"""
 
-    with o[5]:
-        st.markdown("""
+JARGON = """
 ### Qui fait quoi
 
 | Role | Ce qu'il fait |
@@ -238,4 +229,116 @@ une protection contre la baisse, et le coupon est le prix qu'elle lui paie pour 
 | Wrong-way risk | Le defaut de l'emetteur survient au pire moment, correle au marche. Ignore dans cette appli. |
 | SSPA | Swiss Structured Products Association. Reference du marche suisse, premier marche mondial. |
 | PRIIP / KID | Reglementation europeenne : document d'information standardise pour tout produit structure vendu au retail. |
-""")
+"""
+
+TITRE_AIDE = "**Ce que tu trouves ici.** Tout le vocabulaire de l'appli, classe en six onglets : parametres\nde marche, mecaniques produit, grecques, volatilite, modeles, jargon de desk.\n\n**Comment c'est ecrit.** Chaque terme est defini, puis relie a ce qu'il change\nconcretement : sur le prix, sur la couverture, ou sur la conversation avec un client.\n\n**Astuce.** Chaque curseur de l'appli a aussi sa propre infobulle. Le glossaire sert quand\ntu veux le contexte complet d'une notion.\n\n**Recherche.** Le champ en haut cherche dans les six onglets a la fois, sans tenir compte\ndes accents ni des majuscules, et liste chaque definition trouvee avec son onglet d'origine."
+
+
+ONGLETS = [
+    ("Parametres de marche", PARAMETRES),
+    ("Mecaniques produit", MECANIQUES),
+    ("Les grecques", GRECQUES),
+    ("Volatilite", VOLATILITE),
+    ("Modeles", MODELES),
+    ("Jargon de desk", JARGON),
+]
+
+
+# =====================================================================
+# RECHERCHE
+# =====================================================================
+
+def normalise(texte):
+    """Minuscules, sans accents ni mise en forme : un mot tape avec accent est trouve."""
+    texte = unicodedata.normalize("NFKD", texte.replace("\u2019", "'").replace("\u0153", "oe"))
+    texte = "".join(c for c in texte if not unicodedata.combining(c)).lower()
+    for signe in "*|`#":
+        texte = texte.replace(signe, " ")
+    return " ".join(texte.split())
+
+
+def _cellules(ligne):
+    return [c.strip() for c in ligne.strip().strip("|").split("|")]
+
+
+def decoupe(onglet, texte):
+    """
+    Decoupe un onglet en definitions : une par titre '###', et une par ligne
+    de tableau (chaque ligne d'un tableau definit un terme).
+    """
+    defs, titre, lignes, entete = [], onglet, [], None
+
+    def ferme():
+        corps = "\n".join(lignes).strip("\n")
+        if corps.strip():
+            defs.append({"onglet": onglet, "titre": titre, "corps": corps})
+
+    for ligne in texte.split("\n"):
+        if ligne.startswith("### "):
+            ferme()
+            titre, lignes, entete = ligne[4:].strip(), [], None
+        elif ligne.startswith("|"):
+            cell = _cellules(ligne)
+            if entete is None:
+                entete = cell
+            elif not set("".join(cell)) <= set("-: "):
+                terme = cell[0].replace("**", "")
+                if len(cell) == 2:
+                    corps = cell[1]
+                else:
+                    corps = "\n\n".join(f"**{h}** : {v}" for h, v in zip(entete[1:], cell[1:]))
+                defs.append({"onglet": onglet, "titre": terme, "corps": corps})
+        else:
+            if entete is not None and not ligne.strip():
+                entete = None
+            lignes.append(ligne)
+    ferme()
+    for d in defs:
+        d["cle_titre"] = normalise(d["titre"])
+        d["cle"] = d["cle_titre"] + " " + normalise(d["corps"])
+    return defs
+
+
+DEFINITIONS = [d for nom, texte in ONGLETS for d in decoupe(nom, texte)]
+
+
+def cherche(requete):
+    """Definitions qui contiennent tous les mots de la requete, titres d'abord."""
+    mots = normalise(requete).split()
+    if not mots:
+        return []
+    trouve = [d for d in DEFINITIONS if all(w in d["cle"] for w in mots)]
+    return sorted(trouve, key=lambda d: not all(w in d["cle_titre"] for w in mots))
+
+
+# =====================================================================
+# PAGE
+# =====================================================================
+
+def affiche(m):
+    st.title("Glossaire", help=TITRE_AIDE)
+    requete = st.text_input(
+        "Rechercher dans le glossaire", key="glossaire_recherche", type="search",
+        live=True, placeholder="barriere, skew, coupon, emetteur...",
+        help="Cherche dans les six onglets a la fois, sans tenir compte des accents ni "
+             "des majuscules. Plusieurs mots : seules les definitions qui les contiennent "
+             "tous sont gardees. Les termes dont le titre correspond viennent en premier. "
+             "Efface le champ pour retrouver les onglets.")
+
+    if requete.strip():
+        resultats = cherche(requete)
+        if not resultats:
+            st.info(f"Aucune definition ne contient « {requete.strip()} ». Essaie un mot "
+                    "plus court ou un synonyme : vol, barriere, coupon, emetteur, delta.")
+            return
+        st.caption(f"{len(resultats)} definition(s) trouvee(s) pour « {requete.strip()} »")
+        for d in resultats:
+            with st.container(border=True):
+                st.markdown(f"#### {d['titre']}")
+                st.caption(f"Onglet : {d['onglet']}")
+                st.markdown(d["corps"])
+        return
+
+    for onglet, (nom, texte) in zip(st.tabs([nom for nom, _ in ONGLETS]), ONGLETS):
+        with onglet:
+            st.markdown(texte)

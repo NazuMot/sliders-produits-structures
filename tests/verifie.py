@@ -7,6 +7,8 @@ Verification complete de l'appli, lancee par GitHub a chaque push.
    les cases cochees (les calculs caches derriere une case sont testes aussi).
 2. Les chiffres de reference du CLAUDE.md n'ont pas bouge : s'ils changent,
    c'est que le pricing a change.
+3. La recherche du glossaire et la page Entrainement (chaque reponse et chaque
+   demonstration chiffree, mode hasard, compteur) fonctionnent.
 
 Sort avec le code 1 au premier probleme, ce qui fait echouer le test GitHub.
 """
@@ -105,6 +107,75 @@ for corr in (0.9, 0.3):
 controle("Autocall worst-of 3 : coupon et proba de perte montent quand la correlation baisse",
          res[1][0] > res[0][0] and res[1][1] > res[0][1],
          f"coupon {res[0][0]:.1f} -> {res[1][0]:.1f} %, perte {res[0][1]:.0f} -> {res[1][1]:.0f} %")
+
+# 3. Recherche du glossaire -----------------------------------------------------
+def cherche(mot):
+    return lambda a: widget(a.text_input, "Rechercher").set_value(mot)
+
+
+def nb_resultats(at):
+    for c in at.caption:
+        if "trouvee(s) pour" in c.value:
+            return int(c.value.split()[0])
+    return 0
+
+
+at = ouvre("Glossaire", MODELES[0], [cherche("barriere")])
+n = nb_resultats(at)
+controle("Glossaire : 'barriere' trouve des definitions, les onglets s'effacent",
+         not at.exception and n > 0 and not at.tabs, f"{n} resultats")
+at = ouvre("Glossaire", MODELES[0], [cherche("  BARRIÈRE ")])
+controle("Glossaire : recherche insensible aux accents et a la casse",
+         not at.exception and nb_resultats(at) == n, f"{nb_resultats(at)} resultats")
+at = ouvre("Glossaire", MODELES[0], [cherche("xqzwvk")])
+controle("Glossaire : mot absurde -> message propre",
+         not at.exception and nb_resultats(at) == 0
+         and any("Aucune definition" in i.value for i in at.info))
+at = ouvre("Glossaire", MODELES[0], [cherche("barriere"), cherche("")])
+controle("Glossaire : champ vide -> les six onglets reviennent",
+         not at.exception and len(at.tabs) == 6)
+
+# 4. Page Entrainement ----------------------------------------------------------
+from vues.entrainement import QUESTIONS, CLIENT
+
+N = len(QUESTIONS)
+for modele in MODELES:
+    at = ouvre("Entrainement", modele)
+    rates = []
+    for i, x in enumerate(QUESTIONS):
+        at.selectbox(key="ent_q").set_value(i).run()
+        at.button(key="ent_voir").click().run()
+        # 2 metriques pour le compteur, davantage si la demonstration s'est affichee
+        if at.exception or (x["demo"] and len(at.metric) <= 2):
+            rates.append(f"{i + 1}: " + (at.exception[0].value[:200] if at.exception
+                                         else "demonstration vide"))
+    vues = metriques(at)["Questions vues"]
+    controle(f"{modele.split()[0]:6} | Entrainement : les {N} reponses et demonstrations",
+             not rates and vues == f"{N} / {N}", "; ".join(rates) or f"compteur {vues}")
+
+at = ouvre("Entrainement", MODELES[0],
+           [lambda a: a.selectbox(key="ent_theme").set_value(CLIENT)])
+theme = [i for i, x in enumerate(QUESTIONS) if x["theme"] == CLIENT]
+tirees, ok = [], not at.exception
+for _ in theme:
+    avant = at.selectbox(key="ent_q").value
+    at.button(key="ent_hasard").click().run()
+    q = at.selectbox(key="ent_q").value
+    ok = ok and not at.exception and q != avant and q in theme
+    at.button(key="ent_voir").click().run()
+    tirees.append(q)
+controle("Entrainement : hasard dans le theme, sans repetition avant d'avoir tout vu",
+         ok and len(set(tirees)) == len(theme)
+         and metriques(at)["Vues dans ce theme"] == f"{len(theme)} / {len(theme)}",
+         f"{len(set(tirees))} questions differentes sur {len(theme)}")
+
+avant = at.selectbox(key="ent_q").value
+at.button(key="ent_suivante").click().run()
+suivante = theme[(theme.index(avant) + 1) % len(theme)]
+at.button(key="ent_zero").click().run()
+controle("Entrainement : question suivante et remise a zero du compteur",
+         not at.exception and at.selectbox(key="ent_q").value == suivante
+         and metriques(at)["Questions vues"] == f"0 / {N}")
 
 print()
 if echecs:
