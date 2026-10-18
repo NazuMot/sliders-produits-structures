@@ -27,8 +27,12 @@ Tom (compte `NazuMot`). **Tout push sur `main` redéploie automatiquement le sit
 | `moteur.py` | Tout le pricing (aucun `import streamlit` ici) |
 | `graphiques.py` | Graphes interactifs Altair : `payoff`, `courbes`, `trajectoires`, `barres`, `histogramme`, `affiche` |
 | `requirements.txt` | `streamlit`, `numpy`, `altair` (fourni avec Streamlit), versions figées — rien d'autre |
+| `sales.py` | Outils du Sales : reverse enquiry, où va l'argent, marché secondaire (calcul seul) |
+| `backtest.py`, `calibration.py`, `data/` | Données réelles : backtest Euro Stoxx 50, calibrage Bates sur Eurex |
+| `scripts/recupere_donnees.py` | Refait la photo des données (jamais appelé par l'appli) |
 | `tests/verifie.py` | Vérification complète (toutes les pages, deux modèles, chiffres de référence) |
-| `.github/workflows/tests.yml` | Relance `tests/verifie.py` sur GitHub à chaque push |
+| `tests/valide_*.py` | Validation chiffrée du moteur, de `sales.py` et des données réelles |
+| `.github/workflows/tests.yml` | Relance les quatre scripts de tests sur GitHub à chaque push |
 
 ## Pages (sélecteur en haut de la barre latérale, dictionnaire `PAGES` dans `app.py`)
 
@@ -64,12 +68,72 @@ spread émetteur + taux de recouvrement, marge banque, nominal, nombre de trajec
   et identité `DI + DO = put vanille` vérifiée. Si on y touche, revalider.
 - `grecques` : différences finies sur formule fermée (delta, gamma, vega /pt, theta /jour, rho /pt).
 
+- Ajouts optionnels (valeur par défaut = ancien résultat au bit près, contrôlé par
+  `tests/valide_moteur_produits.py`) :
+  - step-down : `trigger` scalaire ou liste (un niveau par observation, `math.inf` = pas de
+    rappel), `trigger_degressif` ;
+  - indice à décrément : `simule_bs/simule_bates(..., decrement=D)`, D en points/an base 100,
+    q = 0 ; `compare_decrement` sépare effet niveau et effet points ;
+  - Discount Certificate : `discount_certificate` (formule fermée), `discount_mc` ;
+  - corrélation de stress : `simule_panier(..., correlation_stress, seuil_stress)`. Elle FAIT
+    BAISSER coupon et proba de perte du worst-of (moins de dispersion) : skew de corrélation ;
+  - wrong-way : `tire_defaut(..., correlation, chemins)` (copule gaussienne, rho = 0 = tirages
+    actuels), `creance="valeur"`, `profil_brc` (perte dans les pires scénarios). L'effet est
+    dans la queue, le coupon baisse légèrement ;
+  - `grecques_autocall` : grecques du desk avec les mêmes tirages (0,03 à 0,4 s) ; le desk est
+    long vega, long dividendes, court corrélation, theta négatif. Derrière une case + cache.
+- Chiffres de référence : autocall 3 ans trimestriel (BS + skew, q = 2,5 %) coupon 8,75 % p.a. ;
+  décrément 5 points 12,91 % ; worst-of 3, corrélation 60 % : 16,7 % -> 13,0 % avec 90 % en
+  stress ; BRC banque, wrong-way 0,6 : pire 1 % 68,9 -> 81,1 % du nominal.
+
 Chiffres de référence (paramètres par défaut) pour détecter une régression, contrôlés par
 `tests/verifie.py` :
 - Capital garanti 5 ans, r = 3 %, marge banque 0,8 %/an : participation ≈ 55 %
   (l'ancien chiffre de 69 % correspondait à une marge de 0,3 %/an)
 - BRC 1 an barrière 70 % : coupon ≈ 5,9 % sous BS plat, ≈ 8,7 % sous Bates
 - Autocall worst-of 3 sous-jacents : coupon et proba de perte montent quand la corrélation baisse
+
+## Outils du Sales (`sales.py`)
+
+Module de calcul sans interface (aucun `import streamlit`), validé par `tests/valide_sales.py`.
+Vue de marché : `Marche.depuis_barre(m, retro=...)`, les réglages de la barre latérale plus la
+rétrocession distributeur. Avec rétro nulle, ses coupons redonnent **exactement** ceux des pages
+(mêmes trajectoires, même graine) : si une page change sa façon d'appeler le moteur, adapter
+`sales.py`.
+- Reverse enquiry : `brc_barriere`, `brc_strike`, `brc_maturite`, `autocall_barriere_capital`,
+  `autocall_trigger`, `cp_protection`, `cp_cap` -> `Reponse` (possible, valeur, obtenu, message
+  prêt à dire au client, courbe à tracer). Hors d'atteinte : « impossible » + meilleure valeur.
+- Où va l'argent : `cascade_brc`, `cascade_autocall`, `cascade_cp` -> lignes dont la somme vaut le
+  nominal au centime ; `infos["cout_retro_par_pt"]` = coupon perdu par 1 % de rétro par an.
+- Marché secondaire : `valeur_secondaire_brc / _autocall / _cp` (+ `etat_autocall`) -> valeur,
+  prix de rachat (fourchette 1 % par défaut), décomposition temps / sous-jacent / vol / taux /
+  spread. Référence : à t = 0, valeur = nominal - marge - rétro (982 EUR, BRC 1 an).
+- 0,02 à 0,4 s par appel : derrière un bouton et en cache (`Marche` est hachable).
+
+## Données réelles (`data/`, `backtest.py`, `calibration.py`)
+
+- `data/eurostoxx50.csv` : Euro Stoxx 50 quotidien 1986-2026 (prix SX5E, net_return SX5T,
+  vstoxx). Sources STOXX officiel + Yahoo + ETF SXRT.DE pour le net return 2016-2026 (dérive
+  0,48 %/an retirée). `data/options_eurostoxx50.csv` : 122 prix de règlement Eurex OESX du
+  16/10/2026. `data/bates_calibre.json` : paramètres calibrés, réglage `curseurs`, erreurs.
+- L'appli ne va jamais chercher de données en ligne. Refaire la photo :
+  `python scripts/recupere_donnees.py` puis `python calibration.py`, puis mettre à jour les
+  chiffres de référence de `tests/valide_donnees.py`.
+- `backtest.py` : `charge_historique()`, `backtest_autocall(h, ...)`, `backtest_brc(h, ...)`
+  (sous-jacent `prix`, `decrement` 50 pts base 1000 à l'émission, ou `net_return`), un résultat
+  par émission + `.resume`. 5 ms. Ne compte que les produits terminés.
+- `calibration.py` : `prix_bates` / `vol_bates` (formule de Lewis, 1 ms), `charge_parametres()`.
+  Optimiseur Nelder-Mead maison, pas de scipy.
+- Ne pas casser : Bates = Black-Scholes et Merton à 1e-4 près, = Monte Carlo de `simule_bates`
+  à ~1 % ATM ; backtest = `pv_autocall` / `pv_brc` à 1e-9 sur les mêmes chemins.
+- Chiffres de référence : autocall 3 ans trimestriel 100/70/60 mémoire 8 % émis chaque mois
+  depuis 2000 : 286 émissions, 57,7 % rappelés à la 1re date, 3,5 % de pertes, pire cas émis le
+  02/05/2000 (42,7 % rendu). BRC 1 an barrière 70 % continue 7 % : 15,8 % de pertes, pire cas
+  03/03/2008. Calibrage : 0,77 pt de vol (réglage curseurs 0,91).
+- Limites : net return 2016-2026 reconstitué via ETF, pas de SX5GT ; barrière continue =
+  clôtures quotidiennes ; coupon fixe sur tout l'historique ; émissions qui se chevauchent ;
+  saut moyen calibré sur la borne -30 % du curseur ; Feller violé (biais du pas hebdomadaire
+  ~0,2 pt sur les calls hors de la monnaie).
 
 ## Contraintes techniques
 
@@ -124,7 +188,8 @@ l'appli en local.
 ## Procédure pour chaque modification
 
 1. Modifier.
-2. Lancer `python tests/verifie.py` (sur une copie à part) : toutes les pages sous les **deux**
+2. Lancer `python tests/verifie.py` et les trois `tests/valide_*.py` (sur une copie à part) :
+   toutes les pages sous les **deux**
    modèles, cases décochées puis cochées, plus les chiffres de référence. Aucune exception
    tolérée. Une nouvelle fonctionnalité derrière un réglage s'ajoute au script.
 3. Si un chiffre de référence change volontairement : mettre à jour le script et ce fichier,
