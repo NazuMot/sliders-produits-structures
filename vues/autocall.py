@@ -185,6 +185,13 @@ def affiche(m):
 
     st.title("Autocall Phoenix", help="**Ce que c'est.** Le produit phare des desks. Coupons conditionnels, et remboursement\nanticipé automatique si le sous-jacent est au-dessus d'un niveau à une date\nd'observation.\n\n**Les trois niveaux à distinguer.**\n- **Trigger** : au-dessus, le produit s'arrête et le client est remboursé.\n- **Barrière de coupon** : au-dessus, le coupon est payé.\n- **Barrière de capital** : observée à l'échéance seulement ; en dessous, le client encaisse\n  toute la baisse.\n\n**Le piège commercial.** Le rappel anticipé coupe les coupons futurs. Regarde la durée de\nvie moyenne : le produit dure rarement jusqu'au bout.\n\n**Le worst-of.** Active plusieurs sous-jacents : le plus mauvais décide de tout. Le coupon\ngrimpe, et la probabilité de perte aussi. C'est la version réellement dominante sur les\ndesks.\n\n**Les variantes du marché.**\n- **Step-down** : le trigger baisse avec le temps, le rappel devient plus facile.\n- **Indice à décrément** : l'indice réinvestit ses dividendes et retire un montant fixe\n  chaque année. Coupon plus haut, risque plus haut, plus de risque de dividende pour la banque.\n- **Corrélation de stress** : sur un worst-of, la corrélation monte dans les krachs. Le\n  desk qui l'ignore surpaie le client.\n- **Grecques du desk** : ce que la banque doit couvrir une fois le produit vendu.")
     st.caption("Le produit phare des desks.")
+    G.en_30_secondes(
+        "Un coupon à chaque date où le sous-jacent tient au-dessus de la barrière de coupon, "
+        "et son capital rendu dès qu'il repasse au-dessus du niveau de départ.",
+        "Si le sous-jacent finit sous la barrière de capital, le client perd comme lui. Et le "
+        "produit s'arrête souvent tôt : les coupons suivants disparaissent.",
+        "Un client qui pense que le marché va stagner ou monter un peu, et veut un revenu "
+        "régulier.")
     bandeau_modele()
 
     c1, c2, c3 = st.columns(3)
@@ -473,6 +480,17 @@ def affiche(m):
         graphe = escalier(graphe, [tt[j] for j in indices[:-1]], paliers,
                           f"trigger dégressif  {paliers[0]:,.0f} -> {paliers[-1]:,.0f}", T)
     G.affiche(graphe)
+    exemple = (bar_cap - 10) / 100 * S0
+    G.en_clair(
+        f"Pour {G.eur(nominal)} investis : à chaque date d'observation où le "
+        + ("plus mauvais sous-jacent" if n_actifs > 1 else "sous-jacent")
+        + f" est au-dessus de {bar_cp/100*S0:,.0f}, le client touche {G.eur(cpn * nominal)}. "
+        f"Au-dessus de {trigger/100*S0:,.0f}"
+        + (" (un seuil qui baisse avec le temps)" if step_down else "")
+        + f", le produit s'arrête et rend les "
+        f"{G.eur(nominal)} : en moyenne au bout de {G.duree(round(duree, 1))}. À l'échéance, "
+        f"sous {bar_cap/100*S0:,.0f}, il perd comme le sous-jacent : fini à {exemple:,.0f}, il "
+        f"récupère {G.eur(nominal * exemple / S0)}.")
 
     # --- graphe 2 : quand le produit se termine
     probas, vivant = [], np.ones(len(ch), dtype=bool)

@@ -51,7 +51,7 @@ for modele in MODELES:
         at = AppTest.from_file(APP, default_timeout=300)
         at.run()
         at.sidebar.toggle(key="anglais").set_value(True).run()
-        at.sidebar.selectbox(key="page").set_value(TAB.get(page, page)).run()
+        next(r for r in at.sidebar.radio if TAB.get(page, page) in r.options).set_value(TAB.get(page, page)).run()
         at.sidebar.radio(key="modele").set_value(modele).run()
         for c in at.checkbox:
             c.check()
@@ -64,13 +64,13 @@ for modele in MODELES:
 
 at = AppTest.from_file(APP, default_timeout=300)
 at.run()
-at.sidebar.selectbox(key="page").set_value("Atelier Sales").run()
+next(r for r in at.sidebar.radio if "Atelier Sales" in r.options).set_value("Atelier Sales").run()
 at.sidebar.toggle(key="anglais").set_value(True).run()
-p_en = at.sidebar.selectbox(key="page").value
+p_en = at.session_state["page"]
 at.sidebar.toggle(key="anglais").set_value(False).run()
 controle("Bascule FR -> EN -> FR : la page choisie est gardee",
-         not at.exception and p_en == TAB["Atelier Sales"] and at.sidebar.selectbox(key="page").value == "Atelier Sales",
-         f"{p_en} / {at.sidebar.selectbox(key='page').value}")
+         not at.exception and p_en == TAB["Atelier Sales"] and at.session_state["page"] == "Atelier Sales",
+         f"{p_en} / {at.session_state['page']}")
 
 print(f"\n{len(restes)} texte(s) visible(s) qui semblent encore en francais :")
 for t, ou in sorted(restes.items())[:60]:

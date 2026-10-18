@@ -583,3 +583,25 @@ def histogramme(valeurs, n_bins, titre, sous_titre=None, xlabel=None,
                  alt.Tooltip("part:N", title="Part")])]
     couches += _niveaux_verticaux(niveaux, hist.max() * 1.04)
     return alt.layer(*couches).properties(title=_titre(titre, sous_titre), height=hauteur)
+
+
+# --- lecture en clair : ce que les graphes et les pages veulent dire pour le client
+
+def en_30_secondes(gagne, risque, pour_qui):
+    """Encadre en haut d'une page produit : gain, risque, client cible."""
+    with st.container(border=True):
+        st.markdown("**Le produit en 30 secondes**")
+        c1, c2, c3 = st.columns(3)
+        c1.markdown(f":green[**Ce que le client gagne**]  \n{gagne}")
+        c2.markdown(f":red[**Ce qu'il risque**]  \n{risque}")
+        c3.markdown(f"**Pour quel client**  \n{pour_qui}")
+
+
+def en_clair(texte):
+    """Phrase sous un graphe : ce qu'il dit, en euros, avec les reglages du moment."""
+    st.markdown(f":material/lightbulb: **En clair.** {texte}")
+
+
+def duree(T):
+    """2.0 -> '2 ans', 0.5 -> '0.5 an'."""
+    return f"{T:g} an" if T < 2 else f"{T:g} ans"

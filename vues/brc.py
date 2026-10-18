@@ -14,6 +14,13 @@ def affiche(m):
 
     st.title("Barrier Reverse Convertible", help="**Ce que c'est.** Un coupon garanti élevé, et le capital remboursé *sauf* si le sous-jacent\nfranchit la barrière ET finit sous le strike.\n\n**Comment c'est construit.** Une obligation, plus la vente par le client d'un put\ndown-and-in à la banque.\n\n**Le point essentiel.** Le coupon n'est pas un intérêt. C'est la prime que la banque paie au\nclient pour l'assurer contre la baisse. Coupon élevé = sinistre probable, jamais bonne\naffaire.\n\n**Pourquoi un client l'achète.** Vue neutre : il pense que le sous-jacent ne va pas\nbeaucoup bouger et se fait payer pour ça.\n\n**Ce qu'il faut regarder.** Le graphe des trajectoires : deux chemins peuvent finir au même\nniveau avec des résultats différents. Le chemin compte, pas seulement l'arrivée.")
     st.caption("Le client ne reçoit pas un intérêt. Il encaisse une prime d'assurance.")
+    G.en_30_secondes(
+        "Un coupon élevé, payé quoi qu'il arrive, et son capital si le sous-jacent ne baisse "
+        "pas trop.",
+        "S'il passe un jour sous la barrière et finit sous le strike, le client perd comme le "
+        "sous-jacent. Il ne profite jamais de la hausse au-delà du coupon.",
+        "Un client qui pense que le marché va peu bouger, et accepte un risque de baisse en "
+        "échange d'un revenu.")
     bandeau_modele()
 
     c1, c2, c3 = st.columns(3)
@@ -73,6 +80,15 @@ def affiche(m):
         niveaux_h=[(plafond, f"plafond  {plafond:,.0f}", G.GAIN)],
         legende_zones=True)
     G.affiche(graphe)
+    exemple = (min(bar, strike) - 10) / 100 * S0
+    G.en_clair(
+        f"Pour {G.eur(nominal)} investis sur {G.duree(T)} : le client touche "
+        f"{G.eur(cpn * nominal * T)} de coupon quoi qu'il arrive. Il récupère tout son capital, "
+        f"sauf si le sous-jacent passe un jour sous {bar/100*S0:,.0f} et finit sous "
+        f"{strike/100*S0:,.0f} : fini à {exemple:,.0f}, il ne récupère que "
+        f"{G.eur(nominal * exemple / (strike / 100 * S0) + cpn * nominal * T)}, coupon compris. "
+        f"C'est ce qui arrive dans {((1-p_no)*(ST < strike/100*S0)).mean()*100:,.0f} % des "
+        "scénarios simulés.")
 
     # --- graphe 2 : deux clients, meme niveau final, resultats differents
     cible = 0.88 * S0

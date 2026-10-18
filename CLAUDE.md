@@ -38,7 +38,7 @@ Tom (compte `NazuMot`). **Tout push sur `main` redéploie automatiquement le sit
 | `tests/valide_*.py` | Validation chiffrée du moteur, de `sales.py` et des données réelles |
 | `.github/workflows/tests.yml` | Relance les quatre scripts de tests sur GitHub à chaque push |
 
-## Pages (sélecteur en haut de la barre latérale, dictionnaire `PAGES` dans `app.py`)
+## Pages (menu par étapes en haut de la barre latérale, `PAGES` et `ETAPES` dans `principal.py`)
 
 Accueil · Comparateur des produits · Atelier Sales · 1 Tracker · 2 Capital Protection ·
 3 Barrier Reverse Convertible (+ case wrong-way risk) · 4 Autocall Phoenix (worst-of 1 à 4
@@ -50,8 +50,14 @@ chiffrée, mode hasard, compteur) · Glossaire (6 onglets + recherche insensible
 
 Le détail des pages ajoutées le 18/10/2026 est dans la section « Pages enrichies » plus bas.
 
+Menu (demande de Tom, 18/10/2026) : une liste de boutons par étape, `ETAPES` = Commencer ·
+Comprendre les produits · Vendre et s'entraîner · Côté desk. La page affichée est dans
+`st.session_state.page` et dans l'adresse (`?page=...`, liens partagés). Les tests choisissent une
+page en cliquant le bouton du menu : `next(r for r in at.sidebar.radio if page in r.options)`, et
+le modèle par `at.sidebar.radio(key="modele")`.
+
 Pour ajouter une page : un fichier `vues/<nom>.py` avec `def affiche(m):`, puis une entrée dans
-`PAGES` (`principal.py`). En tête de `affiche`, la page déballe les réglages dont elle a besoin
+`PAGES` **et** dans une étape de `ETAPES` (`principal.py`). En tête de `affiche`, la page déballe les réglages dont elle a besoin
 (`r, q = m.r, m.q`). Ne pas toucher aux autres pages. Les tests lisent `PAGES` : une nouvelle page
 est testée automatiquement.
 
@@ -286,6 +292,11 @@ sous le niveau survolé. Titres de graphes = ce que le graphe *montre* (« 41 % 
 franchissent la barrière »), pas ce qu'il contient. Pour regarder un graphe avant de pousser :
 le rendre en PNG avec `vl-convert-python` (outil de test, pas dans requirements.txt) ou ouvrir
 l'appli en local.
+
+Lisibilité (demande de Tom, 18/10/2026) : chaque page produit a, sous son titre,
+`G.en_30_secondes(gagne, risque, pour_qui)` (texte fixe, lisible sans ouvrir l'aide du titre), et
+sous son graphe de payoff `G.en_clair(...)` : une phrase en euros avec les réglages du moment
+(« Pour 1 000 EUR investis sur 2 ans : ... »). Un nouveau produit suit ce modèle.
 
 ## Procédure pour chaque modification
 

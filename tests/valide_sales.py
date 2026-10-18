@@ -145,8 +145,8 @@ else:
                      "2 - Capital Protection"):
             at = AppTest.from_file(APP, default_timeout=300)
             at.run()
-            at.sidebar.selectbox[0].set_value(page)
-            at.sidebar.radio[0].set_value(modele)
+            next(r for r in at.sidebar.radio if page in r.options).set_value(page)
+            at.sidebar.radio(key="modele").set_value(modele)
             at.run()
             lu.update({m.label: m.value for m in at.metric})
         attendu = f"{S.coupon_brc(mk, 1.0, 0.70)*100:,.2f}% p.a."

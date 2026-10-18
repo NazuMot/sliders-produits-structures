@@ -14,6 +14,12 @@ def affiche(m):
 
     st.title("Twin-Win", help="**Ce que c'est.** Le client gagne à la hausse ET à la baisse modérée, tant que la barrière\ntient.\n\n**Comment c'est construit.** Tracker plus achat d'un put down-and-out. Le put transforme la\nbaisse en gain, et s'évapore si la barrière casse.\n\n**Pourquoi un client l'achète.** Il pense que le marché va bouger sans savoir dans quel sens,\nmais sans krach.\n\n**Le point dangereux.** Entre la barrière et le niveau initial, le client gagne. Sous la\nbarrière, il perd d'un coup toute cette zone de gain. La discontinuité est brutale : c'est\nle profil le plus difficile à bien expliquer à un client.")
     st.caption("Gagne à la hausse ET à la baisse modérée, tant que la barrière tient.")
+    G.en_30_secondes(
+        "La hausse du sous-jacent, et aussi un gain sur une baisse modérée, tant que la "
+        "barrière n'est jamais touchée.",
+        "Si la barrière casse, le gain sur la baisse disparaît d'un coup et le client perd "
+        "comme le sous-jacent. C'est le profil le plus brutal à expliquer.",
+        "Un client qui attend du mouvement sans savoir dans quel sens, mais pas de krach.")
     bandeau_modele()
 
     c1, c2 = st.columns(2)
@@ -60,6 +66,13 @@ def affiche(m):
         notes=[(bar / 100 * S0, y_bar, "chute brutale\nsi la barrière casse", G.PERTE, 10, -10)],
         legende_zones=True)
     G.affiche(graphe)
+    d = round((100 - bar) / 2)
+    G.en_clair(
+        f"Pour {G.eur(nominal)} investis sur {G.duree(T)} : si le sous-jacent ne passe jamais "
+        f"sous {bar/100*S0:,.0f}, une baisse de {d} % rapporte "
+        f"{G.eur(nominal * (1 + part_bas * d / 100))} et une hausse de {d} % "
+        f"{G.eur(nominal * (1 + d / 100))}. Si la barrière casse, la même baisse de {d} % fait "
+        f"perdre : le client récupère {G.eur(nominal * (1 - d / 100))}.")
 
     st.info(
         "**Décomposition** : tracker plus achat d'un put down-and-out. Le put transforme "

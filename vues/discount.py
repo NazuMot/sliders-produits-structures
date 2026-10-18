@@ -15,6 +15,13 @@ def affiche(m):
 
     st.title("Discount Certificate", help="**Ce que c'est.** Le client achète le sous-jacent moins cher que le marché (la décote),\nen échange d'un plafond : à l'échéance il reçoit le sous-jacent, au plus au niveau du cap.\n\n**Comment c'est construit.** Détention du sous-jacent sans ses dividendes, et vente par le\nclient d'un call de strike égal au cap. Deux sources financent la décote : les dividendes\nabandonnés et la prime du call vendu.\n\n**Pourquoi un client l'achète.** Vue neutre à modérément haussière. Il gagne si le marché\nmonte un peu, stagne, ou même baisse moins que la décote. Il renonce à la hausse au-delà\ndu cap. C'est l'alternative à l'achat direct pour un client qui serait de toute façon entre\ndans le titre.\n\n**Le levier de vente.** Plus la vol est haute, plus le call vendu vaut cher, plus la décote\nest forte. Un Discount se vend quand la vol est élevée.\n\n**Ce qu'il faut regarder.** Le point mort (le niveau sous lequel le client perd) contre la\nbande de densité : où le sous-jacent finit réellement. Et le second graphe : un cap plus\nbas achète de la protection et coûte du potentiel.")
     st.caption("Le sous-jacent moins cher que le marché, avec un plafond.")
+    G.en_30_secondes(
+        "Le sous-jacent acheté moins cher que le marché : il gagne s'il monte un peu, s'il "
+        "stagne, et même s'il baisse moins que la remise.",
+        "Le gain est plafonné au niveau du cap. Sous le point mort, le client perd comme le "
+        "sous-jacent (un peu moins, grâce à la remise).",
+        "Un client qui voulait de toute façon acheter le titre, et pense qu'il ne va pas "
+        "beaucoup monter.")
     bandeau_modele()
 
     c1, c2 = st.columns(2)
@@ -76,6 +83,12 @@ def affiche(m):
         notes=[(K, maxi, f"cap  {K:,.0f}", G.PRODUIT, 6, -6)],
         montrer_points_morts=False, legende_zones=True)
     G.affiche(graphe)
+    G.en_clair(
+        f"Pour {G.eur(nominal)} investis sur {G.duree(T)} : le client achète le sous-jacent à "
+        f"{prix:,.1f} au lieu de {S0:,.0f}. Il gagne tant qu'il finit au-dessus de {prix:,.1f}, "
+        f"au maximum {G.eur(maxi)} s'il finit au-dessus du cap {K:,.0f}. S'il baisse de 20 %, "
+        f"le client récupère {G.eur(unites * min(0.8 * S0, K))}, contre {G.eur(nominal * 0.8)} "
+        "en direct.")
 
     # --- graphe 2 : le choix du cap
     caps = np.arange(70, 131, 1)

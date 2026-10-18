@@ -15,6 +15,13 @@ def affiche(m):
 
     st.title("Capital Protection Certificate", help="**Ce que c'est.** Le client récupère au minimum son capital à l'échéance, et participe à une\npartie de la hausse.\n\n**Comment c'est construit.** Une obligation zéro-coupon qui reconstitue le capital, plus un\ncall avec ce qui reste du budget.\n\n**Le mécanisme clé.** La participation n'est pas choisie, elle est calculée. La banque place\njuste ce qu'il faut pour rembourser le nominal ; ce qui reste achète des options. Plus les\ntaux sont hauts, plus ce reste est gros, plus la participation monte.\n\n**Pourquoi un client l'achète.** Vue haussière, mais refus de risquer le capital.\n\n**Ce qu'il faut tester.** Baisse les taux dans la barre latérale et regarde la participation\ns'effondrer. C'est exactement pourquoi ces produits ont quasiment disparu entre 2015 et\n2021, avant de revenir avec la remontée des taux.")
     st.caption("La participation n'est pas un choix commercial. C'est un reste de budget.")
+    G.en_30_secondes(
+        "Une part de la hausse du sous-jacent (la participation), sans risquer son capital "
+        "à l'échéance.",
+        "De ne toucher qu'une partie de la hausse, parfois plafonnée, et rien si le marché "
+        "baisse. La garantie ne vaut qu'à l'échéance, et tant que la banque ne fait pas "
+        "faillite.",
+        "Un client qui croit à la hausse mais refuse de perdre son capital.")
     bandeau_modele()
 
     c1, c2, c3 = st.columns(3)
@@ -77,6 +84,12 @@ def affiche(m):
                     f"plancher  {nominal*protection/100:,.0f}", G.GAIN)],
         legende_zones=True)
     G.affiche(graphe)
+    hausse = min(0.3, cap / 100 - 1)
+    G.en_clair(
+        f"Pour {G.eur(nominal)} investis sur {G.duree(T)} : le client récupère au moins "
+        f"{G.eur(nominal * protection / 100)} à l'échéance, même si le marché s'effondre. Si le "
+        f"sous-jacent monte de 30 %, il récupère {G.eur(nominal * (protection / 100 + part * hausse))}, "
+        f"contre {G.eur(nominal * 1.3)} en direct.")
 
     st.subheader("Sensibilité aux taux")
     lignes = []

@@ -14,6 +14,13 @@ def affiche(m):
 
     st.title("Bonus Certificate", help="**Ce que c'est.** Un niveau de remboursement minimum (le bonus) tant que la barrière n'est\njamais touchée, plus toute la hausse du sous-jacent sans plafond.\n\n**Comment c'est construit.** Détention du sous-jacent sans dividendes, plus achat d'un put\ndown-and-out. Les dividendes abandonnés financent le put.\n\n**Ce qui le distingue du BRC.** Pas de plafond à la hausse : si le sous-jacent explose, le\nclient suit.\n\n**Pourquoi un client l'achète.** Vue neutre à haussière, avec l'envie de garder le potentiel\nde hausse.\n\n**À ne jamais oublier.** La protection est conditionnelle. Si la barrière casse, le bonus\ndisparaît définitivement et le client se retrouve avec un simple tracker. Ce n'est pas une\ngarantie.")
     st.caption("Un niveau bonus garanti si la barrière tient, hausse illimitée.")
+    G.en_30_secondes(
+        "Un rendement minimum (le bonus) tant que la barrière n'est jamais touchée, et toute "
+        "la hausse du sous-jacent, sans plafond.",
+        "Si le sous-jacent passe une seule fois sous la barrière, le bonus disparaît : le "
+        "client suit alors toute la baisse. Il renonce aussi aux dividendes.",
+        "Un client qui pense que le marché va stagner ou monter, sans vouloir plafonner son "
+        "gain.")
     bandeau_modele()
 
     c1, c2 = st.columns(2)
@@ -57,6 +64,13 @@ def affiche(m):
         niveaux_h=[(nominal * bonus, f"bonus  {nominal*bonus:,.0f}", G.GAIN)],
         legende_zones=True)
     G.affiche(graphe)
+    G.en_clair(
+        f"Pour {G.eur(nominal)} investis sur {G.duree(T)} : si le sous-jacent ne passe jamais "
+        f"sous {bar/100*S0:,.0f}, le client récupère au moins {G.eur(nominal * bonus)}, et "
+        f"{G.eur(max(nominal * 1.3, nominal * bonus))} si le marché monte de 30 %. S'il passe "
+        f"une seule fois dessous, le bonus disparaît : fini à -20 %, il récupère "
+        f"{G.eur(nominal * 0.8)}. La barrière casse dans {(1-p_no.mean())*100:,.0f} % des "
+        "scénarios simulés.")
 
     st.info(
         "**Décomposition** : détention du sous-jacent sans dividendes, plus achat d'un put "

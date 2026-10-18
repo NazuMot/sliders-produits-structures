@@ -50,8 +50,8 @@ def ouvre(page, modele=MODELES[0], reglages=None, query=None):
     for k, v in (query or {}).items():
         at.query_params[k] = v
     at.run()
-    at.sidebar.selectbox[0].set_value(page)
-    at.sidebar.radio[0].set_value(modele)
+    next(r for r in at.sidebar.radio if page in r.options).set_value(page)
+    at.sidebar.radio(key="modele").set_value(modele)
     at.run()
     for regle in reglages or []:
         regle(at)
@@ -242,7 +242,7 @@ for modele, avant in ((MODELES[0], []), (MODELES[1], [lambda a: a.slider(key="ka
     at.button(key="labo_appliquer").click().run()
     valeurs = {k: at.slider(key=k).value for k in BARRE} if not at.exception else {}
     controle(f"{modele.split()[0]:6} | bouton Appliquer : barre latérale sous Bates, valeurs calibrees",
-             not at.exception and at.sidebar.radio[0].value == MODELES[1]
+             not at.exception and at.sidebar.radio(key="modele").value == MODELES[1]
              and all(abs(valeurs[k] - v) < 1e-9 for k, v in BARRE.items())
              and len(at.success) == 1, erreur(at) or str(valeurs))
     lien = {k: at.query_params.get(k, [""])[-1] for k in ["modele", *BARRE]}
@@ -255,7 +255,7 @@ for modele, avant in ((MODELES[0], []), (MODELES[1], [lambda a: a.slider(key="ka
              not at.exception and all(abs(at.slider(key=k).value - v) < 1e-9 for k, v in BARRE.items())
              and not at.success, erreur(at))
 
-at.sidebar.selectbox[0].set_value("3 - Barrier Reverse Convertible").run()
+next(r for r in at.sidebar.radio if "3 - Barrier Reverse Convertible" in r.options).set_value("3 - Barrier Reverse Convertible").run()
 c = nombre(metriques(at)["Coupon équitable"].value) if not at.exception else 0
 controle("après calibrage, la page BRC price sous Bates calibré", not at.exception and c > 0,
          erreur(at) or f"coupon {c:.2f} %")

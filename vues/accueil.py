@@ -4,7 +4,7 @@ import streamlit as st
 
 
 def affiche(m):
-    st.title("Sliders Produits Structurés", help="**Ce que fait cet outil.** Il calcule ce qu'un desk peut offrir sur sept produits structurés,\nà partir des conditions de marché que tu règles à gauche.\n\n**Le point essentiel.** Rien n'est choisi à la main : la participation d'un capital garanti\net le coupon d'un BRC ou d'un autocall sont des *résultats*, pas des paramètres. Ils\ndécoulent du budget disponible, exactement comme sur un desk.\n\n**Par où commencer.** Le Comparateur pour la vue d'ensemble, puis les pages 1 à 6 dans\nl'ordre : chaque produit ajoute une brique au précédent.")
+    st.title("Sliders Produits Structurés", help="**Ce que fait cet outil.** Il calcule ce qu'un desk peut offrir sur sept produits structurés,\nà partir des conditions de marché que tu règles à gauche.\n\n**Le point essentiel.** Rien n'est choisi à la main : la participation d'un capital garanti\net le coupon d'un BRC ou d'un autocall sont des *résultats*, pas des paramètres. Ils\ndécoulent du budget disponible, exactement comme sur un desk.\n\n**Par où commencer.** Le Comparateur pour la vue d'ensemble, puis les pages 1 à 7 dans\nl'ordre : chaque produit ajoute une brique au précédent.")
     st.markdown("Tom Uzan")
 
     st.markdown("---")

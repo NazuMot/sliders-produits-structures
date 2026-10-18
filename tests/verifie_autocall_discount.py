@@ -51,8 +51,8 @@ def controle(nom, ok, detail=""):
 def ouvre(page, modele, reglages=()):
     at = AppTest.from_file(APP, default_timeout=300)
     at.run()
-    at.sidebar.selectbox[0].set_value(page)
-    at.sidebar.radio[0].set_value(modele)
+    next(r for r in at.sidebar.radio if page in r.options).set_value(page)
+    at.sidebar.radio(key="modele").set_value(modele)
     at.run()
     for regle in reglages:
         regle(at)

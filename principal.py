@@ -11,11 +11,10 @@ from vues import (accueil, comparateur, atelier_sales, tracker, capital_protecti
                   couverture, entrainement, glossaire)
 
 # Pour ajouter une page : un fichier dans vues/ avec une fonction affiche(m),
-# puis une entree ici. L'ordre du dictionnaire est celui du menu.
+# puis une entree ici et dans ETAPES. L'ordre du dictionnaire est celui du menu.
 PAGES = {
     "Accueil": accueil,
     "Comparateur des produits": comparateur,
-    "Atelier Sales": atelier_sales,
     "1 - Tracker Certificate": tracker,
     "2 - Capital Protection": capital_protection,
     "3 - Barrier Reverse Convertible": brc,
@@ -23,19 +22,54 @@ PAGES = {
     "5 - Bonus Certificate": bonus,
     "6 - Twin-Win": twin_win,
     "7 - Discount Certificate": discount,
+    "Atelier Sales": atelier_sales,
+    "Entraînement": entrainement,
+    "Glossaire": glossaire,
     "Backtest historique": backtest,
     "Laboratoire modèle": laboratoire,
     "Les grecques en mouvement": grecques,
     "Coût de couverture": couverture,
-    "Entraînement": entrainement,
-    "Glossaire": glossaire,
 }
+
+# Le menu, range par etapes : une liste de boutons par etape.
+ETAPES = {
+    "Commencer": ["Accueil", "Comparateur des produits"],
+    "Comprendre les produits": [p for p in PAGES if p[0].isdigit()],
+    "Vendre et s'entraîner": ["Atelier Sales", "Entraînement", "Glossaire"],
+    "Côté desk": ["Backtest historique", "Laboratoire modèle", "Les grecques en mouvement",
+                  "Coût de couverture"],
+}
+
+
+def _choisit(cle):
+    """Clic dans le menu d'une etape : devient la page affichee."""
+    st.session_state.page = st.session_state[cle]
+
+
+def menu():
+    """
+    Menu par etapes dans la barre laterale. La page choisie est gardee dans
+    st.session_state.page et dans l'adresse (?page=...), pour les liens partages.
+    """
+    if st.session_state.get("page") not in PAGES:
+        demandee = st.query_params.get("page")
+        st.session_state.page = demandee if demandee in PAGES else next(iter(PAGES))
+    page = st.session_state.page
+    for i, (etape, noms) in enumerate(ETAPES.items()):
+        cle = f"menu_{i}"
+        # une seule etape a une page cochee : celle de la page affichee
+        st.session_state[cle] = page if page in noms else None
+        st.sidebar.radio(etape, noms, key=cle, on_change=_choisit, args=(cle,))
+    if page == next(iter(PAGES)):
+        st.query_params.pop("page", None)
+    else:
+        st.query_params["page"] = page
+    return page
 
 
 def lance():
     """Affiche la page choisie dans le menu, puis le pied de page."""
-    page = PAGES[st.sidebar.selectbox("Page", list(PAGES.keys()), index=0,
-                                      key="page", bind="query-params")]
+    page = PAGES[menu()]
     m = barre_laterale()
     page.affiche(m)
 

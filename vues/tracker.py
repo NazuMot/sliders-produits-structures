@@ -13,6 +13,12 @@ def affiche(m):
 
     st.title("Tracker Certificate", help="**Ce que c'est.** Un produit qui suit le sous-jacent a 100%, à la hausse comme à la baisse.\nPas de protection, pas de coupon.\n\n**Comment c'est construit.** Une simple exposition linéaire. Les dividendes du sous-jacent\nrestent à la banque et financent la structure et les frais.\n\n**Pourquoi un client l'achète.** Pour *l'accès*, pas pour le rendement : un panier\nthématique, un indice sur mesure, un marché difficile d'accès, en une seule ligne de\nportefeuille.\n\n**Ce qu'il faut regarder.** L'écart entre la courbe du produit et la détention directe :\nc'est le coût cumulé des frais et des dividendes abandonnés.\n\n**Le risque à nommer.** Le client est créancier de la banque, il ne détient pas les actions.\nC'est la différence majeure avec un ETF.")
     st.caption("Exposition linéaire. Produit d'accès, pas produit de rendement.")
+    G.en_30_secondes(
+        "Toute la hausse du sous-jacent, en une seule ligne de portefeuille : un indice, un "
+        "panier ou un thème difficile d'accès autrement.",
+        "Toute la baisse, sans aucune protection, plus les frais et les dividendes "
+        "abandonnés. Et la faillite de la banque : le client ne détient pas les actions.",
+        "Un client qui veut un accès simple à un marché ou à un thème, pas un rendement.")
 
     c1, c2, c3 = st.columns(3)
     T = c1.slider("Maturité (années)", 1.0, 10.0, 3.0, 0.5,
@@ -41,6 +47,13 @@ def affiche(m):
         niveaux=[(S0, f"départ  {S0:,.0f}")],
         echantillon=trajectoires(T, 1.0)[0][:, -1], legende_zones=True)
     G.affiche(graphe)
+    haut, bas = (nominal * (1 + participation / 100 * p) * (1 - frais_pa / 100 * T)
+                 for p in (0.2, -0.2))
+    G.en_clair(
+        f"Pour {G.eur(nominal)} investis sur {G.duree(T)} : si le sous-jacent monte de 20 %, "
+        f"le client récupère {G.eur(haut)} ; s'il baisse de 20 %, {G.eur(bas)}. En direct, ce "
+        f"serait {G.eur(nominal * 1.2)} et {G.eur(nominal * 0.8)} : l'écart vient "
+        + ("des frais." if participation == 100 else "des frais et de la participation."))
 
     st.table([{"Sous-jacent": f"{p:+d}%",
                "Tracker": f"{nominal*(1+participation/100*p/100)*(1-frais_pa/100*T):,.0f}",
