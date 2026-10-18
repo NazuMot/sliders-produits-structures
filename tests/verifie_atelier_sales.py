@@ -202,8 +202,8 @@ at, rep, s = demande(A.CP, "cap", 3.0)
 controle("Capital Protection 300 % de participation : impossible, meilleur cap affiche",
          not rep.possible and any("Impossible" in x.value for x in at.error)
          and metriques(at)["Obtenu"] == f"{rep.obtenu * 100:,.0f}%", metriques(at)["Obtenu"])
-at, rep, s = demande(A.AC, "barriere_capital", 0.08, BATES)
-controle("Bates | Autocall 8 % : impossible avec 1 % de retro, meilleure barriere affichee",
+at, rep, s = demande(A.AC, "barriere_capital", 0.11, BATES)
+controle("Bates | Autocall 11 % : impossible avec 1 % de retro, meilleure barriere affichee",
          not rep.possible and any("Impossible" in x.value for x in at.error),
          f"au mieux {rep.obtenu * 100:.2f} %")
 at, rep, s = demande(A.BRC, "barriere", 0.01)
@@ -275,8 +275,8 @@ for s in (s_brc, s_ac, A.Structure(A.CP, 5.0, protection=0.95, cap=1.6)):
 
 at = ouvre(A.BRC, A.ARGENT, BS, [lambda a: a.slider(key="as_retro").set_value(0.0)])
 c = A._cascade.__wrapped__(MK[BS].avec(retro=0.0), s_brc)
-controle("Retro nulle : le coupon est celui de la page BRC (9.25 % p.a.)",
-         metriques(at)["Coupon offert"] == pa(S.coupon_brc(S.Marche(), 1.0, 0.70)) == "9.25% p.a.",
+controle("Retro nulle : le coupon est celui de la page BRC (7.84 % p.a., vol locale)",
+         metriques(at)["Coupon offert"] == pa(S.coupon_brc(S.Marche(), 1.0, 0.70)) == "7.84% p.a.",
          metriques(at)["Coupon offert"])
 
 
@@ -291,7 +291,8 @@ def revente(produit, reglages, modele=BS):
 
 a_zero = [lambda a: a.slider(key="as_sec_mois").set_value(0),
           lambda a: a.slider(key="as_sec_niveau").set_value(100)]
-for produit, attendu in [(A.BRC, 982), (A.AC, 946), (A.CP, 910)]:
+# autocall : marge et retro sur la duree de vie attendue (~0,9 an), pas sur 3 ans
+for produit, attendu in [(A.BRC, 982), (A.AC, 983), (A.CP, 910)]:
     at, m = revente(produit, a_zero)
     controle(f"{produit[:18]:18} a l'emission : valeur = nominal - marge - retro = {attendu} EUR",
              not at.exception and m["Valeur juste"] == eur(attendu)

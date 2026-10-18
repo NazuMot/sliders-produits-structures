@@ -142,6 +142,71 @@ def simule_bs(spot, T, r, q, sigma, n_paths, pas_par_an=52, seed=42, decrement=0
     return np.hstack([np.full((ch.shape[0], 1), spot, dtype=np.float32), ch]), sigma
 
 
+PENTE_VOL_LOCALE = 1.9
+
+
+def simule_lv(spot, T, r, q, vol_atm, skew_pts, n_paths, pas_par_an=52, seed=42,
+              pente=PENTE_VOL_LOCALE, decrement=0.0):
+    """
+    Black-Scholes + skew en VOLATILITE LOCALE : la vol de chaque pas depend du
+    niveau atteint par la trajectoire,
+        sigma(S, t) = vol_atm + pente * skew * ln(F(t) / S) / 0.10
+    (bornee entre 5 % et 150 %), F(t) etant le forward.
+
+    Pourquoi : l'ancienne methode prenait UNE vol par produit, lue sur le skew
+    au niveau de la barriere. Une barriere plus basse recevait donc une vol
+    plus haute, et des que le skew etait sensible le coupon d'un autocall
+    montait quand on baissait la barriere de capital : le sens s'inversait.
+    Ici les memes trajectoires servent pour toutes les barrieres, le
+    franchissement d'un niveau bas se fait avec la vol qui regne a ce niveau,
+    et le coupon baisse bien quand la protection augmente.
+
+    pente = 1,9 : la vol locale doit pencher environ deux fois plus que la vol
+    implicite pour la reproduire (regle classique). Avec skew 2, les vols
+    implicites des puts 80/90/100 % a 3 ans sortent a 25,9 / 23,9 / 22,0 %
+    pour une cible de 26 / 24 / 22 %. Avec un skew tres fort (6), les ailes
+    sortent moins pentues que la cible.
+
+    decrement > 0 : indice a decrement (D points par an, q = 0), meme regle que
+    simule_bs : S(k+1) = S(k) * rendement - D * dt, borne a 0.
+
+    Retourne (chemins, sigma_pas) comme simule_bates : le pont brownien
+    utilise la vol de chaque pas. skew_pts = 0 : exactement simule_bs.
+    """
+    if skew_pts == 0:
+        return simule_bs(spot, T, r, q, vol_atm, n_paths, pas_par_an, seed, decrement=decrement)
+    n_steps = nb_pas(T, pas_par_an)
+    rng = np.random.default_rng(seed)
+    dt = T / n_steps
+    half = max(n_paths // 2, 1)
+    z = rng.standard_normal((half, n_steps), dtype=np.float32)
+    z = np.vstack([z, -z])
+    a = np.float32(pente * skew_pts / 100.0 / 0.10)
+    racine_dt = np.float32(math.sqrt(dt))
+    ch = np.empty((z.shape[0], n_steps + 1), dtype=np.float32)
+    sg = np.empty((z.shape[0], n_steps), dtype=np.float32)
+    ch[:, 0] = spot
+    niveau = np.full(z.shape[0], np.float32(spot), dtype=np.float32)
+    for k in range(n_steps):
+        fwd = (forward_decrement(spot, k * dt, r, decrement, q) if decrement > 0
+               else spot * math.exp((r - q) * k * dt))
+        x = np.log(np.maximum(niveau, np.float32(1e-6)))
+        s = np.clip(np.float32(vol_atm) + a * (np.float32(math.log(max(fwd, 1e-6))) - x),
+                    0.05, 1.5).astype(np.float32)
+        sg[:, k] = s
+        niveau = niveau * np.exp((np.float32(r - q) - np.float32(0.5) * s * s) * np.float32(dt)
+                                 + s * racine_dt * z[:, k])
+        if decrement > 0:
+            niveau = np.maximum(niveau - np.float32(decrement * dt), np.float32(0.0))
+        ch[:, k + 1] = niveau
+    if decrement == 0:
+        # recalage du forward date par date (bruit Monte Carlo) : le prix d'un
+        # forward reste exact, comme avec les variables antithetiques en BS pur
+        forward = spot * np.exp((r - q) * dt * np.arange(n_steps + 1))
+        ch *= (forward / ch.mean(axis=0, dtype=np.float64)).astype(np.float32)
+    return ch, sg
+
+
 def _decrement_bs(incr, spot, decrement, dt):
     """
     Indice a decrement :   dS = (r S - D) dt + sigma S dW
@@ -747,13 +812,26 @@ def pv_autocall(chemins, T, r, nominal, n_obs, trigger, bar_cp, bar_cap,
 
 
 def coupon_autocall(chemins, T, r, nominal, n_obs, trigger, bar_cp, bar_cap,
-                    memoire, marge_pa, tau=None, recovery=0.4, spot0=S0):
+                    memoire, marge_pa, tau=None, recovery=0.4, spot0=S0, marge_sur="vie"):
+    """
+    Coupon par observation qui equilibre le produit, marge deduite.
+
+    marge_sur : sur quelle duree la marge annuelle est prelevee.
+      "vie" (defaut) : la duree de vie ATTENDUE du produit. C'est ce que fait
+                       un desk : un autocall rappele en moyenne apres 9 mois ne
+                       paie pas 3 ans de marge. Avant, avec un trigger bas, le
+                       produit vivait ~3 mois mais payait la marge sur la
+                       maturite maximale et le coupon tombait a zero.
+      "maturite"     : la maturite maximale (ancien calcul).
+    """
+    duree = (stats_autocall(chemins, T, n_obs, trigger, bar_cap, spot0)[0]
+             if marge_sur == "vie" else T)
     a = pv_autocall(chemins, T, r, nominal, n_obs, trigger, bar_cp, bar_cap,
                     memoire, 0.0, tau, recovery, spot0)
     b = pv_autocall(chemins, T, r, nominal, n_obs, trigger, bar_cp, bar_cap,
                     memoire, 0.01, tau, recovery, spot0)
     pente = (b - a) / 0.01
-    cible = nominal * (1.0 - marge_pa * T)
+    cible = nominal * (1.0 - marge_pa * duree)
     return max((cible - a) / pente, 0.0) if pente > 1e-9 else 0.0
 
 

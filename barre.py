@@ -4,9 +4,8 @@ from types import SimpleNamespace
 
 import streamlit as st
 
-import moteur as M
 from moteur import S0
-from communs import sim_bs, sim_bates, sim_defaut
+from communs import sim_lv, sim_bates, sim_defaut
 
 
 # Conditions de marche typiques, en un clic. Ordres de grandeur pour un indice actions
@@ -173,15 +172,14 @@ def barre_laterale():
     # --------------------------------------------------------------------
     def trajectoires(T, niveau_ref=1.0, seed=42):
         """
-        Renvoie (chemins, sigma) selon le modele choisi.
-        niveau_ref sert uniquement en Black-Scholes, pour appliquer le skew
-        au strike pertinent du produit.
+        Renvoie (chemins, sigma) selon le modele choisi. En Black-Scholes, le
+        skew passe par une volatilite locale (moteur.simule_lv) : niveau_ref
+        n'est plus utilise, garde pour compatibilite.
         """
         if BATES:
             return sim_bates(S0, T, r, q, n_paths, vol_atm ** 2, theta_v ** 2, kappa,
                              xi, rho, lam, mu_j, sig_j, seed)
-        v = M.vol_au_strike(niveau_ref, vol_atm, skew)
-        return sim_bs(S0, T, r, q, v, n_paths, seed)
+        return sim_lv(S0, T, r, q, vol_atm, skew, n_paths, seed)
 
 
     def defauts(n, T):

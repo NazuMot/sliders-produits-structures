@@ -1,6 +1,6 @@
 # Deploiement : changer cette ligne a chaque publication force Streamlit Cloud
 # a redemarrer et a recharger tous les fichiers (sinon il garde les anciens modules).
-# Publication du 2026-10-18 12:25
+# Publication du 2026-10-18 15:39
 streamlit==1.64.0
 numpy>=2.2,<2.5
 altair>=5.5,<7

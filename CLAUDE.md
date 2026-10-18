@@ -75,6 +75,19 @@ recouvrement, marge banque, nominal, nombre de trajectoires.
   cas `K <= H` → put vanille. **Validé à 1 % près contre Monte Carlo sur 144 combinaisons**,
   et identité `DI + DO = put vanille` vérifiée. Si on y touche, revalider.
 - `grecques` : différences finies sur formule fermée (delta, gamma, vega /pt, theta /jour, rho /pt).
+- `simule_lv` (18/10/2026) : **Black-Scholes + skew en volatilité locale**,
+  `sigma(S,t) = vol_atm + 1,9 × skew × ln(F(t)/S) / 0,10` (bornée 5-150 %), renvoie
+  `(chemins, sigma_pas)` pour le pont brownien, gère le décrément. C'est ce qu'utilisent
+  `barre.trajectoires` et `sales.Marche.trajectoires` pour tous les produits à trajectoire
+  mono sous-jacent. Avant, une seule vol par produit lue au niveau de la barrière inversait le
+  sens (coupon qui monte quand la barrière baisse). Elle redonne le skew affiché à moins d'un
+  point (skew 2 : 25,9 / 23,9 / 22,0 % aux strikes 80 / 90 / 100 %). skew 0 = `simule_bs` au bit
+  près. Restent en vol unique au bon strike : les formules fermées (capital garanti, Discount,
+  grecques en mouvement) et les worst-of (`simule_panier`, vol au niveau de la barrière).
+- `coupon_autocall(..., marge_sur="vie")` (18/10/2026) : la marge annuelle est prélevée sur la
+  **durée de vie attendue**, pas sur la maturité maximale (`marge_sur="maturite"` = ancien
+  calcul). Trigger 80 % : coupon 0 % -> 4,28 % p.a. `sales.py` compte marge et rétro de
+  l'autocall de la même façon.
 
 - Ajouts optionnels (valeur par défaut = ancien résultat au bit près, contrôlé par
   `tests/valide_moteur_produits.py`) :
@@ -97,6 +110,8 @@ recouvrement, marge banque, nominal, nombre de trajectoires.
 Chiffres de référence (paramètres par défaut) pour détecter une régression, contrôlés par
 `tests/verifie.py` :
 - Capital garanti 5 ans, r = 3 %, marge banque 0,8 %/an : participation ≈ 55 %
+- Par défaut (BS + skew 2, vol locale) : BRC 1 an barrière 70 % 7,84 % p.a. ; autocall 3 ans
+  trimestriel 100/70/60 9,28 % p.a., vie moyenne 0,92 an, perte 8,3 %
   (l'ancien chiffre de 69 % correspondait à une marge de 0,3 %/an)
 - BRC 1 an barrière 70 % : coupon ≈ 5,9 % sous BS plat, ≈ 8,7 % sous Bates
 - Autocall worst-of 3 sous-jacents : coupon et proba de perte montent quand la corrélation baisse
@@ -160,10 +175,9 @@ rétrocession distributeur. Avec rétro nulle, ses coupons redonnent **exactemen
   - Revendre : `valeur_secondaire_*` + cascade de l'émission au prix de rachat.
   - Pitch : `pitch(s, profil, vue, faits(mk, s))`, modèles de phrases, 3 à 5 phrases, toujours le
     scénario de perte chiffré et le risque émetteur.
-  - Références : rétro nulle -> coupon BRC 9,25 % (= page) ; à t = 0, valeur 982 / 946 / 910 EUR
-    (BRC 1 an / autocall 3 ans / CP 5 ans, marge 0,8 % + rétro 1 %) ; BRC 8 % -> barrière
-    69,0 %, arrondie à 70 % pour 8,22 %. Graphe en cascade construit dans la page
-    (`graphe_cascade`).
+  - Références : rétro nulle -> coupon BRC 7,84 % (= page) ; à t = 0, valeur 982 / 983 / 910
+    EUR (BRC 1 an / autocall 3 ans, frais sur ~0,9 an de vie attendue / CP 5 ans, marge 0,8 %
+    + rétro 1 %). Graphe en cascade construit dans la page (`graphe_cascade`).
 - **Autocall, options** (`vues/autocall.py`, testé par `tests/verifie_autocall_discount.py`) :
   step-down (`ac_step_down`, `ac_sd_pas`, `ac_sd_plancher`, escalier tracé par `escalier()`) ;
   indice à décrément (`ac_indice`, `ac_dec_points`, `ac_dec_niveau`, défaut 50 points sur 1 000
@@ -171,8 +185,9 @@ rétrocession distributeur. Avec rétro nulle, ses coupons redonnent **exactemen
   stress (`ac_stress`, visible seulement en worst-of car AppTest refuse les cases grisées) ;
   grecques du desk (`ac_voir_grecques`, en cache). Garde-fou mémoire : `trajectoires_panier()`
   plafonne un worst-of à 12,5 millions de points et 20 000 trajectoires (4 sous-jacents / 6 ans /
-  40 000 : pointe 951 -> 378 Mo). Références (BS, défauts) : 8,88 % p.a. ; step-down 8,83 % ;
-  décrément 50 pts/1 000 13,08 % ; worst-of 3 stress 90 % 16,52 -> 13,04 %.
+  40 000 : pointe 951 -> 378 Mo). Références (BS + skew en vol locale, marge sur la vie
+  attendue) : 9,28 % p.a. ; step-down 9,28 % (vie plus courte, moins de pertes) ; décrément
+  50 pts/1 000 11,75 % ; worst-of 3 : le stress fait baisser coupon et perte.
 - **7 Discount Certificate** (`vues/discount.py`, `dc_*`) : `discount_certificate` (vol au cap)
   sous BS, `discount_mc` sous Bates, hors risque émetteur. Référence : 1 an cap 100 : décote
   10,52 %, rendement max 11,76 %, point mort 89,48.
@@ -267,12 +282,9 @@ multi-actifs · corrélation de stress en deux régimes, sans hausse de vol · w
 seulement en option (copule sur le niveau final) · discrétisation hebdomadaire de la variance
 sous Bates · coût de couverture simulé sur put vanille.
 
-Défauts repérés, pas encore corrigés :
-- Autocall : la marge est comptée sur la durée maximale ; avec un trigger bas (80 %), le produit
-  vit ~3 mois mais paie 3 ans de marge et le coupon tombe à 0.
-- Black-Scholes + skew : la vol prise au niveau de la barrière s'applique à toute la
-  trajectoire ; avec un skew fort, le coupon peut monter quand la barrière baisse (sous Bates,
-  tout est cohérent).
+Défauts corrigés le 18/10/2026 : marge de l'autocall sur la maturité maximale, et vol unique
+au niveau de la barrière sous Black-Scholes + skew (voir Moteur). Reste :
+- les worst-of restent en Black-Scholes multi-actifs à vol unique (au niveau de la barrière) ;
 - `sales.py` n'applique pas le plafond de trajectoires des worst-of (identique tant qu'il ne
   joue pas).
 

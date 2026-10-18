@@ -36,10 +36,13 @@ def trajectoires_panier(n_paths, n_actifs, T):
 # =====================================================================
 
 @st.cache_data(show_spinner=False, max_entries=MAX_CACHE)
-def sim_decrement(T, r, sigma, n, decrement, bates=None):
-    """Indice a decrement : dividendes reinvestis (q = 0), D points retires par an."""
+def sim_decrement(T, r, vol_atm, skew, n, decrement, bates=None):
+    """
+    Indice a decrement : dividendes reinvestis (q = 0), D points retires par an.
+    Black-Scholes : volatilite locale, comme les autres pages (moteur.simule_lv).
+    """
     if bates is None:
-        return M.simule_bs(S0, T, r, 0.0, sigma, n, decrement=decrement)
+        return M.simule_lv(S0, T, r, 0.0, vol_atm, skew, n, decrement=decrement)
     return M.simule_bates(S0, T, r, 0.0, n, decrement=decrement, **bates)
 
 
@@ -65,7 +68,7 @@ def defauts_internes(n, T, spread, recovery):
 
 
 @st.cache_data(show_spinner=False, max_entries=MAX_CACHE)
-def compare_indices(T, r, q, sigma, bates, n, decrement, produit, spread, recovery):
+def compare_indices(T, r, q, vol_atm, skew, bates, n, decrement, produit, spread, recovery):
     """
     Le meme autocall sur trois sous-jacents, a vue de marche egale (memes
     tirages, meme vol ou memes parametres Bates) :
@@ -80,7 +83,7 @@ def compare_indices(T, r, q, sigma, bates, n, decrement, produit, spread, recove
     for nom, q_, dec in (("classique", q, 0.0), ("pct", decrement / S0, 0.0),
                          ("points", 0.0, decrement)):
         if bates is None:
-            ch = M.simule_bs(S0, T, r, q_, sigma, n, decrement=dec)[0]
+            ch = M.simule_lv(S0, T, r, q_, vol_atm, skew, n, decrement=dec)[0]
         else:
             ch = M.simule_bates(S0, T, r, q_, n, decrement=dec, **bates)[0]
         out[nom] = resume(ch, T, r, produit, tau, recovery)
@@ -208,7 +211,9 @@ def affiche(m):
         "Trigger degressif (step-down)", key="ac_step_down", bind="query-params",
         help="Le seuil de rappel baisse chaque annee. Le client sort plus souvent avec son "
              "gain meme si le marche a un peu baisse, et va moins souvent jusqu'a "
-             "l'echeance, la ou se joue la perte en capital. Le prix : un coupon plus faible.")
+             "l'echeance, la ou se joue la perte en capital. Le prix : moins de coupons au "
+             "total, puisque le produit s'arrete plus tot ; le coupon par periode bouge peu, "
+             "car la banque preleve sa marge sur une vie plus courte.")
     if step_down:
         pas_sd = s1.slider("Baisse du trigger par an (points de %)", 1, 10, 5, 1,
                            help="5 points : 100 % la premiere annee, 95 % la deuxieme, "
@@ -305,7 +310,7 @@ def affiche(m):
                        "les volatilites de chaque actif, ce qui depasse le cadre de cet "
                        "outil. Le mecanisme de correlation reste juste.")
     elif decrement:
-        ch, _ = sim_decrement(T, r, v_bs, n_paths, D, bates)
+        ch, _ = sim_decrement(T, r, vol_atm, skew, n_paths, D, bates)
     else:
         ch, _ = trajectoires(T, bar_cap / 100)
 
@@ -344,7 +349,7 @@ def affiche(m):
     # --- indice a decrement : classique contre decrement, a vue de marche egale
     if decrement:
         n_cmp = min(n_paths, MAX_COMPARAISON)
-        res = compare_indices(T, r, q, v_bs, bates, n_cmp, D, produit, spread, recovery)
+        res = compare_indices(T, r, q, vol_atm, skew, bates, n_cmp, D, produit, spread, recovery)
         cl, pc, po = res["classique"], res["pct"], res["points"]
         st.table([{"Sous-jacent": nom,
                    "Coupon annuel": f"{x['coupon']*par_an*100:,.2f}%",

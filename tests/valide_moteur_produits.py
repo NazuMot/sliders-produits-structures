@@ -26,6 +26,13 @@ RACINE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, RACINE)
 
 import moteur as M                                       # noqa: E402
+
+
+def coupon_autocall_maturite(*args, **kw):
+    """Ce script isole la mecanique des produits : marge comptee sur la maturite
+    maximale, comme quand il a ete ecrit. La marge sur la duree de vie attendue
+    (defaut du moteur depuis le 18/10/2026) a son propre controle a la fin."""
+    return M.coupon_autocall(*args, marge_sur="maturite", **kw)
 from moteur import S0, nb_pas, idx_obs, proba_non_touche, pv_recouvrement  # noqa: E402
 
 echecs = []
@@ -256,7 +263,7 @@ for ch in (CH_AC, CH_WO):
                      ref_coupon_autocall(ch, T_AC, r, nominal, N_OBS, trig, 0.7, 0.6, mem, marge, tau, 0.4),
                      ref_stats_autocall(ch, T_AC, N_OBS, trig, 0.6))
                 b = (M.pv_autocall(ch, T_AC, r, nominal, N_OBS, trig, 0.7, 0.6, mem, 0.02, tau, 0.4),
-                     M.coupon_autocall(ch, T_AC, r, nominal, N_OBS, trig, 0.7, 0.6, mem, marge, tau, 0.4),
+                     coupon_autocall_maturite(ch, T_AC, r, nominal, N_OBS, trig, 0.7, 0.6, mem, marge, tau, 0.4),
                      M.stats_autocall(ch, T_AC, N_OBS, trig, 0.6))
                 ok &= a == b
 controle("pv_autocall, coupon_autocall, stats_autocall (32 combinaisons)", ok)
@@ -280,7 +287,7 @@ titre("1. Autocall step-down")
 # =====================================================================
 
 def autocall(ch, trig, **kw):
-    c = M.coupon_autocall(ch, T_AC, r, nominal, N_OBS, trig, 0.7, 0.6, True, marge, **kw)
+    c = coupon_autocall_maturite(ch, T_AC, r, nominal, N_OBS, trig, 0.7, 0.6, True, marge, **kw)
     return (c,) + tuple(M.stats_autocall(ch, T_AC, N_OBS, trig, 0.6))
 
 
@@ -496,8 +503,8 @@ controle("Wrong-way : coupon equitable a peine change (l'effet est dans la queue
 titre("6. Grecques de l'autocall (point de vue du desk, EUR pour 1 000 de nominal)")
 # =====================================================================
 
-CPN = M.coupon_autocall(CH_AC, T_AC, r, nominal, N_OBS, 1.0, 0.7, 0.6, True, marge)
-CPN_WO = M.coupon_autocall(CH_WO, T_AC, r, nominal, N_OBS, 1.0, 0.7, 0.6, True, marge)
+CPN = coupon_autocall_maturite(CH_AC, T_AC, r, nominal, N_OBS, 1.0, 0.7, 0.6, True, marge)
+CPN_WO = coupon_autocall_maturite(CH_WO, T_AC, r, nominal, N_OBS, 1.0, 0.7, 0.6, True, marge)
 cas = {"BS mono": dict(),
        "worst-of 3, rho 60 %": dict(n_actifs=3, correlation=0.6),
        "worst-of 3, stress": dict(n_actifs=3, correlation=0.6, correlation_stress=0.9),
@@ -570,6 +577,39 @@ for nom, kw in (("worst-of 4, 6 ans", dict(n_actifs=4, correlation=0.5)),
     tracemalloc.stop()
     controle(f"Grecques {nom}, 10 000 trajectoires : moins de 2 s et de 300 Mo", el < 2.0 and pic < 300,
              f"{el:.2f} s, pointe {pic:.0f} Mo")
+
+# =====================================================================
+titre("7. Marge sur la duree de vie et volatilite locale (18/10/2026)")
+# =====================================================================
+
+for trig in (0.8, 1.0):
+    vie = M.coupon_autocall(CH_AC, T_AC, r, nominal, N_OBS, trig, 0.7, 0.6, True, marge)
+    mat = coupon_autocall_maturite(CH_AC, T_AC, r, nominal, N_OBS, trig, 0.7, 0.6, True, marge)
+    duree = M.stats_autocall(CH_AC, T_AC, N_OBS, trig, 0.6)[0]
+    controle(f"Marge sur la vie attendue, trigger {trig:.0%} : coupon positif et >= ancien calcul",
+             vie > 0 and vie >= mat - 1e-12,
+             f"{pct(mat * 4)} -> {pct(vie * 4)} p.a., vie moyenne {duree:.2f} an sur {T_AC:.0f}")
+
+ch0 = M.simule_lv(100.0, 3.0, r, q, 0.22, 0.0, 10000)
+ch1 = M.simule_bs(100.0, 3.0, r, q, 0.22, 10000)
+controle("Vol locale avec skew 0 = Black-Scholes, au bit pres",
+         np.array_equal(ch0[0], ch1[0]) and ch0[1] == ch1[1])
+
+ch, sg = M.simule_lv(100.0, 3.0, r, q, 0.22, 2.0, 10000)
+ks = [0.8, 0.9, 1.0]
+vols = M.vol_implicite_bates(ch, 3.0, r, q, ks)
+cibles = [M.vol_au_strike(k, 0.22, 2.0) for k in ks]
+controle("Vol locale, skew 2 : elle redonne le skew affiche a 1 pt de vol pres (80/90/100 %)",
+         all(abs(v - c) < 0.01 for v, c in zip(vols, cibles)),
+         " / ".join(f"{v*100:.1f} vs {c*100:.0f}" for v, c in zip(vols, cibles)))
+
+for skew in (2.0, 4.0, 6.0):
+    ch, _ = M.simule_lv(100.0, 3.0, r, q, 0.22, skew, 10000)
+    cps = [M.coupon_autocall(ch, 3.0, r, nominal, 12, 1.0, 0.7, b, True, marge)
+           for b in (0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0)]
+    controle(f"Vol locale, skew {skew:.0f} : le coupon monte avec la barriere de capital",
+             all(cps[i] <= cps[i + 1] + 1e-12 for i in range(len(cps) - 1)),
+             " ".join(f"{c * 400:.1f}" for c in cps))
 
 print()
 if echecs:

@@ -32,8 +32,9 @@ une retrocession nulle, les coupons et participations sont exactement
 ceux affiches par les pages.
 
 Retrocession : nouveau parametre. Comme la marge banque, elle est payee
-d'avance sur la duree maximale du produit (convention courante en
-France) et prelevee sur le budget option.
+d'avance et prelevee sur le budget option : sur la duree maximale pour le
+BRC et le capital garanti, sur la duree de vie ATTENDUE pour l'autocall
+(un autocall rappele en moyenne apres 9 mois ne paie pas 3 ans de frais).
 =======================================================================
 """
 
@@ -109,7 +110,7 @@ class Marche:
             return M.simule_bates(spot, T, self.r, self.q, self.n_paths, self.vol_atm ** 2,
                                   self.theta_v ** 2, self.kappa, self.xi, self.rho,
                                   self.lam, self.mu_j, self.sig_j, seed=seed)
-        return M.simule_bs(spot, T, self.r, self.q, self.vol(niveau_ref), self.n_paths,
+        return M.simule_lv(spot, T, self.r, self.q, self.vol_atm, self.skew, self.n_paths,
                            seed=seed)
 
     def panier(self, n_actifs, correlation, T, niveau_ref, spot=S0, seed=42):
@@ -147,7 +148,8 @@ class _Sims:
         self.cle, self.res = None, None
 
     def __call__(self, niveau_ref):
-        cle = self.mk.vol(niveau_ref)
+        # mono sous-jacent : vol locale, memes trajectoires pour tous les niveaux
+        cle = self.mk.vol(niveau_ref) if self.n_actifs > 1 else "vol locale"
         if cle != self.cle:
             self.res = None                  # libere l'ancienne simulation avant d'en faire une autre
             ch, sg = self.mk.panier(self.n_actifs, self.correlation, self.T, niveau_ref)
@@ -676,6 +678,8 @@ def cascade_autocall(mk, T, par_an, trigger, bar_coupon, bar_capital, memoire=Tr
     tau = mk.defauts(len(ch), T)
     cpn = float(M.coupon_autocall(ch, T, mk.r, N, n_obs, trigger, bar_coupon, bar_capital,
                                   memoire, mk.marge + mk.retro, tau, mk.recovery))
+    # marge et retro prelevees sur la duree de vie attendue (comme moteur.coupon_autocall)
+    duree = float(M.stats_autocall(ch, T, n_obs, trigger, bar_capital)[0])
     obs = _observations(T, par_an, 0.0, ch.shape[1] - 1)
     args = (ch, T, obs, mk, trigger, bar_coupon, bar_capital, memoire)
     c = _composantes_autocall(*args, cpn, 0, tau)
@@ -694,12 +698,13 @@ def cascade_autocall(mk, T, par_an, trigger, bar_coupon, bar_capital, memoire=Tr
         Ligne("credit", "Risque emetteur porte par le client", c["credit"],
               "Ce que vaut le risque de defaut de la banque."),
     ]
-    lignes += _frais(mk, T, sum(l.montant for l in lignes))
+    lignes += _frais(mk, duree, sum(l.montant for l in lignes))
     pente = _composantes_autocall(*args, cpn + 0.01, 0, tau)["pv"] - c["pv"]
     infos = {"coupon_obs": cpn, "coupon_pa": cpn * par_an,
              "zc_taux_financement": N * math.exp(-(mk.r + mk.spread / 10000.0) * T),
-             "marge_affichee": mk.marge * T * N,
-             "cout_retro_par_pt": (0.01 * T * N / pente * 0.01 * par_an) if pente > 1e-9 else 0.0,
+             "marge_affichee": mk.marge * duree * N,
+             "duree_vie": duree,
+             "cout_retro_par_pt": (0.01 * duree * N / pente * 0.01 * par_an) if pente > 1e-9 else 0.0,
              "proba_perte": c["proba_perte"]}
     return Cascade("autocall", N, cpn, lignes, infos)
 
@@ -891,8 +896,11 @@ def valeur_secondaire_autocall(mk_emission, mk_jour, T, par_an, trigger, bar_cou
             cp = etat["coupons_verses"] * coupon * N
             msg = (f"Produit rappele a l'observation {etat['rappel_obs']} : nominal rendu, "
                    f"{cp:,.0f} EUR de coupons encaisses. Il n'y a plus rien a racheter.")
+            ch_e, _ = mk_emission.panier(n_actifs, correlation, T, bar_capital)
+            vie = float(M.stats_autocall(ch_e, T, n_obs, trigger, bar_capital)[0])
+            del ch_e
             return ValeurSecondaire(0.0, 0.0, 0.0, N * (1 - (mk_emission.marge
-                                    + mk_emission.retro) * T), cp, [], etat, msg, N)
+                                    + mk_emission.retro) * vie), cp, [], etat, msg, N)
         manques, coupons_verses = etat["manques"], etat["coupons_verses"]
 
     def valorise(mk, t_, niv, attente):

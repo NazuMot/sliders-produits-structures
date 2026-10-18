@@ -9,7 +9,8 @@ Validation chiffree de sales.py (outils du Sales).
    redonne ce coupon au solveur -> je retrouve la structure a 0,5 pt pres.
 3. Ou va l'argent : la somme des lignes retombe sur le nominal, la marge
    n'est pas un residu deguise, la retro coute ce qui est annonce.
-4. Marche secondaire : a t = 0, valeur = nominal - marge - retro ; la
+4. Marche secondaire : a t = 0, valeur = nominal - marge - retro (sur la vie
+   attendue pour l'autocall) ; la
    decomposition retombe exactement sur la valeur du jour ; les sens de
    variation sont les bons.
 5. Cas limites, puis temps de calcul.
@@ -59,8 +60,7 @@ def page_brc(mk, T, bar, strike, continu):
         ch, sg = M.simule_bates(S0, T, mk.r, mk.q, mk.n_paths, mk.vol_atm ** 2, mk.theta_v ** 2,
                                 mk.kappa, mk.xi, mk.rho, mk.lam, mk.mu_j, mk.sig_j, seed=42)
     else:
-        ch, sg = M.simule_bs(S0, T, mk.r, mk.q, M.vol_au_strike(bar, mk.vol_atm, mk.skew),
-                             mk.n_paths, seed=42)
+        ch, sg = M.simule_lv(S0, T, mk.r, mk.q, mk.vol_atm, mk.skew, mk.n_paths, seed=42)
     tau = M.tire_defaut(len(ch), T, mk.spread, mk.recovery) if mk.spread > 0 else None
     return M.coupon_brc(ch, T, mk.r, mk.nominal, bar, strike, continu, mk.marge, sg, tau,
                         mk.recovery)
@@ -76,8 +76,7 @@ def page_autocall(mk, T, par_an, trig, bcp, bcap, memoire, n_actifs, correl):
         ch, sg = M.simule_bates(S0, T, mk.r, mk.q, mk.n_paths, mk.vol_atm ** 2, mk.theta_v ** 2,
                                 mk.kappa, mk.xi, mk.rho, mk.lam, mk.mu_j, mk.sig_j, seed=42)
     else:
-        ch, sg = M.simule_bs(S0, T, mk.r, mk.q, M.vol_au_strike(bcap, mk.vol_atm, mk.skew),
-                             mk.n_paths, seed=42)
+        ch, sg = M.simule_lv(S0, T, mk.r, mk.q, mk.vol_atm, mk.skew, mk.n_paths, seed=42)
     tau = M.tire_defaut(len(ch), T, mk.spread, mk.recovery) if mk.spread > 0 else None
     return M.coupon_autocall(ch, T, mk.r, mk.nominal, n_obs, trig, bcp, bcap, memoire,
                              mk.marge, tau, mk.recovery)
@@ -199,8 +198,11 @@ for nom, mk in MODELES:
     for tg in (0.90, 1.00):
         c = S.coupon_autocall(mk, 3.0, 4, tg, 0.70, 0.60) * 4
         rep = S.autocall_trigger(mk, c, 3.0, 4)
+        # marge sur la vie attendue : pres de 100 %, le coupon varie peu avec le trigger ;
+        # le solveur rend le trigger le plus bas qui tient la demande
         controle(f"{nom:5} | Autocall trigger {tg:.0%} aller-retour",
-                 rep.possible and proche(rep.valeur, tg, 0.005), f"{rep.valeur*100:.2f}%")
+                 rep.possible and rep.valeur <= tg + 0.005 and rep.obtenu >= c - 1e-9,
+                 f"{rep.valeur*100:.2f}% pour {rep.obtenu*100:.2f}% p.a.")
     for prot in (0.85, 0.95):
         p = S.participation_cp(mk, 5.0, prot)
         rep = S.cp_protection(mk, p, 5.0)
@@ -234,9 +236,11 @@ for nom, base in MODELES:
         for produit, cas, T in cascades:
             lignes = {l.cle: l.montant for l in cas.lignes}
             somme = sum(lignes.values())
-            controle(f"{etiq} | {produit} : somme = nominal, marge = {mk.marge:.1%} x {T:g} an(s)",
-                     proche(somme, N, 1e-6) and proche(lignes["marge"], mk.marge * T * N, 1e-6)
-                     and proche(lignes["retro"], retro * T * N, 1e-9),
+            # autocall : frais sur la duree de vie attendue (moteur.coupon_autocall)
+            d = cas.infos.get("duree_vie", T)
+            controle(f"{etiq} | {produit} : somme = nominal, marge = {mk.marge:.1%} x {d:.2f} an(s)",
+                     proche(somme, N, 1e-6) and proche(lignes["marge"], mk.marge * d * N, 1e-6)
+                     and proche(lignes["retro"], retro * d * N, 1e-9),
                      f"somme {somme:,.6f}, marge {lignes['marge']:.4f}")
             controle(f"{etiq} | {produit} : risque emetteur nul sans spread, negatif sinon",
                      (lignes["credit"] == 0) if spread == 0 else (lignes["credit"] < 0),
@@ -284,9 +288,12 @@ for nom, base in MODELES:
         ("Capital Protection", 5.0, lambda: S.valeur_secondaire_cp(mk, mk, 5.0, 1.0, 3.0,
                                                                    0.0, 1.0)),
     ]
+    vies = {"Autocall": S.cascade_autocall(mk, 3.0, 4, 1.0, 0.70, 0.60).infos["duree_vie"],
+            "Worst-of": S.cascade_autocall(mk, 3.0, 4, 1.0, 0.70, 0.60, True, 3,
+                                           0.6).infos["duree_vie"]}
     for produit, T, f in produits:
         v = f()
-        attendu = N * (1 - (mk.marge + mk.retro) * T)
+        attendu = N * (1 - (mk.marge + mk.retro) * vies.get(produit, T))
         controle(f"{nom:5} | {produit} : a t = 0, valeur = nominal - marge - retro",
                  proche(v.valeur, attendu, 1e-6) and proche(v.valeur_emission, attendu, 1e-6)
                  and all(abs(e) < 1e-6 for _, e in v.decomposition),

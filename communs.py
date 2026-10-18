@@ -19,6 +19,11 @@ def sim_bs(spot, T, r, q, sigma, n, seed=42):
 
 
 @st.cache_data(show_spinner=False, max_entries=MAX_CACHE)
+def sim_lv(spot, T, r, q, vol_atm, skew, n, seed=42):
+    return M.simule_lv(spot, T, r, q, vol_atm, skew, n, seed=seed)
+
+
+@st.cache_data(show_spinner=False, max_entries=MAX_CACHE)
 def sim_bates(spot, T, r, q, n, v0, theta, kappa, xi, rho, lam, mu_j, sig_j, seed=42):
     return M.simule_bates(spot, T, r, q, n, v0, theta, kappa, xi, rho,
                           lam, mu_j, sig_j, seed=seed)
