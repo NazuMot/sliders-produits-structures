@@ -16,6 +16,10 @@ Verification de la page Atelier Sales.
    valeur que sales.py, sens des chocs, barriere touchee, autocall rappele.
 5. Pitch : 3 a 5 phrases, toujours le scenario de perte et le risque
    emetteur, pour chaque produit, profil et vue de marche.
+6. Objections : chaque objection s'affiche pour chaque produit et chaque
+   profil, sous les deux modeles, reponse cachee puis revelee ; les
+   chiffres cites sont ceux des autres sections (coupon, frais, valeur de
+   revente, probabilite de perte, duree de vie, risque emetteur).
 
 Sort avec le code 1 au premier probleme, comme verifie.py.
 """
@@ -23,8 +27,11 @@ Sort avec le code 1 au premier probleme, comme verifie.py.
 import ast
 import math
 import os
+import re
 import sys
 import time
+
+import numpy as np
 
 from streamlit.testing.v1 import AppTest
 
@@ -33,6 +40,7 @@ APP = os.path.join(RACINE, "app.py")
 PAGE = os.path.join(RACINE, "vues", "atelier_sales.py")
 sys.path.insert(0, RACINE)
 
+import backtest as B
 import graphiques as G
 import sales as S
 from vues import atelier_sales as A
@@ -251,7 +259,9 @@ for modele in MODELES:
         total = at.table[0].value.iloc[-1]
         controle(f"{modele.split()[0]:6} | {s.produit[:18]:18} | résultat et total = sales.py",
                  m[libelle] == valeur(c) and total["EUR"] == eur(mk.nominal)
-                 and abs(c.somme - mk.nominal) < 1e-6 and m["Rétrocession"] == eur(RETRO * s.T * 1000),
+                 and abs(c.somme - mk.nominal) < 1e-6
+                 and m["Rétrocession"] == eur(next(l.montant for l in c.lignes if l.cle == "retro"))
+                 and m["Marge banque"] == eur(next(l.montant for l in c.lignes if l.cle == "marge")),
                  f"{m[libelle]}, total {total['EUR']}")
         ca = A._cascade.__wrapped__(mk.avec(retro=0.005), s)
         cb = A._cascade.__wrapped__(mk.avec(retro=0.015), s)
@@ -397,6 +407,158 @@ for produit in A.PRODUITS:
         controle(f"Page | {produit[:18]:18} | {profil[:12]:12} : pitch affiche = modèle",
                  not at.exception and texte == attendu and 'émetteur' in texte,
                  erreur(at) or texte[:80])
+
+
+
+# 6. Objections clients ---------------------------------------------------------
+print("\n6. Objections clients")
+COUPE = re.compile(r"(?<=[.!?])\s+(?=[A-ZÀ-Ý«])")       # fin de phrase
+
+
+def phrases(texte):
+    return len(COUPE.split(texte))
+
+
+h = B.charge_historique()
+
+
+def cours(jour):
+    return h.prix[np.searchsorted(h.dates, np.datetime64(jour), side="right") - 1]
+
+
+annee = (h.dates > np.datetime64("2007-12-31")) & (h.dates <= np.datetime64("2008-12-31"))
+controle("Krach 2008 cité = données réelles (-44 % sur l'année, plus bas à 49 %)",
+         abs(1 - cours("2008-12-31") / cours("2007-12-31") - A.BAISSE_2008) < 5e-4
+         and abs(h.prix[annee].min() / cours("2007-12-31") - A.PLUS_BAS_2008) < 5e-4,
+         f"{1 - cours('2008-12-31') / cours('2007-12-31'):.4f}, "
+         f"{h.prix[annee].min() / cours('2007-12-31'):.4f}")
+
+fautes, n = [], 0
+for mk in (MK[BS], MK[BATES].avec(spread=120)):
+    for s in structures + [A.Structure(A.BRC, 1.0, barriere=0.45),
+                           A.Structure(A.AC, 3.0, bar_capital=0.5)]:
+        f = A.faits(mk, s)
+        for profil in A.PROFILS:
+            for cle in A.LISTE_OBJECTIONS[s.produit]:
+                n += 1
+                nom = f"{s.produit[:12]} {profil[:12]} {cle}"
+                try:
+                    o = A.objection(s, profil, cle, f)
+                except Exception as e:                       # noqa: BLE001
+                    fautes.append(f"{nom} : {e!r}")
+                    continue
+                if not 2 <= phrases(o["reponse"]) <= 4:
+                    fautes.append(f"{nom} : {phrases(o['reponse'])} phrases")
+                if not any(ch.isdigit() for ch in o["chiffre"]):
+                    fautes.append(f"{nom} : pas de chiffre à citer")
+                if len(o["erreur"]) < 40:
+                    fautes.append(f"{nom} : erreur à éviter absente")
+controle(f"{n} objections (6 + 2 structures x 3 profils x 2 marchés) : 2 à 4 phrases, un "
+         "chiffre, une erreur à éviter", not fautes, "; ".join(fautes[:5]))
+controle("8 à 10 objections par produit, dont le rappel pour l'autocall seul",
+         all(8 <= len(v) <= 10 for v in A.LISTE_OBJECTIONS.values())
+         and "rappel" in A.LISTE_OBJECTIONS[A.AC]
+         and "rappel" not in A.LISTE_OBJECTIONS[A.BRC] + A.LISTE_OBJECTIONS[A.CP])
+
+# chaque objection, chaque produit, chaque profil, deux modeles : affichee = modele
+CLE_OBJ = {A.BRC: "as_obj_brc", A.AC: "as_obj_ac", A.CP: "as_obj_cp"}
+S_DEFAUT = {A.BRC: s_brc, A.AC: s_ac, A.CP: s_cp}
+
+
+def reponse_affichee(at):
+    return next((x.value for x in at.markdown if x.value.startswith("**À dire au client.**")),
+                None)
+
+
+for modele in MODELES:
+    for produit in A.PRODUITS:
+        t0, fautes, n = time.time(), [], 0
+        at = ouvre(produit, A.OBJECTIONS, modele)
+        f = A.faits(MK[modele], S_DEFAUT[produit])
+        for profil in A.PROFILS:
+            at.segmented_control(key="as_profil").set_value(profil).run()
+            for cle in A.LISTE_OBJECTIONS[produit]:
+                n += 1
+                at.selectbox(key=CLE_OBJ[produit]).set_value(A.QUESTIONS[cle]).run()
+                cachee = reponse_affichee(at) is None and not at.toggle(key="as_obj_voir").value
+                at.toggle(key="as_obj_voir").set_value(True).run()
+                o = A.objection(S_DEFAUT[produit], profil, cle, f)
+                if at.exception:
+                    fautes.append(f"{profil[:12]} {cle} : {erreur(at)}")
+                elif not cachee:
+                    fautes.append(f"{profil[:12]} {cle} : réponse visible avant d'être demandée")
+                elif (reponse_affichee(at) != "**À dire au client.** " + o["reponse"]
+                      or not any(o["chiffre"] in x.value for x in at.info)
+                      or not any(o["erreur"] in x.value for x in at.warning)):
+                    fautes.append(f"{profil[:12]} {cle} : affiché différent du modèle")
+        controle(f"{modele.split()[0]:6} | {produit[:18]:18} | {n} objections affichées, "
+                 "cachées puis révélées", not fautes,
+                 "; ".join(fautes[:3]) or f"{time.time() - t0:.0f}s")
+
+at = ouvre(A.AC, A.OBJECTIONS, BS)
+avant = at.selectbox(key="as_obj_ac").value
+at.toggle(key="as_obj_voir").set_value(True).run()
+at.button(key="as_obj_hasard").click().run()
+controle("Objection au hasard : une autre objection, réponse de nouveau cachée",
+         not at.exception and at.selectbox(key="as_obj_ac").value != avant
+         and at.selectbox(key="as_obj_ac").value in [A.QUESTIONS[k] for k in A.LISTE_OBJECTIONS[A.AC]]
+         and not at.toggle(key="as_obj_voir").value and reponse_affichee(at) is None, erreur(at))
+
+
+# les chiffres cites = ceux des autres sections de la page
+def objection_page(produit, cle, profil=A.PARTICULIER, reglages=()):
+    at = ouvre(produit, A.OBJECTIONS, BS, list(reglages) + [
+        lambda a: a.segmented_control(key="as_profil").set_value(profil),
+        lambda a: a.selectbox(key=CLE_OBJ[produit]).set_value(A.QUESTIONS[cle]),
+        lambda a: a.toggle(key="as_obj_voir").set_value(True)])
+    texte = (reponse_affichee(at) or "") + " ".join(x.value for x in at.info)
+    return at, texte
+
+
+def nombre(txt):
+    return float(re.search(r"-?[0-9][0-9 ]*(\.[0-9]+)?", txt).group(0).replace(" ", ""))
+
+
+for produit in A.PRODUITS:
+    m = metriques(ouvre(produit, A.ARGENT, BS))
+    resultat = m["Participation offerte" if produit == A.CP else "Coupon offert"]
+    at, texte = objection_page(produit, "marge")
+    coupon = f"{nombre(resultat):,.{0 if produit == A.CP else 2}f} %"
+    controle(f"{produit[:18]:18} | « Combien vous gagnez » : "
+             f"marge, rétro et {'participation' if produit == A.CP else 'coupon'} = Où va l'argent",
+             not at.exception and f"marge {m['Marge banque']}" in texte
+             and f"rétro {m['Rétrocession']}" in texte and coupon in texte,
+             erreur(at) or f"{m['Marge banque']}, {m['Rétrocession']}, {resultat}")
+
+    m = metriques(ouvre(produit, A.REVENTE, BS, a_zero))
+    at, texte = objection_page(produit, "sortie")
+    controle(f"{produit[:18]:18} | « Sortir avant l'échéance » : valeur et rachat = Revendre "
+             "(mois 0, niveau 100)",
+             not at.exception and f"valeur {m['Valeur juste']}" in texte
+             and f"rachat {m['Prix de rachat']}" in texte,
+             erreur(at) or f"{m['Valeur juste']}, {m['Prix de rachat']}")
+    if produit != A.CP:
+        at, texte = objection_page(produit, "piege")
+        lu = m["Proba de perte à l'échéance"]
+        proba = f"{nombre(lu):,.0f} %"
+        controle(f"{produit[:18]:18} | « Où est le piège » : probabilité de perte = Revendre "
+                 "(mois 0)", not at.exception and f"dans {proba} des cas" in texte,
+                 erreur(at) or f"{lu} -> {proba}")
+
+at = ouvre(A.AC, A.PITCH, BS, [lambda a: a.segmented_control(key="as_profil").set_value(A.CGP)])
+duree = re.search(r"durée de vie moyenne ([0-9.]+) an", at.code[0].value).group(1)
+_, texte = objection_page(A.AC, "rappel")
+controle("Autocall | « Pourquoi il s'arrête » : durée de vie = celle du pitch",
+         f"en moyenne {duree} an" in texte and f"moyenne {duree} an" in texte, duree)
+
+spread = [lambda a: a.sidebar.slider(key="spread").set_value(150)]
+at = ouvre(A.BRC, A.ARGENT, BS, spread)
+credit = next(r for _, r in at.table[0].value.iterrows()
+              if r["Composante"].startswith("Risque émetteur"))["EUR"].lstrip("-")
+at, texte = objection_page(A.BRC, "faillite", A.CGP, spread)
+controle("BRC spread 150 bp | « Et si la banque fait faillite » : apport du risque émetteur = "
+         "Où va l'argent", not at.exception and f"spread 150 bp, soit {credit}" in texte
+         and f"il apporte {credit}" in texte, erreur(at) or credit)
 
 print()
 if echecs:
