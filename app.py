@@ -14,8 +14,8 @@ import streamlit as st
 
 from barre import barre_laterale
 from vues import (accueil, comparateur, tracker, capital_protection, brc, autocall,
-                  bonus, twin_win, discount, laboratoire, grecques, couverture, entrainement,
-                  glossaire)
+                  bonus, twin_win, discount, backtest, laboratoire, grecques, couverture,
+                  entrainement, glossaire)
 
 st.set_page_config(page_title="Sliders Produits Structures", layout="wide")
 
@@ -31,6 +31,7 @@ PAGES = {
     "5 - Bonus Certificate": bonus,
     "6 - Twin-Win": twin_win,
     "7 - Discount Certificate": discount,
+    "Backtest historique": backtest,
     "Laboratoire modele": laboratoire,
     "Les grecques en mouvement": grecques,
     "Cout de couverture": couverture,
