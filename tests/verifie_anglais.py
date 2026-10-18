@@ -62,6 +62,33 @@ for modele in MODELES:
             if FRANCAIS.search(t):
                 restes.setdefault(t[:90], nom)
 
+# Atelier Sales, objections clients : chaque objection en anglais, reponse revelee
+from vues import atelier_sales as A  # noqa: E402
+
+for produit, cle in [(A.BRC, "as_obj_brc"), (A.AC, "as_obj_ac"), (A.CP, "as_obj_cp")]:
+    at = AppTest.from_file(APP, default_timeout=300)
+    at.run()
+    at.sidebar.toggle(key="anglais").set_value(True).run()
+    next(r for r in at.sidebar.radio if TAB["Atelier Sales"] in r.options).set_value(
+        TAB["Atelier Sales"]).run()
+    at.segmented_control(key="as_produit").set_value(TAB.get(produit, produit)).run()
+    at.segmented_control(key="as_section").set_value(TAB[A.OBJECTIONS]).run()
+    fautes = []
+    for k in A.LISTE_OBJECTIONS[produit]:
+        at.selectbox(key=cle).set_value(TAB[A.QUESTIONS[k]]).run()
+        at.toggle(key="as_obj_voir").set_value(True).run()
+        textes = [x.value for x in list(at.markdown) + list(at.info) + list(at.warning)
+                  if x.value.startswith(("**The client", "**À dire", "**What to tell", "**The figure",
+                                         "**The mistake"))]
+        if at.exception:
+            fautes.append(f"{k} : {at.exception[0].value[:120]}")
+        elif len(textes) < 3 or any(FRANCAIS.search(x) for x in textes):
+            fautes.append(f"{k} : " + next((x[:90] for x in textes if FRANCAIS.search(x)),
+                                           f"{len(textes)} blocs"))
+    controle(f"EN | Atelier Sales | Objections | {TAB.get(produit, produit)} : "
+             f"{len(A.LISTE_OBJECTIONS[produit])} objections en anglais", not fautes,
+             "; ".join(fautes[:3]))
+
 at = AppTest.from_file(APP, default_timeout=300)
 at.run()
 next(r for r in at.sidebar.radio if "Atelier Sales" in r.options).set_value("Atelier Sales").run()

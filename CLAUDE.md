@@ -142,6 +142,8 @@ rétrocession distributeur. Avec rétro nulle, ses coupons redonnent **exactemen
   prix de rachat (fourchette 1 % par défaut), décomposition temps / sous-jacent / vol / taux /
   spread. Référence : à t = 0, valeur = nominal - marge - rétro (982 EUR, BRC 1 an).
 - 0,02 à 0,4 s par appel : derrière un bouton et en cache (`Marche` est hachable).
+- Les réponses aux objections clients sont écrites dans la page (`vues/atelier_sales.py`,
+  `objection`) à partir des sorties de `sales.py` : aucune fonction ajoutée ici.
 
 ## Données réelles (`data/`, `backtest.py`, `calibration.py`)
 
@@ -185,6 +187,22 @@ rétrocession distributeur. Avec rétro nulle, ses coupons redonnent **exactemen
   - Revendre : `valeur_secondaire_*` + cascade de l'émission au prix de rachat.
   - Pitch : `pitch(s, profil, vue, faits(mk, s))`, modèles de phrases, 3 à 5 phrases, toujours le
     scénario de perte chiffré et le risque émetteur.
+  - Objections clients (18/10/2026) : `objection(s, profil, cle, faits(mk, s))`, fonction pure
+    comme le pitch, sans nouveau pricing. 9 à 10 objections par produit (`LISTE_OBJECTIONS`,
+    textes dans `QUESTIONS` ; rappel pour l'autocall, barrière-plancher pour BRC et autocall,
+    « garanti » pour le CP). Renvoie la phrase à dire (2 à 4 phrases), « le chiffre à citer » et
+    « l'erreur à éviter ». Profil partagé avec le pitch (`as_profil`, `_choix_profil`) :
+    particulier et conseiller en mots simples (+ une phrase pour le conseiller), institutionnel
+    en langage desk. Choix par produit (`as_obj_brc/ac/cp`), « Objection au hasard »
+    (`as_obj_hasard`), réponse cachée tant que `as_obj_voir` est décoché (remis à zéro à chaque
+    changement d'objection). Krach 2008 : `BAISSE_2008` 44,4 %, `PLUS_BAS_2008` 49,2 %, vérifiés
+    contre `data/eurostoxx50.csv`. Les tests vérifient que coupon, marge, rétro, valeur et
+    rachat à t = 0, probabilité de perte, durée de vie et apport du risque émetteur cités sont
+    ceux des autres sections.
+  - `faits()` donne les frais tels que la cascade les prélève (`marge_eur`, `retro_eur`,
+    `frais`) : pour l'autocall, sur la durée de vie attendue. Les métriques « Marge banque » /
+    « Rétrocession », les deux réseaux, l'encadré de revente et la phrase de liquidité du pitch
+    institutionnel l'utilisent aussi (avant : 3 ans pleins, 946 EUR au lieu de 983).
   - Références : rétro nulle -> coupon BRC 7,84 % (= page) ; à t = 0, valeur 982 / 983 / 910
     EUR (BRC 1 an / autocall 3 ans, frais sur ~0,9 an de vie attendue / CP 5 ans, marge 0,8 %
     + rétro 1 %). Graphe en cascade construit dans la page (`graphe_cascade`).

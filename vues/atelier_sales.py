@@ -1,7 +1,7 @@
 """
 Atelier Sales : les outils du Sales face au client (sales.py), plus un pitch.
 
-Quatre sections, un seul produit a la fois (BRC, Autocall, Capital
+Cinq sections, un seul produit a la fois (BRC, Autocall, Capital
 Protection), une seule structure partagee :
   1. Le client demande : reverse enquiry, la contrainte du client donne la
      structure ; « Retenir » ecrit la reponse dans la structure.
@@ -12,6 +12,10 @@ Protection), une seule structure partagee :
   4. Pitch client : phrases construites sur des modeles, selon le profil et
      la vue de marche du client. Toujours le scenario de perte et le risque
      emetteur.
+  5. Objections clients : le client pose une objection classique, la
+     reponse du Sales (phrase, chiffre a citer, erreur a eviter) est
+     chiffree avec le produit a l'ecran et reste cachee jusqu'a ce qu'on
+     la demande.
 
 Seule la section choisie est calculee, et chaque appel a sales.py est en
 cache (l'objet Marche est hachable) : les curseurs restent rapides.
@@ -19,6 +23,7 @@ cache (l'objet Marche est hachable) : les curseurs restent rapides.
 
 import json
 import math
+import random
 from dataclasses import dataclass, replace
 
 import altair as alt
@@ -33,9 +38,10 @@ from communs import MAX_CACHE
 
 BRC, AC, CP = "Barrier Reverse Convertible", "Autocall Phoenix", "Capital Protection"
 PRODUITS = [BRC, AC, CP]
-DEMANDE, ARGENT, REVENTE, PITCH = ("Le client demande", "Où va l'argent",
-                                   "Revendre en cours de vie", "Pitch client")
-SECTIONS = [DEMANDE, ARGENT, REVENTE, PITCH]
+DEMANDE, ARGENT, REVENTE, PITCH, OBJECTIONS = ("Le client demande", "Où va l'argent",
+                                               "Revendre en cours de vie", "Pitch client",
+                                               "Objections clients")
+SECTIONS = [DEMANDE, ARGENT, REVENTE, PITCH, OBJECTIONS]
 PARTICULIER, CGP, INSTIT = "Particulier", "Conseiller en gestion de patrimoine", "Institutionnel"
 PROFILS = [PARTICULIER, CGP, INSTIT]
 VUES = {"Forte hausse": "le marché va fortement monter",
@@ -672,13 +678,18 @@ def _section_argent(mk, s):
     quoi = "participation" if s.produit == CP else "coupon"
     cout = cascade.infos["cout_retro_par_pt"]
 
+    frais = {l.cle: l.montant for l in cascade.lignes}
+    # autocall : frais pris sur la duree de vie attendue, pas sur la maturite maximale
+    vie = (f"la durée de vie attendue ({cascade.infos['duree_vie']:,.2f} an)" if s.produit == AC
+           else _duree(T))
+    Tf = cascade.infos.get("duree_vie", T)
     k = st.columns(4)
     _metriques_resultat(s, cascade, k[0], "Participation offerte" if s.produit == CP
                         else "Coupon offert")
-    k[1].metric("Marge banque", G.eur(mk.marge * T * N),
-                help=f"{mk.marge * 100:,.1f}% par an sur {_duree(T)}, prélevée d'avance.")
-    k[2].metric("Rétrocession", G.eur(mk.retro * T * N),
-                help=f"{mk.retro * 100:,.1f}% par an sur {_duree(T)}, payée d'avance au "
+    k[1].metric("Marge banque", G.eur(frais["marge"]),
+                help=f"{mk.marge * 100:,.1f}% par an sur {vie}, prélevée d'avance.")
+    k[2].metric("Rétrocession", G.eur(frais["retro"]),
+                help=f"{mk.retro * 100:,.1f}% par an sur {vie}, payée d'avance au "
                      "distributeur.")
     k[3].metric("Coût de 1 % de rétro", f"{cout * 100:,.{0 if s.produit == CP else 2}f} pt"
                 + ("" if s.produit == CP else " p.a."),
@@ -729,8 +740,8 @@ def _section_argent(mk, s):
     _metriques_resultat(s, ca, k[0], f"Réseau A, rétro {ra:,.1f}%")
     _metriques_resultat(s, cb, k[1], f"Réseau B, rétro {rb:,.1f}%")
     k[2].metric("Écart pour le client", f"{(vb - va) * 100:+,.{d}f} pt",
-                help=f"{abs(rb - ra):,.1f} pt de rétro par an sur {_duree(T)} = "
-                     f"{G.eur(abs(rb - ra) / 100 * T * N)} pris sur le budget option.")
+                help=f"{abs(rb - ra):,.1f} pt de rétro par an sur {vie} = "
+                     f"{G.eur(abs(rb - ra) / 100 * Tf * N)} pris sur le budget option.")
 
     # le resultat est affine dans les frais : une droite, exacte, ancree sans retro
     c0 = _resultat_pa(s, _cascade(mk.avec(retro=0.0), s))
@@ -750,7 +761,7 @@ def _section_argent(mk, s):
                                                              G.NIVEAU)],
         marqueurs=[(ra, va * 100, G.PRODUIT), (rb, vb * 100, G.PRODUIT)],
         lignes_infobulle=[("Rétro payée sur la durée",
-                           [G.eur(v / 100 * T * N) for v in xr])],
+                           [G.eur(v / 100 * Tf * N) for v in xr])],
         legende=False, hauteur=320)
     G.affiche(graphe)
 
@@ -759,8 +770,8 @@ def _section_argent(mk, s):
             for la, lb in zip(ca.lignes, cb.lignes)]
     st.table(comp, hide_index=True)
     st.info(f"**Pourquoi deux {quoi}s différents.** La rétro est payée d'avance sur toute la "
-            f"durée : {abs(rb - ra):,.1f} pt par an sur {_duree(T)}, c'est "
-            f"{G.eur(abs(rb - ra) / 100 * T * N)} de moins dans le budget option pour le "
+            f"durée : {abs(rb - ra):,.1f} pt par an sur {vie}, c'est "
+            f"{G.eur(abs(rb - ra) / 100 * Tf * N)} de moins dans le budget option pour le "
             f"réseau B. La banque achète donc moins d'optionalité pour le client : le {quoi} "
             "baisse, la marge de la banque ne bouge pas.\n\n"
             "**À dire à un client qui compare deux offres** : à structure égale, l'écart de "
@@ -910,7 +921,9 @@ def _section_revente(mk, s):
     G.affiche(graphe)
     st.caption(v.message)
 
-    frais = (mk.marge + mk.retro) * T * N
+    # autocall : frais pris sur la duree de vie attendue (= valeur a l'emission)
+    Tf = _vie_autocall(mk, s)[0] if s.produit == AC else T
+    frais = (mk.marge + mk.retro) * Tf * N
     if s.produit == CP:
         st.info(f"**La protection ne joue qu'à l'échéance.** Avant, le produit vaut une "
                 f"obligation ({G.eur(v.infos['obligation'])} aujourd'hui) plus des options : "
@@ -918,7 +931,7 @@ def _section_revente(mk, s):
                 "client « garanti » qui revend avant l'échéance peut perdre.")
     else:
         st.info(f"**Revendre le lendemain de l'émission coûte déjà {G.eur(frais + fourchette / 200 * N)}** : "
-                f"marge ({G.eur(mk.marge * T * N)}) et rétro ({G.eur(mk.retro * T * N)}) "
+                f"marge ({G.eur(mk.marge * Tf * N)}) et rétro ({G.eur(mk.retro * Tf * N)}) "
                 f"payées d'avance, plus la demi-fourchette ({G.eur(fourchette / 200 * N)}). "
                 "Un produit structuré se garde jusqu'à l'échéance ou au rappel.")
 
@@ -932,9 +945,13 @@ def faits(mk, s):
     cascade = _cascade(mk, s)
     lignes = {l.cle: l.montant for l in cascade.lignes}
     f = {"N": mk.nominal, "T": s.T, "retro": mk.retro, "marge": mk.marge, "spread": mk.spread,
-         "recovery": mk.recovery, "r": mk.r, "credit": abs(lignes.get("credit", 0.0)),
-         "taux": mk.nominal - lignes["zc"], "cout_retro": cascade.infos["cout_retro_par_pt"],
-         "resultat": _resultat_pa(s, cascade)}
+         "recovery": mk.recovery, "r": mk.r, "q": mk.q, "credit": abs(lignes.get("credit", 0.0)),
+         "taux": mk.nominal - lignes["zc"], "zc": lignes["zc"],
+         "cout_retro": cascade.infos["cout_retro_par_pt"],
+         "resultat": _resultat_pa(s, cascade),
+         # frais payes d'avance, tels que la cascade les preleve (autocall : sur la vie attendue)
+         "marge_eur": lignes["marge"], "retro_eur": lignes["retro"],
+         "frais": lignes["marge"] + lignes["retro"]}
     if s.produit == BRC:
         f.update(put=-lignes["put"], p_perte=cascade.infos["proba_perte"],
                  p_touche=cascade.infos["proba_touche"])
@@ -1213,7 +1230,7 @@ def pitch(s, profil, vue, f):
         else:
             phrases.append(("retro", f"""Aucune rétrocession n'est prévue : {finance} affiché est brut de frais de distribution."""))
     elif profil == INSTIT:
-        frais = (f["marge"] + f["retro"]) * T * N
+        frais = f["frais"]
         phrases.append(("liquidite", f"Valeur juste à l'émission {G.eur(N - frais)} pour "
                                      f"{G.eur(N)} ({G.eur(frais)} de marge et rétro payées "
                                      "d'avance) ; rachat quotidien par l'émetteur, fourchette "
@@ -1223,13 +1240,7 @@ def pitch(s, profil, vue, f):
 
 def _section_pitch(mk, s):
     c = st.columns([3, 2])
-    profil = c[0].segmented_control(
-        "Profil du client", PROFILS, default=PARTICULIER, required=True, key="as_profil",
-        bind="query-params",
-        help="Le même produit ne se présente pas de la même façon. Particulier : des euros et "
-             "des mots simples. Conseiller en gestion de patrimoine : le mécanisme, la "
-             "rétrocession, l'adéquation. Institutionnel : les options, les probabilités "
-             "risque-neutres, la valeur juste.")
+    profil = _choix_profil(c[0])
     vue = c[1].selectbox("Vue de marché du client", list(VUES), index=2, key="as_vue",
                          bind="query-params",
                          help="Ce que le client attend du marché. Le pitch dit si le produit y "
@@ -1253,14 +1264,534 @@ def _section_pitch(mk, s):
 
 
 # =====================================================================
+# 5. OBJECTIONS CLIENTS
+# =====================================================================
+
+# Euro Stoxx 50 en 2008 (data/eurostoxx50.csv) : -44,4 % du 31/12/2007 au
+# 31/12/2008, plus bas a 49,2 % du niveau de depart le 21/11/2008
+BAISSE_2008, PLUS_BAS_2008 = 0.444, 0.492
+
+QUESTIONS = {
+    "piege": "Pourquoi ce coupon est-il si élevé, où est le piège ?",
+    "piege_cp": "Capital garanti et la hausse en plus : où est le piège ?",
+    "faillite": "Et si la banque fait faillite ?",
+    "etf": "Pourquoi pas simplement un ETF ?",
+    "marge": "Combien vous gagnez dessus ?",
+    "sortie": "Je peux sortir avant l'échéance ?",
+    "krach": "Et si le marché s'effondre comme en 2008 ?",
+    "hausse": "Pourquoi je ne profite pas de toute la hausse ?",
+    "concurrent": "Une autre banque me propose un meilleur coupon.",
+    "concurrent_cp": "Une autre banque me propose une meilleure participation.",
+    "barriere": "Avec la barrière, ma perte est limitée, non ?",
+    "rappel": "Pourquoi le produit s'arrête-t-il tout seul ?",
+    "garanti": "Capital garanti, donc je ne peux rien perdre ?",
+}
+LISTE_OBJECTIONS = {
+    BRC: ["piege", "faillite", "etf", "marge", "sortie", "krach", "hausse", "concurrent",
+          "barriere"],
+    AC: ["piege", "rappel", "faillite", "etf", "marge", "sortie", "krach", "hausse",
+         "concurrent", "barriere"],
+    CP: ["piege_cp", "garanti", "faillite", "etf", "marge", "sortie", "krach", "hausse",
+         "concurrent_cp"],
+}
+
+
+def _ans(x):
+    """0.92 -> '0.9 an', 2.5 -> '2.5 ans'."""
+    return f"{x:,.1f} an" + ("s" if x >= 2 else "")
+
+
+def objection(s, profil, cle, f):
+    """
+    La reponse d'un bon Sales a une objection, chiffree avec les valeurs du
+    produit (f, voir faits). Particulier et conseiller : des mots simples
+    (le conseiller les redit a son client), plus une phrase pour lui quand
+    c'est utile ; institutionnel : le mecanisme et les grandeurs du desk.
+    Renvoie {"reponse", "chiffre", "erreur"}.
+    """
+    N, T, c = f["N"], s.T, f["resultat"]
+    inst, cgp = profil == INSTIT, profil == CGP
+    duree = _duree(T)
+    sj = _sous_jacent(s) if profil == PARTICULIER else (
+        f"le plus faible des {s.n_actifs} sous-jacents" if s.produit == AC and s.n_actifs > 1
+        else "le sous-jacent")
+    rec, r = _p(f["recovery"], 0), _p(f["r"], 1)
+    quoi = "la participation" if s.produit == CP else "le coupon"
+    val = _p(c, 0) if s.produit == CP else _p(c, 2)
+    par_an = "" if s.produit == CP else " par an"
+    frais = f["frais"]
+    vie = f["duree"] if s.produit == AC else T
+    sur_vie = (f"sur la durée de vie attendue de {_ans(vie)}" if s.produit == AC
+               else f"sur {duree}")
+    valeur0 = N - frais
+    rachat0 = valeur0 - 0.005 * N          # fourchette de 1 %, comme la section Revendre
+    sans = c + (f["marge"] + f["retro"]) * 100 * f["cout_retro"]
+    interets = N * (math.exp(f["r"] * T) - 1)
+    d = 0 if s.produit == CP else 2
+
+    if cle == "piege":
+        if s.produit == BRC:
+            if inst:
+                rep = (f"Le coupon est la prime d'un put down-and-in {_p(s.barriere, 0)} strike "
+                       f"{_p(s.strike, 0)} vendu par le client ({G.eur(f['put'])} sur {G.eur(N)}), "
+                       f"ajoutée aux {G.eur(f['taux'])} que donnent les taux. Pas de levier "
+                       f"caché : probabilité risque-neutre de perte en capital {_p(f['p_perte'])}, "
+                       f"de knock-in {_p(f['p_touche'])}.")
+                chiffre = (f"Put vendu : {G.eur(f['put'])} ; perte en capital dans "
+                           f"{_p(f['p_perte'])} des scénarios.")
+            else:
+                rep = (f"Le piège n'est pas caché, c'est le risque que vous prenez : {val} par an "
+                       "rémunère l'assurance que vous vendez à la banque contre une forte baisse "
+                       f"de l'indice. Sans risque, on obtient {r} par an aujourd'hui ; l'écart "
+                       f"paie ce risque. Si l'indice passe sous {_p(s.barriere, 0)} de son niveau "
+                       f"de départ et finit sous {_p(s.strike, 0)}, vous perdez comme lui : dans "
+                       f"nos simulations, cela arrive dans {_p(f['p_perte'], 0)} des cas.")
+                chiffre = (f"{val} par an contre {r} sans risque ; perte en capital dans "
+                           f"{_p(f['p_perte'], 0)} des cas.")
+            erreur = ("Répondre « il n'y a pas de piège », ou parler du coupon sans nommer le "
+                      "scénario de perte : le coupon élevé est exactement le prix du risque.")
+        else:
+            if inst:
+                rep = (f"Le coupon de {_p(f['coupon_obs'], 2)} par observation ({val} par an) est "
+                       f"financé par un put down-and-in européen {_p(s.bar_capital, 0)} vendu par "
+                       f"le client ({G.eur(f['put'])}) et par le rappel, qui raccourcit la durée "
+                       f"de vie attendue à {_ans(f['duree'])}. Probabilité risque-neutre de perte "
+                       f"en capital : {_p(f['p_perte'])}.")
+                chiffre = (f"Put vendu : {G.eur(f['put'])} ; perte en capital dans "
+                           f"{_p(f['p_perte'])} des scénarios.")
+            else:
+                rep = (f"Le piège n'est pas caché, c'est le risque que vous prenez : {val} par an "
+                       "rémunère l'assurance que vous vendez à la banque contre une forte baisse "
+                       f"à l'échéance, et le coupon n'est versé que si {sj} reste au-dessus de "
+                       f"{_p(s.bar_coupon, 0)}. Sans risque, on obtient {r} par an aujourd'hui. "
+                       f"Si {sj} a perdu plus de {_p(1 - s.bar_capital, 0)} à l'échéance, vous "
+                       f"subissez toute la baisse : dans nos simulations, cela arrive dans "
+                       f"{_p(f['p_perte'], 0)} des cas.")
+                chiffre = (f"{val} par an, conditionnel, contre {r} sans risque ; perte en capital "
+                           f"dans {_p(f['p_perte'], 0)} des cas.")
+            erreur = ("Présenter le coupon comme acquis : il est conditionnel, et sous la "
+                      "barrière de capital la perte part du niveau de départ, pas de la barrière.")
+    elif cle == "piege_cp":
+        if inst:
+            rep = (f"Zéro-coupon plus call spread : {G.eur(f['zc'])} placés pour rendre "
+                   f"{_p(s.protection, 0)} du nominal, {G.eur(f['call'] - f['call_cap'])} "
+                   f"d'options, {G.eur(frais)} de frais, pour {val} de participation. Le client "
+                   f"finance son call avec le portage qu'il abandonne : {G.eur(interets)} au taux "
+                   f"sans risque sur {duree}.")
+        else:
+            rep = (f"Le prix de la garantie, c'est ce que vous ne touchez pas : pendant {duree}, "
+                   f"pas d'intérêts, alors qu'un placement sans risque à {r} rapporterait "
+                   f"{G.eur(interets)} sur {G.eur(N)}. Vous recevez {val} de la hausse de "
+                   "l'indice, sans les dividendes. Et la garantie est celle de la banque "
+                   "émettrice : elle ne vaut que si la banque est là à l'échéance.")
+        chiffre = (f"{G.eur(interets)} d'intérêts abandonnés sur {duree} ; participation {val}.")
+        erreur = ("Dire « vous ne pouvez rien perdre » : le client renonce au rendement sans "
+                  "risque, et le capital dépend de la survie de l'émetteur.")
+    elif cle == "garanti":
+        if s.protection < 0.9995:
+            debut = (f"Non : la protection est de {_p(s.protection, 0)}, vous pouvez donc perdre "
+                     f"jusqu'à {G.eur(N * (1 - s.protection))} à l'échéance si l'indice baisse.")
+        else:
+            debut = (f"À l'échéance, vous récupérez au moins {G.eur(N)}, à deux conditions : "
+                     "garder le produit jusqu'au bout, et que la banque émettrice ne fasse pas "
+                     "faillite.")
+        if inst:
+            rep = (f"Protection {_p(s.protection, 0)} à l'échéance, hors défaut de l'émetteur "
+                   f"(recouvrement {rec}). En cours de vie, le produit vaut un zéro-coupon plus "
+                   f"des options : {G.eur(valeur0)} le lendemain de l'émission, sous le pair, et "
+                   "sensible aux taux et au spread.")
+        else:
+            rep = (debut + " Avant l'échéance, le prix suit les taux et le marché : le lendemain "
+                   f"de l'émission, il vaut déjà environ {G.eur(valeur0)}.")
+            if s.protection < 0.9995:
+                rep += " La garantie, elle, dépend de la banque émettrice."
+        chiffre = (f"Garanti à l'échéance : {G.eur(N * s.protection)} ; valeur le lendemain de "
+                   f"l'émission : {G.eur(valeur0)}.")
+        erreur = ("Dire « garanti » sans préciser « à l'échéance, et par l'émetteur » : c'est ce "
+                  "qui revient le plus souvent en réclamation.")
+    elif cle == "faillite":
+        finance = "la participation" if s.produit == CP else "le coupon"
+        if inst:
+            if f["spread"] > 0:
+                rep = (f"Exposition senior non sécurisée à l'émetteur : spread {f['spread']:,.0f} "
+                       f"bp, recouvrement {rec}, soit {G.eur(f['credit'])} de valeur sur "
+                       f"{G.eur(N)}, déjà dans {finance}. Pour la réduire : un émetteur mieux "
+                       "noté, ou un produit collatéralisé, au prix d'un rendement plus bas.")
+            else:
+                rep = ("Exposition senior non sécurisée à l'émetteur, recouvrement supposé "
+                       f"{rec} ; le spread est à 0 bp dans cette vue de marché, le risque n'est "
+                       f"donc pas rémunéré dans {finance}. Pour la réduire : diversifier les "
+                       "émetteurs, ou un produit collatéralisé.")
+        else:
+            rep = ("C'est un vrai risque, et il faut le dire : ce produit est une dette de la "
+                   "banque émettrice. Si elle fait faillite, "
+                   + ("la garantie ne joue plus et " if s.produit == CP else "")
+                   + f"vous ne récupérez qu'une partie de votre mise, de l'ordre de {rec}, soit "
+                   f"environ {G.eur(N * f['recovery'])} pour {G.eur(N)}.")
+            if f["spread"] > 0:
+                rep += (f" Ce risque est payé : il apporte {G.eur(f['credit'])} au budget du "
+                        "produit.")
+            else:
+                rep += (" Avec un spread de 0 bp dans cette vue de marché, il n'est pas payé : "
+                        "c'est une raison de répartir sur plusieurs émetteurs.")
+            if cgp:
+                rep += (" Pour votre allocation : regardez la notation et le spread de "
+                        f"l'émetteur, pas seulement {finance}.")
+        chiffre = (f"Recouvrement de l'ordre de {rec} : {G.eur(N * f['recovery'])} pour {G.eur(N)} ; "
+                   + (f"spread {f['spread']:,.0f} bp, soit {G.eur(f['credit'])} dans le budget."
+                      if f["spread"] > 0 else "spread à 0 bp, risque non rémunéré."))
+        erreur = ("Dire « la banque ne peut pas faire faillite » : en 2008, Lehman Brothers "
+                  "émettait aussi des produits à capital garanti. Le risque émetteur se nomme "
+                  "toujours.")
+    elif cle == "etf":
+        div = f["q"] * vie * N
+        if s.produit == CP:
+            if inst:
+                rep = (f"L'ETF est delta 1. Ici, le client est long {val} d'un call à la monnaie"
+                       + ("" if s.cap >= 2.995 else f" plafonné à {_p(s.cap, 0)}")
+                       + f", avec un plancher à {_p(s.protection, 0)} : il échange les dividendes "
+                       f"({_p(f['q'])} par an) et une partie de la hausse contre la convexité.")
+            else:
+                rep = ("Un ETF vous donne toute la hausse de l'indice, mais aussi toute la baisse. "
+                       f"Ici, vous récupérez au moins {_p(s.protection, 0)} de votre capital dans "
+                       f"{duree}, et vous recevez {val} de la hausse ; vous renoncez aux dividendes "
+                       f"({_p(f['q'])} par an) et à une partie de la hausse. C'est le choix de "
+                       "quelqu'un qui ne peut pas se permettre de perdre.")
+            chiffre = (f"Participation {val} contre 100 % pour l'ETF, avec {_p(s.protection, 0)} "
+                       "du capital protégé à l'échéance.")
+        else:
+            seuil = s.barriere if s.produit == BRC else s.bar_capital
+            qui = sj if s.produit == AC else "l'indice"
+            if inst:
+                rep = ("L'ETF est delta 1. Le produit vend de la volatilité à la baisse et renonce "
+                       f"aux dividendes ({_p(f['q'])} par an, environ {G.eur(div)} {sur_vie}) "
+                       f"contre {val} par an : il se justifie quand la vol implicite paraît chère. "
+                       f"Frais : {G.eur(frais)} {sur_vie}.")
+            else:
+                rep = ("Un ETF vous donne toute la hausse et toute la baisse de l'indice, avec ses "
+                       f"dividendes ({_p(f['q'])} par an), pour des frais faibles. Ce produit fait "
+                       f"un autre pari : {val} par an même si l'indice ne monte pas, et votre "
+                       f"capital rendu tant que {qui} ne "
+                       f"perd pas plus de {_p(1 - seuil, 0)}. En "
+                       f"échange, le gain est plafonné aux coupons et les frais sont plus élevés "
+                       f"({G.eur(frais)} {sur_vie}).")
+                if cgp:
+                    rep += (" Pour un client qui attend une forte hausse, l'ETF reste le "
+                            "meilleur choix.")
+            chiffre = (f"Dividendes abandonnés : {_p(f['q'])} par an ; frais du produit : "
+                       f"{G.eur(frais)} {sur_vie}.")
+        erreur = ("Dénigrer l'ETF : pour un client qui attend une forte hausse, c'est souvent le "
+                  "meilleur choix. Le produit structuré répond à une autre vue de marché.")
+    elif cle == "marge":
+        if inst:
+            rep = (f"Marge banque {G.eur(f['marge_eur'])}, rétrocession "
+                   f"{G.eur(f['retro_eur'])}, prélevées d'avance {sur_vie} : valeur juste à "
+                   f"l'émission {G.eur(valeur0)} pour {G.eur(N)}. Sans frais, {quoi} serait de "
+                   f"{_p(sans, d)}{par_an}. La marge paie aussi le risque que le desk garde : "
+                   "gap, corrélation, vol de la vol.")
+        else:
+            rep = (f"La banque prend une marge de {G.eur(f['marge_eur'])} sur {G.eur(N)} "
+                   f"({_p(f['marge'])} par an) et le distributeur une rétrocession de "
+                   f"{G.eur(f['retro_eur'])} : {G.eur(frais)} au total {sur_vie}, prélevés au "
+                   f"départ et déjà compris dans le prix. Sans ces frais, {quoi} serait de "
+                   f"{_p(sans, d)}{par_an} au lieu de {val}.")
+            if cgp:
+                rep += (f" La rétrocession de {_p(f['retro'])} par an est la rémunération de "
+                        f"votre cabinet : chaque point coûte {f['cout_retro'] * 100:,.{d}f} pt "
+                        f"de {quoi.split()[-1]} à votre client.")
+        chiffre = (f"{G.eur(frais)} de frais sur {G.eur(N)} (marge {G.eur(f['marge_eur'])}, "
+                   f"rétro {G.eur(f['retro_eur'])}) ; sans frais, {_p(sans, d)}{par_an}.")
+        erreur = ("Esquiver ou répondre « presque rien » : les frais figurent dans le document "
+                  "d'informations clés, le client les retrouvera. Donner le chiffre, et dire ce "
+                  "qu'il paie.")
+    elif cle == "sortie":
+        fin = " ou au rappel" if s.produit == AC else ""
+        if inst:
+            rep = (f"Rachat quotidien par l'émetteur, fourchette de l'ordre de 1 % : valeur juste "
+                   f"le lendemain de l'émission {G.eur(valeur0)}, prix de rachat "
+                   f"{G.eur(rachat0)}. Ensuite, le prix suit le sous-jacent, la vol, les taux et "
+                   "le spread de l'émetteur : la section « Revendre en cours de vie » le chiffre.")
+        else:
+            rep = ("Oui : la banque rachète le produit chaque jour, mais au prix du marché, pas "
+                   f"au nominal. Le lendemain de l'émission, il vaut environ {G.eur(valeur0)} "
+                   f"pour {G.eur(N)}, car les frais sont payés d'avance, et la banque le rachète "
+                   f"autour de {G.eur(rachat0)}. Ce produit est fait pour être gardé jusqu'à "
+                   f"l'échéance{fin}"
+                   + (" : la protection ne joue qu'à ce moment-là." if s.produit == CP else "."))
+        chiffre = (f"Le lendemain de l'émission : valeur {G.eur(valeur0)}, rachat "
+                   f"{G.eur(rachat0)} pour {G.eur(N)}.")
+        erreur = ("Promettre le nominal en cas de sortie : la banque garantit la liquidité, pas "
+                  "le prix" + (", et la protection n'existe qu'à l'échéance."
+                               if s.produit == CP else "."))
+    elif cle == "krach":
+        fin = 1 - BAISSE_2008
+        annee = (f"Sur l'année 2008, l'Euro Stoxx 50 a perdu {_p(BAISSE_2008, 0)}, avec un plus "
+                 f"bas à {_p(PLUS_BAS_2008, 0)} de son niveau de début d'année, en novembre.")
+        if s.produit == BRC:
+            touchee = s.barriere >= (PLUS_BAS_2008 if s.continu else fin)
+            perte = touchee and fin < s.strike
+            rendu = N * (fin / s.strike if perte else 1.0) + c * T * N
+            if perte:
+                suite = (f" Dans ce scénario, la barrière de {_p(s.barriere, 0)} est franchie et "
+                         f"vous perdez comme l'indice : environ {G.eur(rendu)} rendus pour "
+                         f"{G.eur(N)}, coupon compris.")
+            else:
+                suite = (f" Avec une barrière à {_p(s.barriere, 0)}, ce scénario précis ne la "
+                         f"franchit pas : {G.eur(rendu)} rendus, coupon compris ; une crise plus "
+                         "longue, comme 2000-2003, l'aurait franchie.")
+        elif s.produit == AC:
+            perte = fin < s.bar_capital
+            rendu = N * fin if perte else N
+            if perte:
+                suite = (f" Si {sj} finit l'échéance à {_p(fin, 0)} de son niveau de départ, "
+                         f"comme l'indice fin 2008, sous la barrière de capital de "
+                         f"{_p(s.bar_capital, 0)}, vous subissez toute la baisse : environ "
+                         f"{G.eur(rendu)} rendus pour {G.eur(N)}, plus les coupons déjà touchés.")
+            else:
+                suite = (f" Avec une barrière de capital à {_p(s.bar_capital, 0)}, finir à "
+                         f"{_p(fin, 0)} "
+                         f"rend le capital ({G.eur(rendu)}) ; les coupons, eux, s'arrêtent tant "
+                         f"que {sj} reste sous {_p(s.bar_coupon, 0)}.")
+        else:
+            rendu = N * s.protection
+            suite = (f" À l'échéance, vous récupérez {G.eur(rendu)} : c'est exactement ce pour "
+                     "quoi ce produit existe, à condition que la banque émettrice survive. En "
+                     "2008, les porteurs de produits garantis par Lehman Brothers n'ont récupéré "
+                     "qu'une partie de leur mise, des années plus tard.")
+        if inst:
+            rep = (f"Euro Stoxx 50 en 2008 : {_p(-BAISSE_2008)} sur l'année, plus bas à "
+                   f"{_p(PLUS_BAS_2008)} du niveau initial. Rejoué sur ce produit : "
+                   f"{G.eur(rendu)} pour {G.eur(N)}"
+                   + ("" if s.produit == CP else
+                      f" ; probabilité risque-neutre de perte en capital {_p(f['p_perte'])}")
+                   + ". Le stress test se montre au client, il ne se résume pas à une "
+                   "probabilité.")
+        else:
+            rep = annee + suite
+            if s.produit != CP and len(suite) < 260:
+                rep += (" Dans nos simulations, une perte arrive dans "
+                        f"{_p(f['p_perte'], 0)} des cas.")
+        chiffre = (f"Euro Stoxx 50 en 2008 : {_p(-BAISSE_2008, 0)} ; dans ce scénario, "
+                   f"{G.eur(rendu)} rendus pour {G.eur(N)}.")
+        if s.produit == CP:
+            erreur = ("Oublier le risque émetteur : en 2008, c'est la faillite de Lehman "
+                      "Brothers, pas la baisse des marchés, qui a fait perdre les porteurs de "
+                      "produits garantis.")
+        else:
+            erreur = ("Promettre que la barrière tiendra : en 2008, l'indice est descendu à "
+                      f"{_p(PLUS_BAS_2008, 0)} de son niveau de début d'année. Le scénario de "
+                      "perte se chiffre, il ne se minimise pas.")
+    elif cle == "hausse":
+        if s.produit == BRC:
+            if inst:
+                rep = (f"Le client est vendeur d'un put, pas acheteur d'un call : rendement "
+                       f"plafonné au coupon ({_p(c * T)} sur {duree}), profil concave. Pour une "
+                       "vue haussière, un call spread ou un Capital Protection.")
+            else:
+                rep = ("Parce que ce produit ne vend pas de la hausse, il vend un revenu : vous "
+                       f"touchez {val} par an quoi que fasse l'indice, soit au plus "
+                       f"{G.eur(c * T * N)} sur {duree}. Même si l'indice monte de 30 %, vous "
+                       "gagnez le coupon, pas plus. Si vous attendez une forte hausse, un produit "
+                       "à participation ou l'indice lui-même sont plus adaptés.")
+            chiffre = f"Gain maximum : {G.eur(c * T * N)} sur {duree}, soit {_p(c * T)}."
+            erreur = ("Laisser croire que le client profite de la hausse : son gain est plafonné "
+                      "au coupon, quoi que fasse le marché.")
+        elif s.produit == AC:
+            if inst:
+                rep = (f"Le client est court de l'option de rappel : au-dessus de "
+                       f"{_p(s.trigger, 0)}, le produit s'arrête avec un coupon de "
+                       f"{_p(f['coupon_obs'], 2)}. Rappel dès la première date dans "
+                       f"{_p(f['rappel_1'])} des scénarios, durée de vie attendue "
+                       f"{_ans(f['duree'])} : le gain est plafonné, le risque de baisse reste "
+                       "entier.")
+            else:
+                rep = (f"Le produit s'arrête dès que {sj} dépasse {_p(s.trigger, 0)} de son "
+                       "niveau de départ à une date d'observation : vous récupérez votre capital "
+                       f"et le coupon de {_p(f['coupon_obs'], 2)}, et c'est tout. En échange, vous "
+                       "êtes payé même dans un marché stable. Dans nos simulations, il est "
+                       f"rappelé dès la première date dans {_p(f['rappel_1'], 0)} des cas.")
+            chiffre = (f"Rappel dès la première date dans {_p(f['rappel_1'], 0)} des cas ; durée "
+                       f"de vie moyenne {_ans(f['duree'])} sur {duree}.")
+            erreur = ("Promettre la hausse du marché : le gain s'arrête au coupon, et le rappel "
+                      "coupe le produit au moment où il devenait intéressant.")
+        else:
+            options = f["call"] - f["call_cap"]       # ce qui reste pour la hausse
+            gain = ("" if s.cap >= 2.995 else
+                    f", dans la limite d'un gain de {_p(c * (s.cap - 1), 0)}")
+            if c >= 1 and s.cap < 2.995:
+                # participation au-dela de 100 % : c'est le cap qui la paie
+                if inst:
+                    rep = (f"Participation {val} financée par la vente du call au cap "
+                           f"{_p(s.cap, 0)} ({G.eur(f['call_cap'])}) : le client échange les "
+                           f"très fortes hausses contre un levier sur les hausses modérées. Gain "
+                           f"maximum {_p(c * (s.cap - 1), 0)}.")
+                else:
+                    rep = (f"Vous recevez déjà {val} de la hausse, plus que l'indice lui-même, "
+                           f"mais jusqu'à un plafond : au-delà de {_p(s.cap - 1, 0)} de hausse, "
+                           f"votre gain s'arrête à {_p(c * (s.cap - 1), 0)}. C'est ce plafond, "
+                           "revendu par la banque, qui paie la participation au-delà de 100 %.")
+            elif inst:
+                rep = (f"Après le zéro-coupon ({G.eur(f['zc'])}), les frais ({G.eur(frais)}) et "
+                       f"le risque émetteur, il reste {G.eur(options)} d'options : le call à la "
+                       f"monnaie coûte plus, d'où {val} de participation{gain}. Leviers : "
+                       "protection plus basse, maturité plus longue, cap, ou moyenne des cours.")
+            else:
+                rep = (f"Parce que la garantie coûte : sur {G.eur(N)}, {G.eur(f['zc'])} servent à "
+                       f"garantir {_p(s.protection, 0)} du capital à l'échéance, et après les "
+                       f"frais, il ne reste que {G.eur(options)} pour acheter de la hausse. Cela "
+                       f"paie {val} de la hausse{gain}. Une protection plus basse ou une durée "
+                       "plus longue augmenterait la participation.")
+            chiffre = (f"Participation {val}{gain} ; {G.eur(f['zc'])} sur {G.eur(N)} servent à "
+                       "la garantie.")
+            erreur = (f"Promettre « la hausse du marché » : le client n'en reçoit que {val}, et "
+                      "pas les dividendes.")
+    elif cle in ("concurrent", "concurrent_cp"):
+        cout = f"{f['cout_retro'] * 100:,.{d}f} pt"
+        de_quoi = f"de {quoi.split()[-1]}{par_an}"
+        memes = ("même protection, même cap" if s.produit == CP else "mêmes barrières")
+        if inst:
+            rep = ("À structure identique, l'écart vient du spread de financement de l'émetteur, "
+                   f"des frais et de la couverture. Un point de frais par an vaut {cout} "
+                   f"{de_quoi}. Comparez la valeur juste du document d'informations "
+                   "clés et le spread CDS des deux émetteurs.")
+        else:
+            rep = ("C'est possible, et il faut comparer à structure égale : même sous-jacent, "
+                   f"même durée, {memes}. Ensuite, deux choses expliquent l'écart : les "
+                   f"frais de distribution, car chaque point de rétrocession par an coûte {cout} "
+                   f"{de_quoi}, et la solidité de l'émetteur, car une banque moins "
+                   "bien notée paie plus parce que vous portez plus de risque.")
+            if cgp:
+                rep += (" Un rendement plus haut chez un émetteur plus fragile rémunère un risque, "
+                        "ce n'est pas un meilleur produit.")
+        chiffre = f"1 % de rétrocession par an = {cout} {de_quoi}."
+        erreur = ("Dénigrer le concurrent ou baisser la marge à l'aveugle : vérifier d'abord que "
+                  "la structure et la signature de l'émetteur sont les mêmes.")
+    elif cle == "barriere":
+        if s.produit == BRC:
+            L = max(s.barriere - 0.10, 0.20)
+            rendu = N * L / s.strike + c * T * N
+            quand = "en cours de route" if s.continu else "à l'échéance"
+            if inst:
+                rep = (f"Put down-and-in : une fois la barrière de {_p(s.barriere, 0)} touchée, "
+                       f"la perte est linéaire depuis le strike {_p(s.strike, 0)}, pas depuis la "
+                       f"barrière. Probabilité de knock-in {_p(f['p_touche'])} ; à {_p(L, 0)} "
+                       f"final, {G.eur(rendu)} rendus coupon compris.")
+            else:
+                rep = ("Non, et c'est le malentendu le plus fréquent : la barrière n'est pas un "
+                       f"plancher. Tant que l'indice ne passe pas sous {_p(s.barriere, 0)} "
+                       f"{quand}, vous êtes protégé ; si elle est franchie et que l'indice finit "
+                       f"sous {_p(s.strike, 0)}, vous perdez comme lui, sans limite : à "
+                       f"{_p(L, 0)}, vous récupérez environ {G.eur(rendu)}, coupon compris. La "
+                       "barrière dit quand le risque commence, pas combien vous pouvez perdre.")
+            chiffre = (f"Barrière franchie, indice à {_p(L, 0)} : {G.eur(rendu)} rendus pour "
+                       f"{G.eur(N)} ; barrière touchée dans {_p(f['p_touche'], 0)} des cas.")
+            erreur = (f"Dire « vous ne pouvez perdre que {_p(1 - s.barriere, 0)} » : la perte se "
+                      "calcule depuis le strike, pas depuis la barrière.")
+        else:
+            juste = s.bar_capital - 0.01
+            if inst:
+                rep = (f"Put down-and-in européen {_p(s.bar_capital, 0)} : discontinuité à la "
+                       f"barrière, le remboursement passe de {G.eur(N)} à "
+                       f"{G.eur(N * s.bar_capital)} en un point. Perte linéaire depuis 100 %, "
+                       f"probabilité risque-neutre {_p(f['p_perte'])}.")
+            else:
+                rep = ("Non, et c'est le malentendu le plus fréquent : la barrière de capital "
+                       f"n'est pas un plancher. Si {sj} finit au-dessus de "
+                       f"{_p(s.bar_capital, 0)}, votre capital est rendu ; juste en dessous, à "
+                       f"{_p(juste, 0)}, vous récupérez {G.eur(N * juste)}, toute la baisse depuis "
+                       "le départ. Un point de marché à l'échéance peut coûter "
+                       f"{_p(1 - s.bar_capital, 0)} de votre capital.")
+            chiffre = (f"Juste sous {_p(s.bar_capital, 0)} à l'échéance : {G.eur(N * juste)} "
+                       f"rendus au lieu de {G.eur(N)}.")
+            erreur = (f"Dire « vous ne perdez qu'au-delà de {_p(1 - s.bar_capital, 0)} de "
+                      "baisse » : sous la barrière, la perte part du niveau de départ.")
+    elif cle == "rappel":
+        if inst:
+            rep = (f"Le rappel au-dessus de {_p(s.trigger, 0)} coupe le coupon dans les "
+                   "scénarios favorables au client : c'est ce qui le rend plus élevé. Durée de "
+                   f"vie attendue {_ans(f['duree'])} sur {duree}, rappel dès la première date "
+                   f"dans {_p(f['rappel_1'])} des scénarios ; le client porte le risque de "
+                   "réinvestissement.")
+        else:
+            rep = (f"Parce que c'est ce qui finance le coupon : dès que {sj} est au-dessus de "
+                   f"{_p(s.trigger, 0)} à une date d'observation, la banque vous rend votre "
+                   "capital plus le coupon, et ne vous doit plus rien. Dans nos simulations, cela "
+                   f"arrive dès la première date dans {_p(f['rappel_1'], 0)} des cas, et le "
+                   f"produit dure en moyenne {_ans(f['duree'])} sur {duree} possibles. La "
+                   "contrepartie : il faudra réinvestir, peut-être à des conditions moins bonnes.")
+        chiffre = (f"Rappel à la première date dans {_p(f['rappel_1'], 0)} des cas ; durée de vie "
+                   f"moyenne {_ans(f['duree'])} sur {duree}.")
+        erreur = ("Présenter la durée maximale comme la durée probable : l'argent revient "
+                  "probablement bien plus tôt, et il faudra le réinvestir.")
+    else:
+        raise ValueError(cle)
+    return {"reponse": rep, "chiffre": chiffre, "erreur": erreur}
+
+
+def _cache_reponse():
+    st.session_state["as_obj_voir"] = False
+
+
+def _hasard(cle, options):
+    actuelle = st.session_state.get(cle)
+    st.session_state[cle] = random.choice([o for o in options if o != actuelle] or options)
+    st.session_state["as_obj_voir"] = False
+
+
+def _choix_profil(col):
+    """Le profil du client, commun au pitch et aux objections."""
+    return col.segmented_control(
+        "Profil du client", PROFILS, default=PARTICULIER, required=True, key="as_profil",
+        bind="query-params",
+        help="Le même produit ne se présente pas de la même façon. Particulier : des euros et "
+             "des mots simples. Conseiller en gestion de patrimoine : le mécanisme, la "
+             "rétrocession, l'adéquation. Institutionnel : les options, les probabilités "
+             "risque-neutres, la valeur juste.")
+
+
+def _section_objections(mk, s):
+    suffixe = {BRC: "brc", AC: "ac", CP: "cp"}[s.produit]
+    cle_choix = f"as_obj_{suffixe}"
+    options = [QUESTIONS[k] for k in LISTE_OBJECTIONS[s.produit]]
+    profil = _choix_profil(st)
+    c = st.columns([3, 1], vertical_alignment="bottom")
+    question = c[0].selectbox(
+        "Objection du client", options, key=f"as_obj_{suffixe}", bind="query-params",
+        on_change=_cache_reponse,
+        help="Les objections qu'un Sales entend chaque semaine. La réponse reste cachée le temps "
+             "de préparer la vôtre.")
+    c[1].button("Objection au hasard", key="as_obj_hasard", on_click=_hasard,
+                args=(cle_choix, options), width="stretch",
+                help="Tire une autre objection et cache la réponse.")
+    cle = next(k for k in LISTE_OBJECTIONS[s.produit] if QUESTIONS[k] == question)
+
+    with st.container(border=True):
+        st.markdown(f"**Le client :** « {question} »")
+    voir = st.toggle("Voir la réponse du Sales", key="as_obj_voir", bind="query-params",
+                     help="Préparez d'abord votre réponse : 2 à 4 phrases, honnêtes, avec un "
+                          "chiffre. Puis comparez.")
+    if not voir:
+        st.caption("Réfléchissez à votre réponse, puis affichez celle du Sales.")
+        return
+    o = objection(s, profil, cle, faits(mk, s))
+    with st.container(border=True):
+        st.markdown("**À dire au client.** " + o["reponse"])
+    c = st.columns(2)
+    c[0].info("**Le chiffre à citer.** " + o["chiffre"])
+    c[1].warning("**L'erreur à éviter.** " + o["erreur"])
+    st.caption("Réponses construites sur des modèles, avec les chiffres des autres sections : "
+               "coupon, frais, probabilité de perte, risque émetteur.")
+
+
+# =====================================================================
 # PAGE
 # =====================================================================
 
 def affiche(m):
-    st.title("Atelier Sales", help="**Ce que c'est.** Les quatre gestes d'un Sales face à un "
+    st.title("Atelier Sales", help="**Ce que c'est.** Les cinq gestes d'un Sales face à un "
              "client, sur un même produit : trouver la structure qui répond à sa demande, "
-             "expliquer où va son argent, lui racheter le produit en cours de vie, et le lui "
-             "présenter.\n\n**Comment c'est construit.** Tout part de la vue de marché de la "
+             "expliquer où va son argent, lui racheter le produit en cours de vie, le lui "
+             "présenter, et répondre à ses objections.\n\n**Comment c'est construit.** Tout part de la vue de marché de la "
              "barre latérale et du cadre « Structure », plus la rétrocession du distributeur. "
              "Les calculs sont ceux des pages produits (mêmes trajectoires, même graine) : avec "
              "une rétro nulle, les coupons sont exactement les mêmes.\n\n**Pourquoi c'est le "
@@ -1269,7 +1800,7 @@ def affiche(m):
              "réponse honnête quand c'est hors d'atteinte, et sait dire où part chaque euro, "
              "rétro comprise.\n\n**Ce qu'il faut regarder.** Dans « Le client demande », "
              "l'arbitrage sur le graphe ; puis « Retenir cette structure » et suivre le même "
-             "produit dans les trois autres sections. Le pitch nomme toujours le scénario de "
+             "produit dans les autres sections. Le pitch nomme toujours le scénario de "
              "perte et le risque émetteur.")
     st.caption("Le client pose une contrainte. Le Sales rapporte une structure, son prix et "
                "son risque.")
@@ -1281,7 +1812,7 @@ def affiche(m):
     section = st.segmented_control(
         "Section", SECTIONS, default=DEMANDE, required=True, key="as_section",
         bind="query-params",
-        help="Seule la section choisie est calculée. Le cadre Structure est commun aux quatre.")
+        help="Seule la section choisie est calculée. Le cadre Structure est commun à toutes.")
 
     cherche = cible = None
     if section == DEMANDE:
@@ -1310,6 +1841,13 @@ def affiche(m):
                           "décomposition change un facteur à la fois, sur les mêmes tirages, "
                           "et retombe exactement sur la valeur du jour.")
         _section_revente(mk, s)
+    elif section == OBJECTIONS:
+        st.subheader("Objections clients",
+                     help="Le client fictif pose une objection classique ; la réponse d'un bon "
+                          "Sales arrive quand vous l'avez préparée. Chiffrée avec le produit à "
+                          "l'écran : coupon, frais sur la durée de vie, probabilité de perte, "
+                          "spread émetteur. Honnête : on ne cache jamais le risque.")
+        _section_objections(mk, s)
     else:
         st.subheader("Pitch client",
                      help="Trois à cinq phrases construites sur des modèles à partir du produit, "
