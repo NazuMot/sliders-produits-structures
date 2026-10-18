@@ -46,7 +46,8 @@ sous-jacents, step-down, indice à décrément, corrélation de stress, grecques
 Certificate · 6 Twin-Win · 7 Discount Certificate · Backtest historique · Laboratoire modèle
 (Black-Scholes vs Bates, calibrage Eurex) · Les grecques en mouvement · Coût de couverture ·
 Entraînement (40 questions d'entretien de Sales en 5 thèmes, réponse rédigée + démonstration
-chiffrée, mode hasard, compteur) · Glossaire (6 onglets + recherche insensible aux accents).
+chiffrée, mode hasard, compteur ; jeu « Devine le coupon ») · Glossaire (6 onglets + recherche
+insensible aux accents).
 
 Le détail des pages ajoutées le 18/10/2026 est dans la section « Pages enrichies » plus bas.
 
@@ -212,6 +213,19 @@ rétrocession distributeur. Avec rétro nulle, ses coupons redonnent **exactemen
   smile Eurex contre Bates calibré et Black-Scholes plat, erreurs, 8 paramètres. Le bouton écrit
   `st.session_state` (modele, vol, vol_lt, kappa, vol_vol, rho, sauts, taille_saut, disp_saut)
   dans un on_click, et `st.query_params` pour les curseurs Bates pas encore affichés.
+- **Entraînement, jeu « Devine le coupon »** (`vues/entrainement.py`, clés `ent_dv_*`, choix
+  de l'exercice par `ent_exercice`, testé par `tests/verifie_entrainement.py`) : `dv_tirage(graine,
+  choix)` tire un produit (BRC coupon, Capital Protection participation, Autocall coupon annuel
+  équivalent, Discount décote) et un marché borné (vol 12-40 %, taux 0-4,5 %, dividende 1,5-4,5 %,
+  skew 1-4, spread 0-150 bp), avec les clés et les crans des curseurs. Graine dans
+  `session_state["ent_dv_graine"]` et dans le lien. `dv_valeur` refait l'appel au moteur de la
+  page produit (5 000 trajectoires, graine 42, marge et recouvrement de la barre latérale ; sous
+  Bates, seule la vol de départ est tirée) ; `dv_resultat` ajoute l'effet de chaque paramètre pris
+  seul depuis les réglages par défaut (phrase « Pourquoi »). 0,01 à 0,2 s, en cache, calculé
+  seulement à la révélation. Verdict : dans le mille à 1 point, proche à 3. Score sur la séance
+  (`ent_dv_scores`, seule la première révélation compte). « Refaire ce produit dans sa page »
+  écrit le tirage dans la barre latérale (trajectoires 5 000) et la page : même chiffre affiché.
+  Si une page produit change sa façon d'appeler le moteur, adapter `dv_valeur`.
 - Graphes construits dans les pages, à remonter un jour dans `graphiques.py` s'ils servent
   ailleurs : `graphe_cascade` (Atelier Sales), `_graphe_emissions` et `_graphe_repartition`
   (Backtest), `_graphe_smile` (Laboratoire), `escalier()` (Autocall).

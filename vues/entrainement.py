@@ -1,4 +1,4 @@
-"""Entrainement : questions d'entretien de Sales en produits structures."""
+"""Entrainement : questions d'entretien de Sales en produits structures, et jeu « Devine le coupon »."""
 
 import math
 import random
@@ -7,8 +7,9 @@ import numpy as np
 import streamlit as st
 
 import moteur as M
+import graphiques as G
 from moteur import S0
-from communs import sim_bs, sim_bates, sim_panier, sim_defaut
+from communs import MAX_CACHE, sim_bs, sim_bates, sim_panier, sim_defaut
 
 
 CLIENT = "Discours client"
@@ -936,6 +937,448 @@ QUESTIONS = [
 
 
 # =====================================================================
+# JEU « DEVINE LE COUPON »
+# L'appli tire un produit et un marche, l'utilisateur estime le resultat,
+# puis le moteur le calcule exactement comme la page produit (memes
+# fonctions, meme graine, 5 000 trajectoires). Les reglages tires portent
+# les cles des curseurs : le bouton « Refaire ce produit dans sa page »
+# les ecrit tels quels dans la barre laterale et dans la page.
+# =====================================================================
+
+QUESTIONS_ENTRETIEN, JEU = "Questions d'entretien", "Devine le coupon"
+DV_BRC, DV_CP = "Barrier Reverse Convertible", "Capital Protection"
+DV_AC, DV_DC = "Autocall Phoenix", "Discount Certificate"
+DV_PRODUITS = [DV_BRC, DV_CP, DV_AC, DV_DC]
+DV_HASARD = "Au hasard"
+DV_PAGES = {DV_BRC: "3 - Barrier Reverse Convertible", DV_CP: "2 - Capital Protection",
+            DV_AC: "4 - Autocall Phoenix", DV_DC: "7 - Discount Certificate"}
+DV_N = 5000
+CONTINUE, EUROPEENNE = "Continue (américaine)", "À l'échéance (européenne)"
+FREQUENCES = {"Trimestrielle": 4, "Semestrielle": 2, "Annuelle": 1}
+CLASSIQUE = "Indice classique"
+
+# Le point de depart : reglages par defaut de la barre laterale et des pages produits
+DV_REF_MARCHE = {"taux": 3.0, "dividende": 2.5, "vol": 22.0, "skew": 2.0, "spread": 0}
+DV_REF_PRODUIT = {
+    DV_BRC: {"brc_maturite": 1.0, "brc_barriere": 70, "brc_observation": CONTINUE},
+    DV_CP: {"cp_maturite": 5.0, "cp_protection": 100, "cp_cap": 300},
+    DV_AC: {"ac_maturite": 3.0, "ac_frequence": "Trimestrielle", "ac_trigger": 100,
+            "ac_bar_coupon": 70, "ac_bar_capital": 60, "ac_memoire": True},
+    DV_DC: {"dc_maturite": 1.0, "dc_cap": 100},
+}
+# Les parametres qui comptent pour chaque produit (le Discount est hors risque emetteur)
+DV_MARCHE = {DV_BRC: ["vol", "skew", "taux", "dividende", "spread"],
+             DV_CP: ["taux", "spread", "vol", "skew", "dividende"],
+             DV_AC: ["vol", "skew", "taux", "dividende", "spread"],
+             DV_DC: ["vol", "skew", "taux", "dividende"]}
+
+# Ce qu'on devine
+DV_GRANDEUR = {
+    DV_BRC: "le coupon du BRC, en % par an",
+    DV_CP: "la participation à la hausse, en %",
+    DV_AC: "le coupon de l'autocall, en équivalent annuel (% par an)",
+    DV_DC: "la décote du certificat, en % du prix du sous-jacent",
+}
+DV_CIBLE = {DV_BRC: "au coupon", DV_CP: "à la participation", DV_AC: "au coupon",
+            DV_DC: "à la décote"}
+
+DV_NOMS = {
+    "vol": "Volatilité ATM", "skew": "Skew", "taux": "Taux sans risque",
+    "dividende": "Dividende", "spread": "Spread émetteur",
+    "brc_maturite": "Maturité", "brc_barriere": "Barrière", "brc_observation": "Observation",
+    "cp_maturite": "Maturité", "cp_protection": "Protection", "cp_cap": "Cap",
+    "ac_maturite": "Maturité maximale", "ac_frequence": "Observation", "ac_trigger": "Trigger",
+    "ac_bar_coupon": "Barrière de coupon", "ac_bar_capital": "Barrière de capital",
+    "ac_memoire": "Effet mémoire", "dc_maturite": "Maturité", "dc_cap": "Cap",
+}
+
+# Les memes, dans une phrase
+DV_PHRASE = {
+    "vol": "la volatilité ATM", "skew": "le skew", "taux": "le taux sans risque",
+    "dividende": "le dividende", "spread": "le spread émetteur",
+    "brc_maturite": "la maturité", "brc_barriere": "la barrière",
+    "brc_observation": "l'observation de la barrière", "cp_maturite": "la maturité",
+    "cp_protection": "le niveau de protection", "cp_cap": "le cap",
+    "ac_maturite": "la maturité maximale", "ac_frequence": "la fréquence d'observation",
+    "ac_bar_coupon": "la barrière de coupon", "ac_bar_capital": "la barrière de capital",
+    "ac_memoire": "l'effet mémoire", "dc_maturite": "la maturité", "dc_cap": "le cap",
+}
+
+
+def _dv_format(cle, v):
+    """Un reglage tire, comme on le lirait sur le curseur."""
+    if cle == "vol":
+        return f"{v:.0f} %"
+    if cle in ("taux", "dividende"):
+        return f"{v:.2f} %"
+    if cle == "skew":
+        return f"{v:.1f} pt / -10 %"
+    if cle == "spread":
+        return f"{v} bp"
+    if cle.endswith("maturite"):
+        return G.duree(v)
+    if cle == "ac_memoire":
+        return "Oui" if v else "Non"
+    if cle == "cp_cap" and v >= 300:
+        return "aucun (300 %)"
+    if isinstance(v, str):
+        return v
+    return f"{v} %"
+
+
+# Ce qui explique chaque parametre, produit par produit (vrai dans les deux sens)
+DV_POURQUOI = {
+    (DV_BRC, "vol"): "Plus la vol est haute, plus le put que le client vend à la banque vaut cher : la prime reversée en coupon grossit.",
+    (DV_BRC, "skew"): "Le skew rend les puts bas plus chers, et c'est justement un put à barrière basse que le client vend.",
+    (DV_BRC, "taux"): "Le coupon contient d'abord le taux sans risque : la banque place le nominal, chaque point de taux s'y retrouve presque tel quel.",
+    (DV_BRC, "dividende"): "Le client ne touche pas les dividendes : plus ils sont élevés, plus le forward est bas, plus le put vendu vaut cher.",
+    (DV_BRC, "spread"): "Le client porte le risque de l'émetteur : la banque se finance à travers le produit et lui reverse son spread.",
+    (DV_BRC, "brc_maturite"): "La maturité change le temps laissé au sous-jacent pour toucher la barrière, et la durée sur laquelle la prime est étalée.",
+    (DV_BRC, "brc_barriere"): "Une barrière plus haute se touche plus facilement : le put vendu vaut plus cher, le coupon monte.",
+    (DV_BRC, "brc_observation"): "Observée en continu, la barrière se touche bien plus souvent qu'à l'échéance seule : le put vaut plus, le coupon aussi.",
+    (DV_CP, "taux"): "Des taux plus hauts rendent le zéro-coupon moins cher : il reste plus de budget pour acheter le call.",
+    (DV_CP, "spread"): "La garantie est actualisée au taux de financement de la banque : un spread plus large libère du budget, contre un risque de crédit porté par le client.",
+    (DV_CP, "vol"): "Le client achète un call : plus la vol est haute, plus il coûte cher, moins le budget en achète.",
+    (DV_CP, "skew"): "Avec le skew, les strikes hauts ont une vol plus basse : le call vendu au cap rapporte moins, le call spread coûte plus cher.",
+    (DV_CP, "dividende"): "Les dividendes restent à la banque et abaissent le forward : le call coûte moins cher, le budget en achète plus.",
+    (DV_CP, "cp_maturite"): "Plus c'est long, moins la banque doit placer pour garantir le capital : le budget option grossit, mais le call coûte aussi plus cher.",
+    (DV_CP, "cp_protection"): "Chaque point de protection abandonné rend le zéro-coupon moins cher et finance plus de call.",
+    (DV_CP, "cp_cap"): "Un cap plus bas revend à la banque la hausse au-delà du cap : ce call vendu finance une participation plus forte.",
+    (DV_AC, "vol"): "Le client vend de la vol : plus elle est haute, plus le risque de finir sous la barrière de capital vaut cher, plus le coupon monte.",
+    (DV_AC, "skew"): "Le skew rend la baisse plus chère à assurer : la barrière de capital que porte le client rapporte plus.",
+    (DV_AC, "taux"): "Les taux s'ajoutent au coupon : la banque place le nominal pendant toute la vie du produit.",
+    (DV_AC, "dividende"): "Le client ne touche pas les dividendes : ils abaissent le forward, le rappel devient moins probable et la perte plus probable.",
+    (DV_AC, "spread"): "Le client porte le risque de l'émetteur : la banque se finance à travers le produit et lui reverse son spread.",
+    (DV_AC, "ac_maturite"): "Une maturité plus longue laisse plus de temps pour finir sous la barrière de capital, et plus de dates pour être rappelé.",
+    (DV_AC, "ac_frequence"): "Des observations plus rares, ce sont moins d'occasions d'être rappelé et de toucher un coupon : le produit vit plus longtemps et son risque change.",
+    (DV_AC, "ac_bar_coupon"): "Une barrière de coupon plus haute fait sauter des coupons plus souvent : pour le même prix, chaque coupon payé est plus gros.",
+    (DV_AC, "ac_bar_capital"): "Une barrière de capital plus haute rend la perte plus probable : le client est payé plus cher pour ce risque.",
+    (DV_AC, "ac_memoire"): "Sans mémoire, un coupon sauté est perdu pour de bon : la banque peut promettre un coupon plus gros.",
+    (DV_DC, "vol"): "Le client vend un call au cap : plus la vol est haute, plus ce call vaut cher, plus la décote est forte.",
+    (DV_DC, "skew"): "Avec le skew, la vol au cap dépend du niveau du cap : plus haute sous 100 %, plus basse au-dessus, et le call vendu suit.",
+    (DV_DC, "taux"): "Les taux rendent le call vendu plus cher et le remboursement futur moins cher aujourd'hui : la décote grandit.",
+    (DV_DC, "dividende"): "Le client abandonne les dividendes : plus ils sont élevés, plus la décote grandit.",
+    (DV_DC, "dc_maturite"): "Plus c'est long, plus le call vendu et les dividendes abandonnés valent cher : la décote grandit.",
+    (DV_DC, "dc_cap"): "Un cap plus bas vend un call plus cher : grosse décote, mais un rendement maximal plus faible.",
+}
+
+
+def dv_tirage(graine, choix):
+    """(produit, reglages) tires d'une graine : des marches et des produits realistes."""
+    rng = random.Random(graine)
+    reg = {"taux": rng.randint(0, 18) * 0.25,           # 0 a 4,5 %
+           "dividende": rng.randint(6, 18) * 0.25,      # 1,5 a 4,5 %
+           "vol": float(rng.randint(12, 40)),           # 12 a 40 %
+           "skew": rng.randint(2, 8) * 0.5,             # 1 a 4 pts
+           "spread": rng.choice([0, 25, 50, 75, 100, 150])}
+    produit = rng.choice(DV_PRODUITS) if choix not in DV_PRODUITS else choix
+    if produit == DV_BRC:
+        reg.update(brc_maturite=rng.choice([0.5, 1.0, 1.5, 2.0]),
+                   brc_barriere=rng.choice([55, 60, 65, 70, 75, 80, 85]),
+                   brc_observation=rng.choice([CONTINUE, CONTINUE, EUROPEENNE]))
+    elif produit == DV_CP:
+        reg.update(cp_maturite=rng.choice([3.0, 4.0, 5.0, 6.0, 7.0, 8.0]),
+                   cp_protection=rng.choice([90, 95, 100]),
+                   cp_cap=rng.choice([140, 160, 180, 200, 250, 300]))
+    elif produit == DV_AC:
+        bar_cp = rng.choice([60, 65, 70, 75, 80])
+        reg.update(ac_maturite=rng.choice([2.0, 3.0, 4.0, 5.0]),
+                   ac_frequence=rng.choice(list(FREQUENCES)), ac_trigger=100,
+                   ac_bar_coupon=bar_cp,
+                   ac_bar_capital=rng.choice([b for b in (50, 55, 60, 65, 70) if b <= bar_cp]),
+                   ac_memoire=rng.choice([True, False]))
+    else:
+        reg.update(dc_maturite=rng.choice([0.5, 0.75, 1.0, 1.5, 2.0]),
+                   dc_cap=rng.choice([85, 90, 95, 100, 105, 110, 115]))
+    return produit, reg
+
+
+def dv_valeur(produit, reg, bates, marge, recovery, nominal):
+    """
+    La valeur affichee par la page produit avec ces reglages (en fraction) :
+    memes appels au moteur, dans le meme ordre, 5 000 trajectoires, graine 42.
+    bates : None (Black-Scholes + skew) ou (theta, kappa, xi, rho, lam, mu_j, sig_j).
+    """
+    r, q = reg["taux"] / 100, reg["dividende"] / 100
+    vol, skew, spread = reg["vol"] / 100, reg["skew"], reg["spread"]
+
+    def chemins(T):
+        if bates:
+            theta, kappa, xi, rho, lam, mu_j, sig_j = bates
+            return M.simule_bates(S0, T, r, q, DV_N, vol ** 2, theta ** 2, kappa, xi, rho,
+                                  lam, mu_j, sig_j, seed=42)
+        return M.simule_lv(S0, T, r, q, vol, skew, DV_N, seed=42)
+
+    def defauts(n, T):
+        return M.tire_defaut(n, T, spread, recovery, 123) if spread > 0 else None
+
+    if produit == DV_BRC:
+        T, bar = reg["brc_maturite"], reg["brc_barriere"]
+        ch, sg = chemins(T)
+        return M.coupon_brc(ch, T, r, nominal, bar / 100, 100 / 100,
+                            reg["brc_observation"] == CONTINUE, marge, sg,
+                            defauts(len(ch), T), recovery)
+    if produit == DV_CP:
+        T, protection, cap = reg["cp_maturite"], reg["cp_protection"], reg["cp_cap"]
+        zc = protection / 100 * math.exp(-(r + spread / 10000.0) * T)
+        budget = 1.0 - zc - marge * T
+        v_call = vol if bates else M.vol_au_strike(1.0, vol, skew)
+        v_cap = vol if bates else M.vol_au_strike(cap / 100, vol, skew)
+        cout = max((M.bs_call(S0, S0, T, r, v_call, q)
+                    - M.bs_call(S0, cap / 100 * S0, T, r, v_cap, q)) / S0, 1e-9)
+        return max(budget / cout, 0.0)
+    if produit == DV_AC:
+        T, par_an = reg["ac_maturite"], FREQUENCES[reg["ac_frequence"]]
+        n_obs = max(int(T * par_an), 1)
+        ch, _ = chemins(T)
+        cpn = M.coupon_autocall(ch, T, r, nominal, n_obs, reg["ac_trigger"] / 100,
+                                reg["ac_bar_coupon"] / 100, reg["ac_bar_capital"] / 100,
+                                reg["ac_memoire"], marge, defauts(len(ch), T), recovery)
+        return cpn * par_an
+    T, cap = reg["dc_maturite"], reg["dc_cap"]
+    if bates:
+        return M.discount_mc(chemins(T)[0], T, r, cap / 100, marge)["decote"]
+    sigma = M.vol_au_strike(cap / 100, vol, skew)
+    return M.discount_certificate(S0, cap / 100 * S0, T, r, sigma, q, marge)["decote"]
+
+
+def dv_resultat(produit, reg, bates, marge, recovery, nominal):
+    """
+    La vraie valeur, celle des reglages de reference, et l'effet de chaque
+    parametre tire pris seul (on part de la reference et on ne change que lui).
+    """
+    ref = {**DV_REF_MARCHE, **DV_REF_PRODUIT[produit]}
+    v_ref = dv_valeur(produit, ref, bates, marge, recovery, nominal)
+    cles = [c for c in DV_MARCHE[produit] if not (bates and c == "skew")]
+    cles += [c for c in DV_REF_PRODUIT[produit] if c != "ac_trigger"]
+    effets = []
+    for c in cles:
+        if reg[c] != ref[c]:
+            seul = {**ref, c: reg[c]}
+            effets.append((c, dv_valeur(produit, seul, bates, marge, recovery, nominal) - v_ref))
+    effets.sort(key=lambda x: -abs(x[1]))
+    return {"valeur": dv_valeur(produit, reg, bates, marge, recovery, nominal),
+            "reference": v_ref, "effets": effets}
+
+
+@st.cache_data(show_spinner=False, max_entries=MAX_CACHE)
+def _dv_resultat(produit, reg, bates, marge, recovery, nominal):
+    return dv_resultat(produit, reg, bates, marge, recovery, nominal)
+
+
+def _dv_bates(m):
+    return (m.theta_v, m.kappa, m.xi, m.rho, m.lam, m.mu_j, m.sig_j) if m.BATES else None
+
+
+def _dv_verdict(ecart):
+    """Ecart en points de % : dans le mille a 1 point, proche a 3."""
+    return "mille" if abs(ecart) <= 1 else ("proche" if abs(ecart) <= 3 else "loin")
+
+
+def _dv_graine():
+    if "ent_dv_graine" not in st.session_state:
+        lue = st.query_params.get("ent_dv_graine", "")
+        st.session_state["ent_dv_graine"] = int(lue) if lue.isdigit() else random.randrange(10 ** 6)
+    return st.session_state["ent_dv_graine"]
+
+
+def _dv_nouveau():
+    st.session_state["ent_dv_graine"] = (_dv_graine() + random.randrange(1, 10 ** 6)) % 10 ** 6
+    st.session_state["ent_dv_estimation"] = None
+    st.session_state["ent_dv_revele"] = None
+
+
+def _dv_reveler(cle):
+    """Seule la premiere revelation d'un tirage compte : l'estimation est figee."""
+    if (st.session_state.get("ent_dv_revele") or {}).get("cle") == cle:
+        return
+    st.session_state["ent_dv_revele"] = {"cle": cle,
+                                         "estimation": st.session_state.get("ent_dv_estimation")}
+
+
+def _dv_zero():
+    st.session_state["ent_dv_scores"] = {}
+
+
+def _dv_refaire(produit, reg):
+    """Avant le rendu des widgets : la barre laterale et la page produit prennent le tirage."""
+    for c, v in reg.items():
+        st.session_state[c] = v
+    st.session_state["trajectoires"] = DV_N
+    if produit == DV_BRC:
+        st.session_state["brc_strike"] = 100
+    elif produit == DV_AC:
+        st.session_state.update(ac_step_down=False, ac_indice=CLASSIQUE, ac_sous_jacents=1)
+    st.session_state["page"] = DV_PAGES[produit]
+
+
+def _dv_tableau(reg, cles):
+    return [{"Paramètre": DV_NOMS[c], "Valeur": _dv_format(c, reg[c])} for c in cles]
+
+
+def jeu(m):
+    """Le jeu « Devine le coupon »."""
+    st.caption("Un produit, un marché tirés au hasard : estime le résultat avant que le "
+               "moteur le calcule. C'est l'ordre de grandeur qu'un Sales doit avoir en tête "
+               "au téléphone.")
+    choix = st.selectbox(
+        "Produit à deviner", [DV_HASARD] + DV_PRODUITS, key="ent_dv_produit",
+        bind="query-params",
+        help="Au hasard : le produit change à chaque tirage. Sinon, le marché et les réglages "
+             "du produit choisi sont tirés au hasard, pour s'entraîner sur un seul produit.")
+    graine = _dv_graine()
+    st.query_params["ent_dv_graine"] = str(graine)
+    produit, reg = dv_tirage(graine, choix)
+    bates = _dv_bates(m)
+    cle = f"{graine}-{DV_PRODUITS.index(produit)}-{int(m.BATES)}"
+    quoi = DV_GRANDEUR[produit]
+
+    st.subheader(produit, help="Les conditions sont tirées dans des bornes réalistes : vol 12 "
+                 "à 40 %, taux 0 à 4,5 %, dividende 1,5 à 4,5 %, spread 0 à 150 bp, et des "
+                 "réglages de produit qu'on voit réellement sur le marché. La marge banque et "
+                 "le taux de recouvrement viennent de la barre latérale.")
+    marche = [c for c in DV_MARCHE[produit] if not (m.BATES and c == "skew")]
+    c1, c2 = st.columns(2)
+    c1.markdown("**Le marché**")
+    c1.table(_dv_tableau(reg, marche))
+    c2.markdown("**Le produit**")
+    c2.table(_dv_tableau(reg, list(DV_REF_PRODUIT[produit])))
+    if m.BATES:
+        st.caption(f"Sous Bates : vol de départ tirée, autres paramètres Bates de la barre "
+                   f"latérale. Marge {m.marge*100:.1f} %/an, recouvrement "
+                   f"{m.recovery*100:.0f} %, Monte Carlo sur 5 000 trajectoires.")
+    else:
+        st.caption(f"Sous Black-Scholes + skew (vol locale). Marge {m.marge*100:.1f} %/an, "
+                   f"recouvrement {m.recovery*100:.0f} %"
+                   + (", formule fermée." if produit in (DV_CP, DV_DC)
+                      else ", Monte Carlo sur 5 000 trajectoires."))
+
+    st.markdown(f"### Devine : {quoi}")
+    e1, e2 = st.columns([1, 2])
+    e1.number_input(
+        "Ton estimation (en %)", min_value=0.0, max_value=500.0, value=None, step=0.1,
+        format="%.2f", key="ent_dv_estimation", bind="query-params",
+        help="Un chiffre en %, sans le signe. Dans le mille à 1 point près, proche à 3 "
+             "points.")
+    repere = e2.checkbox(
+        "Montrer un point de repère", key="ent_dv_repere", bind="query-params",
+        help="Affiche la valeur du même produit avec les réglages par défaut de l'appli. Le "
+             "réflexe d'un desk : partir d'un chiffre connu et l'ajuster paramètre par "
+             "paramètre.")
+    b = st.columns(3)
+    b[0].button("Révéler", key="ent_dv_reveler", type="primary", on_click=_dv_reveler,
+                args=(cle,), help="Le moteur calcule la vraie valeur, l'écart avec ton "
+                                  "estimation et le paramètre qui a le plus pesé.")
+    b[1].button("Nouveau tirage", key="ent_dv_nouveau", on_click=_dv_nouveau,
+                help="Un autre marché et un autre produit (ou le même produit si tu l'as "
+                     "choisi au-dessus).")
+    b[2].button("Remettre le score à zéro", key="ent_dv_zero", on_click=_dv_zero,
+                help="Oublie les tirages joués pendant cette session.")
+
+    revele = st.session_state.get("ent_dv_revele") or {}
+    revele = revele if revele.get("cle") == cle else {}
+    res = None
+    if revele or repere:
+        res = _dv_resultat(produit, reg, bates, m.marge, m.recovery, m.nominal)
+    if repere:
+        st.caption(f"Point de repère : avec les réglages par défaut de l'appli "
+                   f"({_dv_texte_ref(produit)}), ce produit vaut "
+                   f"{_dv_affiche(produit, res['reference'])}.")
+
+    if revele:
+        v = res["valeur"] * 100
+        x = revele["estimation"]
+        scores = st.session_state.setdefault("ent_dv_scores", {})
+        k = st.columns(3)
+        k[0].metric("Vraie valeur", _dv_affiche(produit, res["valeur"]))
+        if x is None:
+            k[1].metric("Ton estimation", "—")
+            st.info("Pas d'estimation saisie : ce tirage ne compte pas dans le score.")
+        else:
+            ecart = x - v
+            scores.setdefault(cle, ecart)
+            k[1].metric("Ton estimation", f"{x:,.2f}%")
+            k[2].metric("Écart", f"{ecart:+,.2f} pts", delta_color="off")
+            sens = "trop haut" if ecart > 0 else "trop bas"
+            verdict = _dv_verdict(ecart)
+            if verdict == "mille":
+                st.success(f"Dans le mille : à {abs(ecart):,.2f} point près.")
+            elif verdict == "proche":
+                st.info(f"Proche : {abs(ecart):,.2f} points {sens}.")
+            else:
+                st.warning(f"Loin : {abs(ecart):,.2f} points {sens}.")
+        st.markdown("**Pourquoi.** " + _dv_pourquoi(produit, reg, res))
+        if res["effets"]:
+            with st.expander("Paramètre par paramètre"):
+                st.table([{"Paramètre": DV_NOMS[c], "Tiré": _dv_format(c, reg[c]),
+                           "Référence": _dv_format(c, {**DV_REF_MARCHE,
+                                                       **DV_REF_PRODUIT[produit]}[c]),
+                           "Effet seul": f"{e*100:+,.2f} pts"} for c, e in res["effets"]])
+                st.caption("Chaque effet part des réglages par défaut et ne change que ce "
+                           "paramètre. Leur somme n'est pas exactement l'écart total : les "
+                           "paramètres interagissent.")
+        st.button("Refaire ce produit dans sa page", key="ent_dv_refaire",
+                  on_click=_dv_refaire, args=(produit, reg),
+                  help="Charge ce marché dans la barre latérale (avec 5 000 trajectoires) et "
+                       "ouvre la page du produit avec les mêmes réglages : elle affiche la "
+                       "même valeur.")
+    else:
+        st.info("Écris ton chiffre, puis clique sur « Révéler ».")
+
+    scores = list(st.session_state.get("ent_dv_scores", {}).values())
+    st.markdown("---")
+    s = st.columns(4)
+    s[0].metric("Tirages joués", f"{len(scores)}",
+                help="Un tirage compte dès qu'il est révélé avec une estimation. Le score dure "
+                     "le temps de la session.")
+    s[1].metric("Dans le mille", f"{sum(_dv_verdict(e) == 'mille' for e in scores)}",
+                help="Estimations à 1 point ou moins de la vraie valeur.")
+    s[2].metric("Proches", f"{sum(_dv_verdict(e) == 'proche' for e in scores)}",
+                help="Estimations entre 1 et 3 points de la vraie valeur.")
+    s[3].metric("Écart moyen",
+                f"{sum(abs(e) for e in scores) / len(scores):,.2f} pts" if scores else "—",
+                help="Moyenne des écarts, en valeur absolue, sur les tirages joués.")
+
+
+def _dv_affiche(produit, v):
+    """Le format de la page produit."""
+    if produit in (DV_BRC, DV_AC):
+        return f"{v*100:,.2f}% p.a."
+    if produit == DV_CP:
+        return f"{v*100:,.1f}%"
+    return f"{v*100:,.2f}%"
+
+
+def _dv_texte_ref(produit):
+    marche = "vol 22 %, taux 3 %, dividende 2,5 %, skew 2, spread nul"
+    if produit == DV_BRC:
+        return f"1 an, barrière 70 % continue, {marche}"
+    if produit == DV_CP:
+        return f"5 ans, protection 100 %, sans cap, {marche}"
+    if produit == DV_AC:
+        return f"3 ans, trimestriel, barrières 70 / 60 %, mémoire, {marche}"
+    return f"1 an, cap 100 %, {marche}"
+
+
+def _dv_pourquoi(produit, reg, res):
+    """La phrase chiffree : le parametre qui a le plus pese, et son mecanisme."""
+    ref = {**DV_REF_MARCHE, **DV_REF_PRODUIT[produit]}
+    texte = (f"Avec les réglages par défaut de l'appli, ce produit vaudrait "
+             f"{_dv_affiche(produit, res['reference'])}, contre "
+             f"{_dv_affiche(produit, res['valeur'])} ici. ")
+    if not res["effets"]:
+        return texte + "Ce tirage tombe sur les réglages par défaut."
+    c, e = res["effets"][0]
+    texte += (f"Ce qui a le plus pesé : {DV_PHRASE[c]}, {_dv_format(c, reg[c])} au lieu "
+              f"de {_dv_format(c, ref[c])}. ")
+    if e > 0:
+        texte += f"À lui seul, ce paramètre ajoute {e*100:,.2f} points {DV_CIBLE[produit]}. "
+    else:
+        texte += f"À lui seul, ce paramètre retire {-e*100:,.2f} points {DV_CIBLE[produit]}. "
+    return texte + DV_POURQUOI[(produit, c)]
+
+
+# =====================================================================
 # PAGE
 # =====================================================================
 
@@ -966,7 +1409,15 @@ def _zero():
 
 
 def affiche(m):
-    st.title("Entraînement", help="**Ce que c'est.** Une banque de questions d'entretien pour un poste de Sales en\nproduits structurés, classées en cinq thèmes. Le plus fourni est le discours client :\nc'est ce qu'un desk teste en premier chez un Sales.\n\n**Comment s'en servir.** Lis la question, réponds à voix haute en trente secondes, puis\naffiche la réponse. Elle est rédigée comme on la dirait en entretien : courte, juste, avec\nle pourquoi financier. La ligne « Ce que le recruteur vérifie » donne l'idée à ne pas\nrater.\n\n**Les démonstrations chiffrées.** Quand la réponse repose sur un mécanisme de prix, le\nmoteur le calcule avec la vue de marché de la barre latérale. Change la vol, les taux, le\nspread ou le modèle : les chiffres suivent, et tu peux citer des ordres de grandeur justes.\n\n**Le compteur.** Une question compte comme vue dès que sa réponse est affichée.\nLe bouton « Question au hasard » privilégie les questions pas encore vues.")
+    st.title("Entraînement", help="**Ce que c'est.** Une banque de questions d'entretien pour un poste de Sales en\nproduits structurés, classées en cinq thèmes. Le plus fourni est le discours client :\nc'est ce qu'un desk teste en premier chez un Sales.\n\n**Comment s'en servir.** Lis la question, réponds à voix haute en trente secondes, puis\naffiche la réponse. Elle est rédigée comme on la dirait en entretien : courte, juste, avec\nle pourquoi financier. La ligne « Ce que le recruteur vérifie » donne l'idée à ne pas\nrater.\n\n**Les démonstrations chiffrées.** Quand la réponse repose sur un mécanisme de prix, le\nmoteur le calcule avec la vue de marché de la barre latérale. Change la vol, les taux, le\nspread ou le modèle : les chiffres suivent, et tu peux citer des ordres de grandeur justes.\n\n**Le compteur.** Une question compte comme vue dès que sa réponse est affichée.\nLe bouton « Question au hasard » privilégie les questions pas encore vues.\n\n**Devine le coupon.** Un jeu d'intuition : l'appli tire un produit et un marché,\ntu estimes le coupon, la participation ou la décote, puis le moteur révèle la vraie\nvaleur, ton écart et le paramètre qui a le plus pesé. Un Sales doit connaître ces\nordres de grandeur sans calculatrice.")
+    exercice = st.segmented_control(
+        "Exercice", [QUESTIONS_ENTRETIEN, JEU], default=QUESTIONS_ENTRETIEN, required=True,
+        key="ent_exercice", bind="query-params",
+        help="Questions d'entretien : la banque de questions, réponses rédigées. Devine le "
+             "coupon : estimer le résultat d'un produit tiré au hasard, avant le calcul.")
+    if exercice == JEU:
+        jeu(m)
+        return
     st.caption("Réponds à voix haute avant de regarder : c'est la formulation qui se "
                "travaille, pas seulement l'idée.")
 
