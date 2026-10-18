@@ -13,8 +13,8 @@ Lancer avec :  streamlit run app.py
 import streamlit as st
 
 from barre import barre_laterale
-from vues import (accueil, comparateur, tracker, capital_protection, brc, autocall,
-                  bonus, twin_win, laboratoire, grecques, couverture, entrainement,
+from vues import (accueil, comparateur, atelier_sales, tracker, capital_protection, brc,
+                  autocall, bonus, twin_win, laboratoire, grecques, couverture, entrainement,
                   glossaire)
 
 st.set_page_config(page_title="Sliders Produits Structures", layout="wide")
@@ -24,6 +24,7 @@ st.set_page_config(page_title="Sliders Produits Structures", layout="wide")
 PAGES = {
     "Accueil": accueil,
     "Comparateur des produits": comparateur,
+    "Atelier Sales": atelier_sales,
     "1 - Tracker Certificate": tracker,
     "2 - Capital Protection": capital_protection,
     "3 - Barrier Reverse Convertible": brc,
