@@ -8,7 +8,7 @@ import streamlit as st
 import moteur as M
 import graphiques as G
 from moteur import S0
-from communs import MAX_CACHE, sim_bs, sim_panier
+from communs import MAX_CACHE, sim_panier
 
 CLASSIQUE, DECREMENT = "Indice classique", "Indice a decrement"
 

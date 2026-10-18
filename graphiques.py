@@ -87,7 +87,7 @@ def _titre(titre, sous_titre):
         return alt.TitleParams("")
     return alt.TitleParams(titre, subtitle=sous_titre or "", anchor="start",
                            fontSize=15, fontWeight=500, subtitleFontSize=12,
-                           subtitlePadding=4, offset=10)
+                           subtitleColor=DIRECT, subtitlePadding=4, offset=10)
 
 
 def _legende():
@@ -175,11 +175,9 @@ def _notes(notes):
 
 
 def _echelles(series):
+    """Echelle de couleur commune : une serie = une couleur, dans la legende aussi."""
     noms = [s["nom"] for s in series]
-    couleur = alt.Scale(domain=noms, range=[s.get("couleur", PRODUIT) for s in series])
-    trait = alt.Scale(domain=noms, range=[TRAITS[s.get("trait", "plein")] for s in series])
-    epaisseur = alt.Scale(domain=noms, range=[s.get("epaisseur", 2.6) for s in series])
-    return couleur, trait, epaisseur
+    return alt.Scale(domain=noms, range=[s.get("couleur", PRODUIT) for s in series])
 
 
 # =====================================================================
@@ -242,7 +240,7 @@ def courbes(x, series, titre=None, sous_titre=None, xlabel=None, ylabel=None,
     enc_x = alt.X("x:Q", scale=ech_x, axis=axe_x)
     enc_y = alt.Y("y:Q", scale=ech_y, axis=axe_y)
 
-    couleur, trait, epaisseur = _echelles(series)
+    couleur = _echelles(series)
     leg = _legende() if legende and len(series) > 1 else None
     couches = []
 
@@ -263,12 +261,15 @@ def courbes(x, series, titre=None, sous_titre=None, xlabel=None, ylabel=None,
             opacity=0.30, interpolate="step-after").encode(
             enc_x, enc_y, color=alt.Color("serie:N", scale=couleur, legend=None)))
 
+    # une couche par serie : epaisseur et trait fixes. Une echelle "size" nominale
+    # interpolerait entre la premiere et la derniere epaisseur des qu'il y a 3 series.
     interp = series[0].get("interpolation", "linear")
-    couches.append(alt.Chart(long).mark_line(interpolate=interp).encode(
-        enc_x, enc_y,
-        color=alt.Color("serie:N", scale=couleur, legend=leg),
-        strokeDash=alt.StrokeDash("serie:N", scale=trait, legend=None),
-        size=alt.Size("serie:N", scale=epaisseur, legend=None)))
+    for k, s_ in enumerate(series):
+        couches.append(alt.Chart(long[long["serie"] == s_["nom"]]).mark_line(
+            interpolate=interp, strokeWidth=s_.get("epaisseur", 2.6),
+            strokeDash=TRAITS[s_.get("trait", "plein")]).encode(
+            enc_x, enc_y, color=alt.Color("serie:N", scale=couleur,
+                                          legend=leg if k == 0 else None)))
 
     a_points = [s["nom"] for s in series if s.get("points")]
     if a_points:
@@ -556,7 +557,7 @@ def barres(etiquettes, valeurs, couleurs, titre, sous_titre=None, ylabel=None,
         base.mark_bar(cornerRadiusTopLeft=3, cornerRadiusTopRight=3).encode(
             x, y, color=alt.Color("couleur:N", scale=None), tooltip=infobulle),
         base.mark_text(baseline="bottom", dy=-3, fontSize=11, fontWeight="bold").encode(
-            x, y, text="txt:N"),
+            x, y, text="txt:N", color=alt.Color("couleur:N", scale=None)),
     ).properties(title=_titre(titre, sous_titre), height=hauteur)
 
 

@@ -77,23 +77,23 @@ et frais de transaction. Montre que la marge n'est pas un simple prelevement.
 
 ### Limites
 
-**1. Parametres regles a la main, pas calibres.**
-C'est la difference principale avec un pricer de production. Un desk recalibre Bates
-chaque matin sur les prix d'options cotees. Ici tu choisis les parametres au curseur : le
-modele est juste, l'etalonnage est arbitraire. Les niveaux sont donc indicatifs, pas des
-prix de marche.
+**1. Calibrage sur une seule photo de marche.**
+Le Laboratoire calibre Bates sur 122 prix Eurex du 16/10/2026 (0,9 point de vol d'erreur
+moyenne aux crans des curseurs). Un desk recalibre chaque matin ; ici les curseurs restent
+libres et la photo vieillit. Les niveaux sont donc indicatifs, pas des prix de marche.
 
 **2. Worst-of simule en Black-Scholes multi-actifs.**
 Un Bates multi-dimensionnel demanderait de correler aussi les volatilites entre actifs.
 Le mecanisme de correlation est juste, la dynamique de vol ne l'est pas.
 
-**3. Correlation constante.**
-En pratique elle monte fortement dans les krachs, exactement quand ca fait mal sur un
-worst-of. Le modele sous-estime donc le risque des paniers en periode de stress.
+**3. Correlation de stress simplifiee.**
+Sur l'Autocall, une option fait monter la correlation quand le marche baisse, mais en deux
+regimes seulement, et sans que la volatilite monte en meme temps.
 
-**4. Pas de wrong-way risk.**
-Le defaut de l'emetteur est simule independamment du sous-jacent. Dans la realite une
-banque fait defaut au pire moment, quand les marches s'effondrent.
+**4. Wrong-way risk seulement sur demande.**
+Par defaut, le defaut de l'emetteur est independant du sous-jacent. La page BRC propose une
+correlation (copule gaussienne sur le niveau final) : elle montre l'effet, sans modele de
+credit complet.
 
 **5. Discretisation hebdomadaire de la variance sous Bates.**
 Euler a troncature complete introduit un biais modeste sur le processus de variance. Un

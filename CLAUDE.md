@@ -36,12 +36,15 @@ Tom (compte `NazuMot`). **Tout push sur `main` redéploie automatiquement le sit
 
 ## Pages (sélecteur en haut de la barre latérale, dictionnaire `PAGES` dans `app.py`)
 
-Accueil · Comparateur des produits · 1 Tracker · 2 Capital Protection · 3 Barrier Reverse
-Convertible (+ case wrong-way risk : défaut émetteur lié au sous-jacent) · 4 Autocall Phoenix (avec worst-of 1 à 4 sous-jacents + corrélation) · 5 Bonus
-Certificate · 6 Twin-Win · Laboratoire modèle (Black-Scholes vs Bates) · Les grecques en
-mouvement · Coût de couverture · Entraînement (40 questions d'entretien de Sales en 5 thèmes,
-réponse rédigée + démonstration chiffrée par le moteur, mode hasard, compteur) · Glossaire
-(6 onglets + recherche insensible aux accents).
+Accueil · Comparateur des produits · Atelier Sales · 1 Tracker · 2 Capital Protection ·
+3 Barrier Reverse Convertible (+ case wrong-way risk) · 4 Autocall Phoenix (worst-of 1 à 4
+sous-jacents, step-down, indice à décrément, corrélation de stress, grecques du desk) · 5 Bonus
+Certificate · 6 Twin-Win · 7 Discount Certificate · Backtest historique · Laboratoire modèle
+(Black-Scholes vs Bates, calibrage Eurex) · Les grecques en mouvement · Coût de couverture ·
+Entraînement (40 questions d'entretien de Sales en 5 thèmes, réponse rédigée + démonstration
+chiffrée, mode hasard, compteur) · Glossaire (6 onglets + recherche insensible aux accents).
+
+Le détail des pages ajoutées le 18/10/2026 est dans la section « Pages enrichies » plus bas.
 
 Pour ajouter une page : un fichier `vues/<nom>.py` avec `def affiche(m):`, puis une entrée dans
 `PAGES` (`app.py`). En tête de `affiche`, la page déballe les réglages dont elle a besoin
@@ -140,6 +143,54 @@ rétrocession distributeur. Avec rétro nulle, ses coupons redonnent **exactemen
   saut moyen calibré sur la borne -30 % du curseur ; Feller violé (biais du pas hebdomadaire
   ~0,2 pt sur les calls hors de la monnaie).
 
+## Pages enrichies
+
+- **Atelier Sales** (`vues/atelier_sales.py`, clés `as_*`, testé par
+  `tests/verifie_atelier_sales.py`) : met `sales.py` en scène face au client. Produit
+  (BRC / Autocall / Capital Protection) et section choisis par `segmented_control` liés au lien ;
+  seule la section choisie est calculée, chaque appel à `sales.py` en cache (`Structure` et
+  `Marche` figées, hachables). Cadre Structure commun (curseurs du produit + rétro distributeur,
+  1 %/an par défaut).
+  - Le client demande : reverse enquiry, valeur exacte puis arrondie dans le sens qui garde la
+    demande satisfaite (`arrondi_client`), phrase client ; « Retenir » écrit la valeur dans le
+    curseur de la Structure (callback sur session_state).
+  - Où va l'argent : cascade du budget (sources : taux, option vendue, risque émetteur ;
+    emplois : coupons ou call, marge, rétro), deux réseaux de distribution, droite
+    coupon = f(rétro).
+  - Revendre : `valeur_secondaire_*` + cascade de l'émission au prix de rachat.
+  - Pitch : `pitch(s, profil, vue, faits(mk, s))`, modèles de phrases, 3 à 5 phrases, toujours le
+    scénario de perte chiffré et le risque émetteur.
+  - Références : rétro nulle -> coupon BRC 9,25 % (= page) ; à t = 0, valeur 982 / 946 / 910 EUR
+    (BRC 1 an / autocall 3 ans / CP 5 ans, marge 0,8 % + rétro 1 %) ; BRC 8 % -> barrière
+    69,0 %, arrondie à 70 % pour 8,22 %. Graphe en cascade construit dans la page
+    (`graphe_cascade`).
+- **Autocall, options** (`vues/autocall.py`, testé par `tests/verifie_autocall_discount.py`) :
+  step-down (`ac_step_down`, `ac_sd_pas`, `ac_sd_plancher`, escalier tracé par `escalier()`) ;
+  indice à décrément (`ac_indice`, `ac_dec_points`, `ac_dec_niveau`, défaut 50 points sur 1 000
+  = 5 %/an, mono sous-jacent) avec tableau classique / décrément en % / en points ; corrélation de
+  stress (`ac_stress`, visible seulement en worst-of car AppTest refuse les cases grisées) ;
+  grecques du desk (`ac_voir_grecques`, en cache). Garde-fou mémoire : `trajectoires_panier()`
+  plafonne un worst-of à 12,5 millions de points et 20 000 trajectoires (4 sous-jacents / 6 ans /
+  40 000 : pointe 951 -> 378 Mo). Références (BS, défauts) : 8,88 % p.a. ; step-down 8,83 % ;
+  décrément 50 pts/1 000 13,08 % ; worst-of 3 stress 90 % 16,52 -> 13,04 %.
+- **7 Discount Certificate** (`vues/discount.py`, `dc_*`) : `discount_certificate` (vol au cap)
+  sous BS, `discount_mc` sous Bates, hors risque émetteur. Référence : 1 an cap 100 : décote
+  10,52 %, rendement max 11,76 %, point mort 89,48.
+- **Backtest historique** (`vues/backtest.py`, clés `bt_*`, testé par `tests/verifie_backtest.py`) :
+  onglets Autocall / BRC (mêmes curseurs que les pages produits + coupon fixe), sous-jacent prix /
+  net return / décrément, première émission 1987-2020 (défaut 2000). Graphe : l'indice, un point
+  par émission (vert rappelé ou barrière intacte, gris terme ou touchée sans perte, rouge perte),
+  survol = détail + vie du produit. Comparaison avec le Monte Carlo de la vue de marché. Onglets
+  `st.tabs(on_change=...)` : seul l'onglet ouvert calcule ; l'onglet est recopié à la main dans le
+  lien (`bt_onglet`). AppTest ne sait pas cliquer un onglet : `session_state["bt_onglet"]`.
+- **Laboratoire, section 5 Calibrage sur le marché** (`labo_echeance`, bouton `labo_appliquer`) :
+  smile Eurex contre Bates calibré et Black-Scholes plat, erreurs, 8 paramètres. Le bouton écrit
+  `st.session_state` (modele, vol, vol_lt, kappa, vol_vol, rho, sauts, taille_saut, disp_saut)
+  dans un on_click, et `st.query_params` pour les curseurs Bates pas encore affichés.
+- Graphes construits dans les pages, à remonter un jour dans `graphiques.py` s'ils servent
+  ailleurs : `graphe_cascade` (Atelier Sales), `_graphe_emissions` et `_graphe_repartition`
+  (Backtest), `_graphe_smile` (Laboratoire), `escalier()` (Autocall).
+
 ## Contraintes techniques
 
 - **Mémoire** : Streamlit Cloud gratuit plante au-delà de ~1 Go. Garder float32, pas
@@ -193,8 +244,8 @@ l'appli en local.
 ## Procédure pour chaque modification
 
 1. Modifier.
-2. Lancer `python tests/verifie.py` et les trois `tests/valide_*.py` (sur une copie à part) :
-   toutes les pages sous les **deux**
+2. Lancer `python tests/verifie.py`, les `tests/valide_*.py` et les `tests/verifie_*.py` (sur
+   une copie à part ; ce sont ceux du workflow GitHub) : toutes les pages sous les **deux**
    modèles, cases décochées puis cochées, plus les chiffres de référence. Aucune exception
    tolérée. Une nouvelle fonctionnalité derrière un réglage s'ajoute au script.
 3. Si un chiffre de référence change volontairement : mettre à jour le script et ce fichier,
@@ -206,12 +257,21 @@ l'appli en local.
 
 ## Limites connues (affichées dans l'appli)
 
-Paramètres réglés au curseur, non calibrés sur des prix d'options cotées · worst-of simulé en
-Black-Scholes multi-actifs · corrélation constante · pas de wrong-way risk · discrétisation
-hebdomadaire de la variance sous Bates · coût de couverture simulé sur put vanille.
+Calibrage sur une seule photo de marché (16/10/2026) · worst-of simulé en Black-Scholes
+multi-actifs · corrélation de stress en deux régimes, sans hausse de vol · wrong-way risk
+seulement en option (copule sur le niveau final) · discrétisation hebdomadaire de la variance
+sous Bates · coût de couverture simulé sur put vanille.
+
+Défauts repérés, pas encore corrigés :
+- Autocall : la marge est comptée sur la durée maximale ; avec un trigger bas (80 %), le produit
+  vit ~3 mois mais paie 3 ans de marge et le coupon tombe à 0.
+- Black-Scholes + skew : la vol prise au niveau de la barrière s'applique à toute la
+  trajectoire ; avec un skew fort, le coupon peut monter quand la barrière baisse (sous Bates,
+  tout est cohérent).
+- `sales.py` n'applique pas le plafond de trajectoires des worst-of (identique tant qu'il ne
+  joue pas).
 
 ## Pistes déjà évoquées, non faites
 
-- Recherche dans le glossaire (gratuit, simple).
-- Calibration de Bates sur des prix d'options réels.
-- Corrélation qui monte en période de stress pour le worst-of.
+- Version anglaise (bouton FR/EN) et README du dépôt avec captures (prévus en dernier).
+- Remonter dans `graphiques.py` les graphes construits dans les pages.
