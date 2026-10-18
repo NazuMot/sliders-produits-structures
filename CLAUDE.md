@@ -37,7 +37,7 @@ Tom (compte `NazuMot`). **Tout push sur `main` redéploie automatiquement le sit
 ## Pages (sélecteur en haut de la barre latérale, dictionnaire `PAGES` dans `app.py`)
 
 Accueil · Comparateur des produits · 1 Tracker · 2 Capital Protection · 3 Barrier Reverse
-Convertible · 4 Autocall Phoenix (avec worst-of 1 à 4 sous-jacents + corrélation) · 5 Bonus
+Convertible (+ case wrong-way risk : défaut émetteur lié au sous-jacent) · 4 Autocall Phoenix (avec worst-of 1 à 4 sous-jacents + corrélation) · 5 Bonus
 Certificate · 6 Twin-Win · Laboratoire modèle (Black-Scholes vs Bates) · Les grecques en
 mouvement · Coût de couverture · Entraînement (40 questions d'entretien de Sales en 5 thèmes,
 réponse rédigée + démonstration chiffrée par le moteur, mode hasard, compteur) · Glossaire
@@ -50,8 +50,13 @@ est testée automatiquement.
 
 ## Barre latérale (vue de marché unique pour toutes les pages)
 
-Modèle (Black-Scholes + skew / Bates), taux, dividende, vol ATM, skew (ou 8 paramètres Bates),
-spread émetteur + taux de recouvrement, marge banque, nominal, nombre de trajectoires.
+Conditions de marché en un clic (`SCENARIOS` dans `barre.py` : défaut, octobre 2026, 2017,
+taux zéro 2020-2021, Covid, automne 2008, 2022-2023 ; vols d'après le VSTOXX de `data/`). Le
+sélecteur est une action : il écrit les curseurs via `st.session_state` puis revient à vide ; ce
+sont les curseurs, liés au lien, qui gardent les valeurs. `.streamlit/config.toml` coupe
+l'avertissement de Streamlit sur ces écritures, voulues. Puis : modèle (Black-Scholes + skew /
+Bates), taux, dividende, vol ATM, skew (ou 8 paramètres Bates), spread émetteur + taux de
+recouvrement, marge banque, nominal, nombre de trajectoires.
 
 ## Moteur — ce qui est validé, ne pas casser
 

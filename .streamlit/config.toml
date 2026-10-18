@@ -1,0 +1,4 @@
+# Les scenarios de marche et le calibrage ecrivent les curseurs via st.session_state :
+# c'est voulu, on coupe l'avertissement de Streamlit qui le signale.
+[global]
+disableWidgetStateDuplicationWarning = true

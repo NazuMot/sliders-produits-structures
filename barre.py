@@ -9,10 +9,73 @@ from moteur import S0
 from communs import sim_bs, sim_bates, sim_defaut
 
 
+# Conditions de marche typiques, en un clic. Ordres de grandeur pour un indice actions
+# europeen : vol d'apres le VSTOXX de data/eurostoxx50.csv (ramenee a une maturite de
+# quelques annees, plus basse que la vol 30 jours en crise), taux et dividendes de la zone
+# euro (plancher a 0 du curseur quand les taux etaient negatifs), spread d'une banque.
+SCENARIOS = {
+    "Reglages par defaut": {
+        "texte": "Le point de depart de l'appli.",
+        "valeurs": {"taux": 3.0, "dividende": 2.5, "vol": 22.0, "skew": 2.0, "vol_lt": 24.0,
+                    "spread": 0}},
+    "Octobre 2026 (photo Eurex)": {
+        "texte": "Taux autour de 2,75 %, vol basse (VSTOXX ~17 %), skew modere.",
+        "valeurs": {"taux": 2.75, "dividende": 3.0, "vol": 17.0, "skew": 2.5, "vol_lt": 20.0,
+                    "spread": 50}},
+    "Marche calme (2017)": {
+        "texte": "Taux nuls, vol tres basse (VSTOXX ~15 %) : peu de budget, peu de prime.",
+        "valeurs": {"taux": 0.0, "dividende": 3.0, "vol": 15.0, "skew": 3.0, "vol_lt": 18.0,
+                    "spread": 50}},
+    "Taux zero (2020-2021)": {
+        "texte": "Taux nuls ou negatifs : le capital garanti n'a presque plus de budget.",
+        "valeurs": {"taux": 0.0, "dividende": 2.5, "vol": 21.0, "skew": 2.5, "vol_lt": 22.0,
+                    "spread": 50}},
+    "Krach Covid (mars 2020)": {
+        "texte": "Vol qui explose (VSTOXX ~55 % en moyenne, 86 % au pic), taux nuls.",
+        "valeurs": {"taux": 0.0, "dividende": 3.5, "vol": 45.0, "skew": 4.0, "vol_lt": 25.0,
+                    "spread": 125}},
+    "Crise financiere (automne 2008)": {
+        "texte": "Vol extreme (VSTOXX ~55 %), taux encore eleves, banques sous pression.",
+        "valeurs": {"taux": 3.75, "dividende": 5.0, "vol": 45.0, "skew": 4.0, "vol_lt": 25.0,
+                    "spread": 300}},
+    "Remontee des taux (2022-2023)": {
+        "texte": "Les taux remontent vers 3 % : le retour des produits a capital garanti.",
+        "valeurs": {"taux": 3.0, "dividende": 3.5, "vol": 24.0, "skew": 3.0, "vol_lt": 24.0,
+                    "spread": 75}},
+}
+
+
+def _applique_scenario():
+    """
+    Ecrit les valeurs du scenario dans les curseurs, avant qu'ils soient redessines.
+    Le selecteur revient ensuite a vide : c'est une action, pas un reglage. Ce sont les
+    curseurs, relies au lien, qui gardent les valeurs.
+    """
+    nom = st.session_state.scenario
+    if nom is None:
+        return
+    for cle, valeur in SCENARIOS[nom]["valeurs"].items():
+        st.session_state[cle] = valeur
+    st.session_state.scenario_applique = nom
+    st.session_state.scenario = None
+
+
 def barre_laterale():
     """Affiche la barre laterale et renvoie tous les reglages de marche."""
     st.sidebar.markdown("---")
     st.sidebar.title("Parametres de marche")
+
+    st.sidebar.selectbox(
+        "Conditions de marche", list(SCENARIOS), index=None, key="scenario",
+        placeholder="Charger un scenario de marche...", on_change=_applique_scenario,
+        help="Charge en un clic des conditions de marche typiques : taux, dividende, "
+             "volatilite, skew et spread emetteur. C'est un point de depart : tu peux "
+             "ensuite bouger chaque curseur librement. Compare par exemple le capital "
+             "garanti en 2021 et en 2023.")
+    applique = st.session_state.get("scenario_applique")
+    if applique:
+        st.sidebar.caption(f"**{applique}** : {SCENARIOS[applique]['texte']} Point de "
+                           "depart charge, chaque curseur reste libre.")
 
     modele = st.sidebar.radio(
         "Modele de pricing", ["Black-Scholes + skew", "Bates (vol stochastique + sauts)"],

@@ -10,7 +10,7 @@ from moteur import S0
 
 def affiche(m):
     bandeau_modele, defauts, marge, nominal, r = m.bandeau_modele, m.defauts, m.marge, m.nominal, m.r
-    recovery, trajectoires = m.recovery, m.trajectoires
+    recovery, spread, trajectoires = m.recovery, m.spread, m.trajectoires
 
     st.title("Barrier Reverse Convertible", help="**Ce que c'est.** Un coupon garanti eleve, et le capital rembourse *sauf* si le sous-jacent\nfranchit la barriere ET finit sous le strike.\n\n**Comment c'est construit.** Une obligation, plus la vente par le client d'un put\ndown-and-in a la banque.\n\n**Le point essentiel.** Le coupon n'est pas un interet. C'est la prime que la banque paie au\nclient pour l'assurer contre la baisse. Coupon eleve = sinistre probable, jamais bonne\naffaire.\n\n**Pourquoi un client l'achete.** Vue neutre : il pense que le sous-jacent ne va pas\nbeaucoup bouger et se fait payer pour ca.\n\n**Ce qu'il faut regarder.** Le graphe des trajectoires : deux chemins peuvent finir au meme\nniveau avec des resultats differents. Le chemin compte, pas seulement l'arrivee.")
     st.caption("Le client ne recoit pas un interet. Il encaisse une prime d'assurance.")
@@ -125,6 +125,59 @@ def affiche(m):
         ])
         st.caption("Le spread emetteur n'est pas un cadeau : c'est la remuneration d'un "
                    "risque de credit que le client porte sans toujours le savoir.")
+
+    if st.checkbox("Risque emetteur lie au sous-jacent (wrong-way risk)",
+                   key="brc_voir_wrong_way", bind="query-params",
+                   help="Un BRC sur une action bancaire, emis par une banque comparable : "
+                        "quand le sous-jacent s'effondre, l'emetteur vacille en meme temps. "
+                        "Le modele de base suppose les deux independants."):
+        sp = spread if spread > 0 else 150
+        if spread == 0:
+            st.caption("Aucun spread emetteur dans la barre laterale : la demonstration "
+                       "utilise 150 bp, la signature d'une banque moyenne en periode "
+                       "tendue.")
+        rho_ww = st.slider(
+            "Correlation defaut / sous-jacent", 0.0, 0.9, 0.6, 0.1,
+            key="brc_ww_correlation", bind="query-params",
+            help="0 : le defaut de l'emetteur ne depend pas du marche (modele de base). "
+                 "Plus elle monte, plus le defaut tombe dans les scenarios ou le "
+                 "sous-jacent a chute.")
+        lignes, res = [], []
+        for nom, c in (("Defaut independant", 0.0), ("Defaut lie au sous-jacent", rho_ww)):
+            tau_c = M.tire_defaut(len(ch), T, sp, recovery, correlation=c, chemins=ch)
+            cpn_c = M.coupon_brc(ch, T, r, nominal, bar / 100, strike / 100, continu, marge,
+                                 sg, tau_c, recovery, creance="valeur")
+            prof = M.profil_brc(ch, T, nominal, bar / 100, strike / 100, continu, cpn_c, sg,
+                                tau_c, recovery, creance="valeur", niveau_es=0.01)
+            res.append(prof)
+            lignes.append({"": nom, "Coupon equitable": f"{cpn_c*100:,.2f}% p.a.",
+                           "Proba de defaut": f"{prof['p_defaut']*100:,.1f}%",
+                           "Krach ET defaut": f"{prof['p_double']*100:,.2f}%",
+                           "Perte moyenne dans le pire 1 %": f"{prof['es']*100:,.0f}% du nominal"})
+        st.table(lignes)
+        hyp = ["Defaut independant", f"Defaut lie ({rho_ww:.1f})"]
+        g1, g2 = st.columns(2)
+        with g1:
+            G.affiche(G.barres(
+                hyp, [res[0]["p_double"] * 100, res[1]["p_double"] * 100],
+                [G.DIRECT, G.PERTE], "Krach ET defaut en meme temps",
+                "Probabilite que le client perde sur les deux tableaux", "Probabilite (%)",
+                nom_x="Hypothese", fmt=lambda v: G.pct(v, 2), hauteur=260, seuil_texte=0))
+        with g2:
+            G.affiche(G.barres(
+                hyp, [res[0]["es"] * 100, res[1]["es"] * 100],
+                [G.DIRECT, G.PERTE], "Perte moyenne dans le pire 1 % des cas",
+                "Le coupon bouge a peine, la queue des pertes s'alourdit",
+                "% du nominal", nom_x="Hypothese", fmt=lambda v: G.pct(v, 0), hauteur=260,
+                seuil_texte=0))
+        st.info(
+            "**Ce que ca change pour le client** : le prix moyen bouge peu, parce que la "
+            "perte supplementaire est concentree dans quelques scenarios. Mais dans ces "
+            "scenarios, le client perd deux fois au meme moment : sur le sous-jacent, puis "
+            "sur la creance envers l'emetteur.\n\n"
+            "**Le reflexe Sales** : ne jamais placer un BRC sur une action bancaire emis par "
+            "une banque du meme pays ou du meme modele economique. Choisir un emetteur dont "
+            "le risque n'est pas lie au sous-jacent, quitte a perdre un peu de coupon.")
 
     st.info(
         "**Le coupon a trois sources** : les taux, la prime du put que le client vend, et "

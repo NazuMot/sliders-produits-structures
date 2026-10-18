@@ -177,6 +177,35 @@ controle("Entrainement : question suivante et remise a zero du compteur",
          not at.exception and at.selectbox(key="ent_q").value == suivante
          and metriques(at)["Questions vues"] == f"0 / {N}")
 
+# 5. Scenarios de marche et wrong-way risk ---------------------------------------
+def scenario(nom):
+    return lambda a: a.sidebar.selectbox(key="scenario").set_value(nom)
+
+
+
+
+parts = {}
+for nom in ("Taux zero (2020-2021)", "Remontee des taux (2022-2023)"):
+    at = ouvre("2 - Capital Protection", MODELES[0], [scenario(nom)])
+    parts[nom] = nombre(metriques(at)["Participation offerte"]) if not at.exception else -1
+    controle(f"Scenario '{nom}' : la barre laterale prend les valeurs du scenario",
+             not at.exception and widget(at.sidebar.slider, "Taux sans risque").value
+             == __import__("barre").SCENARIOS[nom]["valeurs"]["taux"])
+controle("Scenarios : la participation du capital garanti remonte avec les taux",
+         parts["Remontee des taux (2022-2023)"] > parts["Taux zero (2020-2021)"] >= 0,
+         " -> ".join(f"{v:.0f} %" for v in parts.values()))
+
+at = ouvre("3 - Barrier Reverse Convertible", MODELES[0],
+           [lambda a: a.checkbox(key="brc_voir_wrong_way").check()])
+t = at.table[-1].value if at.table else None
+ok = not at.exception and t is not None and len(t) == 2
+if ok:
+    double = [float(v.rstrip("%")) for v in t["Krach ET defaut"]]
+    queue = [float(v.split("%")[0]) for v in t["Perte moyenne dans le pire 1 %"]]
+    ok = double[1] > double[0] and queue[1] > queue[0]
+controle("BRC wrong-way : krach et defaut ensemble plus frequents, queue plus lourde",
+         ok, f"{double} / {queue}" if t is not None and len(t) == 2 else "")
+
 print()
 if echecs:
     print(f"{len(echecs)} probleme(s) :")
