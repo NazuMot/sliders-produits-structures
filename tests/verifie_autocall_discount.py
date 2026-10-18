@@ -339,7 +339,7 @@ tracemalloc.stop()
 meme_affichage(f"Worst-of 4, 6 ans, 40 000 demandees : calcule sur 10 000 ({el:.1f} s, pointe {pic:.0f} Mo)",
                at, attendu(*autocall(M.simule_panier(4, 0.6, S0, 6.0, r, q, V60, 10000)[0], 6.0, 24)))
 controle("... legende discrete affichee", "au lieu de 40 000" in textes(at.caption))
-controle("... pointe de memoire du calcul sous 400 Mo (site gratuit : ~1 Go)", pic < 400, f"{pic:.0f} Mo")
+controle("... pointe de memoire du calcul sous 450 Mo (site gratuit : ~1 Go ; ~376 Mo sur Mac, ~400 sous Linux)", pic < 450, f"{pic:.0f} Mo")
 
 # toutes les options a la fois : premier calcul puis reaction a un curseur deja vu
 TOUT = [regle("ac_sous_jacents", 3, "select_slider"), coche("ac_step_down"), coche("ac_stress"),
