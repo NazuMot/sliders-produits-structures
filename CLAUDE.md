@@ -35,7 +35,9 @@ Tom (compte `NazuMot`). **Tout push sur `main` redéploie automatiquement le sit
 Accueil · Comparateur des produits · 1 Tracker · 2 Capital Protection · 3 Barrier Reverse
 Convertible · 4 Autocall Phoenix (avec worst-of 1 à 4 sous-jacents + corrélation) · 5 Bonus
 Certificate · 6 Twin-Win · Laboratoire modèle (Black-Scholes vs Bates) · Les grecques en
-mouvement · Coût de couverture · Glossaire (6 onglets).
+mouvement · Coût de couverture · Entraînement (40 questions d'entretien de Sales en 5 thèmes,
+réponse rédigée + démonstration chiffrée par le moteur, mode hasard, compteur) · Glossaire
+(6 onglets + recherche insensible aux accents).
 
 Pour ajouter une page : un fichier `vues/<nom>.py` avec `def affiche(m):`, puis une entrée dans
 `PAGES` (`app.py`). En tête de `affiche`, la page déballe les réglages dont elle a besoin

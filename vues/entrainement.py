@@ -990,14 +990,14 @@ def affiche(m):
 
     c1, c2 = st.columns([1, 3])
     theme = c1.selectbox(
-        "Theme", [TOUS] + THEMES, key="ent_theme",
+        "Theme", [TOUS] + THEMES, key="ent_theme", bind="query-params",
         help="Filtre la banque de questions. Le discours client est le theme prioritaire : "
              "savoir adapter un produit au besoin du client et l'expliquer simplement.")
     liste = [i for i, x in enumerate(QUESTIONS) if theme == TOUS or x["theme"] == theme]
     if st.session_state.get("ent_q") not in liste:
         st.session_state["ent_q"] = liste[0]
     q = c2.selectbox(
-        "Question", liste, key="ent_q", format_func=lambda i: f"{i+1}. {QUESTIONS[i]['q']}",
+        "Question", liste, key="ent_q", bind="query-params", format_func=lambda i: f"{i+1}. {QUESTIONS[i]['q']}",
         help="Choisis une question precise, ou laisse les boutons en dessous te guider. "
              "Le numero est celui de la question dans la banque complete.")
 

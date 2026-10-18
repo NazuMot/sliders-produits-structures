@@ -318,7 +318,8 @@ def cherche(requete):
 def affiche(m):
     st.title("Glossaire", help=TITRE_AIDE)
     requete = st.text_input(
-        "Rechercher dans le glossaire", key="glossaire_recherche", type="search",
+        "Rechercher dans le glossaire", key="glossaire_recherche", bind="query-params",
+        type="search",
         live=True, placeholder="barriere, skew, coupon, emetteur...",
         help="Cherche dans les six onglets a la fois, sans tenir compte des accents ni "
              "des majuscules. Plusieurs mots : seules les definitions qui les contiennent "
