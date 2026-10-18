@@ -295,5 +295,7 @@ au niveau de la barrière sous Black-Scholes + skew (voir Moteur). Reste :
 
 ## Pistes déjà évoquées, non faites
 
-- Version anglaise (bouton FR/EN) et README du dépôt avec captures (prévus en dernier).
+- Version anglaise (bouton FR/EN), prévue après les accents.
+- README : fait le 18/10/2026 (`README.md`, images `docs/*.png` régénérées par
+  `scripts/captures_readme.py`, rendu `vl-convert-python` hors requirements).
 - Remonter dans `graphiques.py` les graphes construits dans les pages.
