@@ -3,10 +3,10 @@ Validation chiffree de sales.py (outils du Sales).
 
     python tests/valide_sales.py
 
-1. Coherence avec les pages : memes coupons et participations, au bit pres
+1. Coherence avec les pages : memes coupons et participations, au bit près
    contre le code des pages, et contre l'affichage reel des pages.
 2. Aller-retour du reverse enquiry : je fixe une structure -> coupon ; je
-   redonne ce coupon au solveur -> je retrouve la structure a 0,5 pt pres.
+   redonne ce coupon au solveur -> je retrouve la structure a 0,5 pt près.
 3. Ou va l'argent : la somme des lignes retombe sur le nominal, la marge
    n'est pas un residu deguise, la retro coute ce qui est annonce.
 4. Marche secondaire : a t = 0, valeur = nominal - marge - retro (sur la vie
@@ -198,7 +198,7 @@ for nom, mk in MODELES:
     for tg in (0.90, 1.00):
         c = S.coupon_autocall(mk, 3.0, 4, tg, 0.70, 0.60) * 4
         rep = S.autocall_trigger(mk, c, 3.0, 4)
-        # marge sur la vie attendue : pres de 100 %, le coupon varie peu avec le trigger ;
+        # marge sur la vie attendue : près de 100 %, le coupon varie peu avec le trigger ;
         # le solveur rend le trigger le plus bas qui tient la demande
         controle(f"{nom:5} | Autocall trigger {tg:.0%} aller-retour",
                  rep.possible and rep.valeur <= tg + 0.005 and rep.obtenu >= c - 1e-9,
@@ -302,7 +302,7 @@ for nom, base in MODELES:
                  proche(v.prix_rachat, v.valeur - 5.0, 1e-9)
                  and proche(v.prix_vente, v.valeur + 5.0, 1e-9))
 
-    # meme pricer que le moteur a t = 0, au bit pres ou presque
+    # meme pricer que le moteur a t = 0, au bit près ou presque
     for n_act in (1, 3):
         for memoire in (True, False):
             ch, _ = mk.panier(n_act, 0.6, 3.0, 0.60)
@@ -376,7 +376,7 @@ e = S.etat_autocall([0.95, 1.02, 0.80], 1.0, 0.70)
 controle("État autocall : rappelé à la 2e observation", not e["vivant"] and e["rappel_obs"] == 2)
 v = S.valeur_secondaire_autocall(BS, BS, 3.0, 4, 1.0, 0.70, 0.60, True, 0.6, 0.9,
                                  niveaux_observes=[0.95, 1.02])
-controle("Autocall déjà rappelé : plus rien a racheter",
+controle("Autocall déjà rappelé : plus rien à racheter",
          v.valeur == 0 and v.coupons_encaisses > 0, v.message[:60])
 v1 = S.valeur_secondaire_autocall(BS, BS, 3.0, 4, 1.0, 0.70, 0.60, True, 0.6, 0.9, manques=2)
 v0 = S.valeur_secondaire_autocall(BS, BS, 3.0, 4, 1.0, 0.70, 0.60, True, 0.6, 0.9, manques=0)

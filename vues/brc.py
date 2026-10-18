@@ -61,7 +61,7 @@ def affiche(m):
 
     graphe = G.payoff(
         spots, pay_touche, direct, nominal, "Si la barrière a été touchée",
-        titre=f"Coupon de {cpn*100:,.2f}% quoi qu'il arrive, capital à risqué sous "
+        titre=f"Coupon de {cpn*100:,.2f}% quoi qu'il arrive, capital à risque sous "
               f"{strike/100*S0:,.0f}",
         sous_titre="Le coupon est plafonné : même si le sous-jacent double, le client "
                    "touche le même montant",
@@ -126,7 +126,7 @@ def affiche(m):
         st.caption("Le spread émetteur n'est pas un cadeau : c'est la rémunération d'un "
                    "risque de crédit que le client porte sans toujours le savoir.")
 
-    if st.checkbox("Risque émetteur lie au sous-jacent (wrong-way risk)",
+    if st.checkbox("Risque émetteur lié au sous-jacent (wrong-way risk)",
                    key="brc_voir_wrong_way", bind="query-params",
                    help="Un BRC sur une action bancaire, émis par une banque comparable : "
                         "quand le sous-jacent s'effondre, l'émetteur vacille en même temps. "
@@ -182,6 +182,6 @@ def affiche(m):
     st.info(
         "**Le coupon a trois sources** : les taux, la prime du put que le client vend, et "
         "le spread de l'émetteur. Coupon élevé = sinistre probable, ou signature faible.\n\n"
-        "**Pres de la barrière, le gamma explose** : le trader doit trader des volumes "
+        "**Près de la barrière, le gamma explose** : le trader doit trader des volumes "
         "énormes en peu de temps. D'où le prix dégradé sur les barrières proches du spot. "
         "La page Coût de couverture chiffre ce mécanisme.")

@@ -21,7 +21,7 @@ def affiche(m):
     BATES, nominal, q, r, skew = m.BATES, m.nominal, m.q, m.r, m.skew
     vol_atm = m.vol_atm
 
-    st.title("Les grecques en mouvement", help="**Ce que tu regardes.** La position que porte la banque après avoir vendu un BRC : elle est\nacheteuse du put a barrière que le client lui a vendu. On suit cette position jour par jour.\n\n**Comment l'utiliser.** Choisis un scénario, puis déplace le curseur *Jour*. À chaque\ninstant tu vois les cinq grecques et l'ordre exact que le trader doit passer pour rester\ncouvert.\n\n**Ce qu'il faut observer.**\n- Le **delta** bouge en permanence : c'est le delta-hedging quotidien.\n- Le **gamma** monte quand le sous-jacent s'approche de la barrière, surtout pres de\n  l'échéance : le trader doit alors rebalancer beaucoup et souvent.\n- Au moment où la barrière casse, **toutes les courbes sautent en même temps**. L'option\n  devient un put vanille, définitivement. C'est le gap risk.\n\n**Le meilleur scénario pour commencer.** *Franchissement puis rebond* : la rupture y est\nnette et visible sur les quatre graphes.")
+    st.title("Les grecques en mouvement", help="**Ce que tu regardes.** La position que porte la banque après avoir vendu un BRC : elle est\nacheteuse du put à barrière que le client lui a vendu. On suit cette position jour par jour.\n\n**Comment l'utiliser.** Choisis un scénario, puis déplace le curseur *Jour*. À chaque\ninstant tu vois les cinq grecques et l'ordre exact que le trader doit passer pour rester\ncouvert.\n\n**Ce qu'il faut observer.**\n- Le **delta** bouge en permanence : c'est le delta-hedging quotidien.\n- Le **gamma** monte quand le sous-jacent s'approche de la barrière, surtout près de\n  l'échéance : le trader doit alors rebalancer beaucoup et souvent.\n- Au moment où la barrière casse, **toutes les courbes sautent en même temps**. L'option\n  devient un put vanille, définitivement. C'est le gap risk.\n\n**Le meilleur scénario pour commencer.** *Franchissement puis rebond* : la rupture y est\nnette et visible sur les quatre graphes.")
     st.caption("Une trajectoire, jour par jour. Ce que mesure chaque grecque, "
                "et ce que le trader doit faire en face.")
 
@@ -142,10 +142,10 @@ def affiche(m):
     st.subheader("Ce que le trader doit faire aujourd'hui")
     if abs(ordre) < 0.01:
         st.success(f"Position en actions inchangée : **{parts:,.2f} actions**. "
-                   "Rien a faire aujourd'hui.")
+                   "Rien à faire aujourd'hui.")
     elif ordre > 0:
         st.info(f"**Acheter {ordre:,.2f} actions** pour passer de {parts_prec:,.2f} "
-                f"à {parts:,.2f}. Le sous-jacent a baissé, le put achète par la banque "
+                f"à {parts:,.2f}. Le sous-jacent a baissé, le put acheté par la banque "
                 "a pris de la valeur, il faut plus d'actions en face pour rester neutre.")
     else:
         st.info(f"**Vendre {abs(ordre):,.2f} actions** pour passer de {parts_prec:,.2f} "
@@ -210,7 +210,7 @@ def affiche(m):
         "Le **gamma** dit à quelle vitesse ce nombre change. Quand il monte, le trader "
         "doit rebalancer plus souvent, donc payer plus de frais. C'est la raison "
         "chiffrée pour laquelle une barrière proche du spot fait dégrader le prix.\n\n"
-        "Le **vega** s'éteint à mesuré que l'échéance approche : une option qui expire "
+        "Le **vega** s'éteint à mesure que l'échéance approche : une option qui expire "
         "demain ne dépend plus de la volatilité.\n\n"
         "Le **theta** est le miroir du gamma. Celui qui possède du gamma paie du theta "
         "chaque jour, et inversement. Un trader ne choisit jamais l'un sans l'autre.")
@@ -234,4 +234,4 @@ def affiche(m):
                    "juste au-dessus de la barrière, il dépasse 4 en valeur absolue : le "
                    "trader doit détenir quatre fois plus d'actions que le nominal ne le "
                    "suggère, et tout basculera d'un coup si la barrière cède. Aucun desk "
-                   "ne côté une telle structure sans charger une marge conséquente.")
+                   "ne cote une telle structure sans charger une marge conséquente.")

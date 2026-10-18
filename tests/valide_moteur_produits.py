@@ -4,7 +4,7 @@ Validation chiffree des ajouts au moteur (moteur.py), sans interface.
     python tests/valide_moteur_produits.py
 
 0. Compatibilite : avec leurs reglages par defaut, les fonctions modifiees
-   redonnent EXACTEMENT (au bit pres) les resultats de la version
+   redonnent EXACTEMENT (au bit près) les resultats de la version
    precedente, copiee plus bas.
 1. Autocall step-down          4. Correlation de stress (worst-of)
 2. Indice a decrement          5. Wrong-way risk
@@ -231,7 +231,7 @@ def pct(x, d=2):
 
 
 # =====================================================================
-titre("0. Compatibilite : réglages par défaut = version precedente, au bit pres")
+titre("0. Compatibilite : réglages par défaut = version precedente, au bit près")
 # =====================================================================
 
 for n in (10000, 9999):
@@ -321,7 +321,7 @@ except ValueError:
 
 
 # =====================================================================
-titre("2. Indice a décrément")
+titre("2. Indice à décrément")
 # =====================================================================
 
 controle("decrement_base100 : 50 points sur 5 000 = 1, sur base 1 000 = 5",
@@ -457,7 +457,7 @@ controle("Corrélation 0 avec chemins fournis = tirages actuels",
          np.array_equal(M.tire_defaut(20000, T1, SP, REC, correlation=0.0, chemins=chb), t0))
 te = M.tire_defaut(20000, T1, SP, REC, correlation=1e-6, chemins=chb)
 d_ = t0 <= T1
-controle("Corrélation 1e-6 : mêmes défauts, mêmes dates à 1e-4 pres",
+controle("Corrélation 1e-6 : mêmes défauts, mêmes dates à 1e-4 près",
          np.array_equal(te <= T1, d_) and np.max(np.abs(te[d_] / t0[d_] - 1)) < 1e-4)
 p_th = 1 - math.exp(-lam * T1)
 se = math.sqrt(p_th * (1 - p_th) / 20000)
@@ -530,7 +530,7 @@ for nom, g in G.items():
     if "worst" in nom:
         ok &= g["correlation"] < 0
     controle(f"{nom} : signes du desk (delta < 0, vega > 0, theta < 0, dividende > 0, corrélation < 0)", ok)
-controle("Indice a décrément : aucune sensibilité au dividende", G["décrément 2,5 pts"]["dividende"] == 0.0)
+controle("Indice à décrément : aucune sensibilité au dividende", G["décrément 2,5 pts"]["dividende"] == 0.0)
 
 # delta coherent avec la variation de prix exacte (payoff non lisse, memes tirages)
 ch0 = M.simule_bs(S0, T_AC, r, q, V_AC, 10000)[0]
@@ -592,14 +592,14 @@ for trig in (0.8, 1.0):
 
 ch0 = M.simule_lv(100.0, 3.0, r, q, 0.22, 0.0, 10000)
 ch1 = M.simule_bs(100.0, 3.0, r, q, 0.22, 10000)
-controle("Vol locale avec skew 0 = Black-Scholes, au bit pres",
+controle("Vol locale avec skew 0 = Black-Scholes, au bit près",
          np.array_equal(ch0[0], ch1[0]) and ch0[1] == ch1[1])
 
 ch, sg = M.simule_lv(100.0, 3.0, r, q, 0.22, 2.0, 10000)
 ks = [0.8, 0.9, 1.0]
 vols = M.vol_implicite_bates(ch, 3.0, r, q, ks)
 cibles = [M.vol_au_strike(k, 0.22, 2.0) for k in ks]
-controle("Vol locale, skew 2 : elle redonne le skew affiché à 1 pt de vol pres (80/90/100 %)",
+controle("Vol locale, skew 2 : elle redonne le skew affiché à 1 pt de vol près (80/90/100 %)",
          all(abs(v - c) < 0.01 for v, c in zip(vols, cibles)),
          " / ".join(f"{v*100:.1f} vs {c*100:.0f}" for v, c in zip(vols, cibles)))
 

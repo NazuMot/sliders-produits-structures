@@ -13,7 +13,7 @@ def affiche(m):
     BATES, bandeau_modele, marge, nominal, q = m.BATES, m.bandeau_modele, m.marge, m.nominal, m.q
     r, skew, spread, trajectoires, vol_atm = m.r, m.skew, m.spread, m.trajectoires, m.vol_atm
 
-    st.title("Capital Protection Certificate", help="**Ce que c'est.** Le client récupère au minimum son capital à l'échéance, et participe à une\npartie de la hausse.\n\n**Comment c'est construit.** Une obligation zéro-coupon qui reconstitué le capital, plus un\ncall avec ce qui reste du budget.\n\n**Le mécanisme clé.** La participation n'est pas choisie, elle est calculée. La banque place\njuste ce qu'il faut pour rembourser le nominal ; ce qui reste achète des options. Plus les\ntaux sont hauts, plus ce reste est gros, plus la participation monte.\n\n**Pourquoi un client l'achète.** Vue haussière, mais refus de risquer le capital.\n\n**Ce qu'il faut tester.** Baisse les taux dans la barre latérale et regarde la participation\ns'effondrer. C'est exactement pourquoi ces produits ont quasiment disparu entre 2015 et\n2021, avant de revenir avec la remontée des taux.")
+    st.title("Capital Protection Certificate", help="**Ce que c'est.** Le client récupère au minimum son capital à l'échéance, et participe à une\npartie de la hausse.\n\n**Comment c'est construit.** Une obligation zéro-coupon qui reconstitue le capital, plus un\ncall avec ce qui reste du budget.\n\n**Le mécanisme clé.** La participation n'est pas choisie, elle est calculée. La banque place\njuste ce qu'il faut pour rembourser le nominal ; ce qui reste achète des options. Plus les\ntaux sont hauts, plus ce reste est gros, plus la participation monte.\n\n**Pourquoi un client l'achète.** Vue haussière, mais refus de risquer le capital.\n\n**Ce qu'il faut tester.** Baisse les taux dans la barre latérale et regarde la participation\ns'effondrer. C'est exactement pourquoi ces produits ont quasiment disparu entre 2015 et\n2021, avant de revenir avec la remontée des taux.")
     st.caption("La participation n'est pas un choix commercial. C'est un reste de budget.")
     bandeau_modele()
 
@@ -95,4 +95,4 @@ def affiche(m):
         "juste ce qu'il faut pour y arriver. Ce qui reste achète un call.\n\n"
         "**A savoir dire en entretien** : taux hauts = capital garanti vendable. Taux à "
         "zéro = participation ridicule, le marché bascule vers BRC et autocalls. "
-        "Mouvement observe entre 2015 et 2021, puis l'inverse depuis.")
+        "Mouvement observé entre 2015 et 2021, puis l'inverse depuis.")

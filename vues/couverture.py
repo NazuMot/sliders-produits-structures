@@ -18,10 +18,7 @@ def affiche(m):
                "couvrir, et couvrir coûte de l'argent.")
 
     st.markdown(
-        "On prend un **Reverse Convertible sans barrière** : le client vend un put "
-        "a la monnaie, la banque l'achète. Le trader delta-couvre cette position "
-        "jusqu'à l'échéance. En théorie de Black-Scholes, avec une couverture continue "
-        "et sans frais, le résultat est exactement nul. On enlève ces deux hypothèses.")
+        "On prend un **Reverse Convertible sans barrière** : le client vend un put à la monnaie, la banque l'achète. Le trader delta-couvre cette position jusqu'à l'échéance. En théorie de Black-Scholes, avec une couverture continue et sans frais, le résultat est exactement nul. On enlève ces deux hypothèses.")
 
     c1, c2, c3 = st.columns(3)
     T = c1.slider("Maturité (années)", 0.25, 2.0, 1.0, 0.25,
@@ -34,7 +31,7 @@ def affiche(m):
                                    key="couv_rebalancement", bind="query-params")
     cout_bp = c3.slider("Coût de transaction (bp par transaction)", 0, 50, 10, 1,
                         help="Fourchette achat-vente plus impact de marché, en points "
-                             "de base du montant échange.", key="couv_frais", bind="query-params")
+                             "de base du montant échangé.", key="couv_frais", bind="query-params")
 
     par_an = {"Mensuel": 12, "Hebdomadaire": 52, "2x par semaine": 104, "Quotidien": 252}[freq_h]
     n_reb = max(int(round(par_an * T)), 4)
@@ -143,7 +140,7 @@ def affiche(m):
     st.info(
         f"**Lecture du résultat.** La banque a acheté le put a {vol_atm*100:,.0f}% de vol "
         f"implicite, et le marché a réalisé {vol_reelle*100:,.0f}%. "
-        + (f"Elle a donc paye trop cher de {-ecart:,.0f} points : elle perd sur cette jambe."
+        + (f"Elle a donc payé trop cher de {-ecart:,.0f} points : elle perd sur cette jambe."
            if ecart < 0 else
            f"Elle a payé {ecart:,.0f} points de moins que ce que le marché a réalisé : "
            "elle perd, car elle est acheteuse de vol et la vol réalisée est basse.")
@@ -156,7 +153,4 @@ def affiche(m):
         "volonté. C'est ce coût-la, et il est mesurable.")
 
     st.warning(
-        "**Limite assumée de cette page** : on couvre ici un put vanille, pas un put a "
-        "barrière. Sur un vrai BRC, le gamma explose autour de la barrière et le coût de "
-        "couverture est nettement supérieur à ce qui est affiché ici. L'ordre de grandeur "
-        "et le mécanisme sont justes ; le niveau est un plancher.")
+        "**Limite assumée de cette page** : on couvre ici un put vanille, pas un put à barrière. Sur un vrai BRC, le gamma explose autour de la barrière et le coût de couverture est nettement supérieur à ce qui est affiché ici. L'ordre de grandeur et le mécanisme sont justes ; le niveau est un plancher.")

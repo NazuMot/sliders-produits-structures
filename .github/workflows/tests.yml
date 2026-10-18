@@ -24,3 +24,4 @@ jobs:
       - run: python tests/verifie_autocall_discount.py
       - run: python tests/verifie_atelier_sales.py
       - run: python tests/verifie_backtest.py
+      - run: python tests/verifie_anglais.py

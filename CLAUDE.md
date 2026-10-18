@@ -20,7 +20,11 @@ Tom (compte `NazuMot`). **Tout push sur `main` redéploie automatiquement le sit
 
 | Fichier | Rôle |
 |---|---|
-| `app.py` | Point d'entrée : menu `PAGES`, appel de la page choisie, pied de page |
+| `app.py` | Point d'entrée : bouton English, puis `principal` (ou sa version anglaise) |
+| `principal.py` | Menu `PAGES`, appel de la page choisie, pied de page (fonction `lance()`) |
+| `traduction.py` | Version anglaise à la volée : relit chaque module et remplace ses textes via `traductions/en.json` |
+| `traductions/en.json` | Dictionnaire « texte français → texte anglais » (1 444 textes) |
+| `scripts/traductions.py` | Liste les textes sans traduction (`--export fichier` pour les traduire) |
 | `barre.py` | Barre latérale : `barre_laterale()` renvoie tous les réglages de marché (objet `m`) |
 | `communs.py` | Couleurs, `MAX_CACHE`, simulations mises en cache (`sim_bs`, `sim_bates`…) |
 | `vues/*.py` | Une page par fichier, chacune avec une fonction `affiche(m)` |
@@ -47,7 +51,7 @@ chiffrée, mode hasard, compteur) · Glossaire (6 onglets + recherche insensible
 Le détail des pages ajoutées le 18/10/2026 est dans la section « Pages enrichies » plus bas.
 
 Pour ajouter une page : un fichier `vues/<nom>.py` avec `def affiche(m):`, puis une entrée dans
-`PAGES` (`app.py`). En tête de `affiche`, la page déballe les réglages dont elle a besoin
+`PAGES` (`principal.py`). En tête de `affiche`, la page déballe les réglages dont elle a besoin
 (`r, q = m.r, m.q`). Ne pas toucher aux autres pages. Les tests lisent `PAGES` : une nouvelle page
 est testée automatiquement.
 
@@ -206,6 +210,28 @@ rétrocession distributeur. Avec rétro nulle, ses coupons redonnent **exactemen
   ailleurs : `graphe_cascade` (Atelier Sales), `_graphe_emissions` et `_graphe_repartition`
   (Backtest), `_graphe_smile` (Laboratoire), `escalier()` (Autocall).
 
+## Version anglaise (`traduction.py`)
+
+Bouton « English » en haut de la barre latérale (clé `anglais`, liée au lien). Le code français
+reste la seule source : en anglais, `traduction.py` relit chaque module du projet (`principal`,
+`barre`, `graphiques`, `sales`, `backtest`, `vues/*`), remplace chaque texte affiché par sa
+traduction de `traductions/en.json`, et l'exécute sous un autre nom (`en_vues.brc`…). `moteur`,
+`communs` et `calibration` ne sont pas traduits (pas de texte affiché).
+- Ce qui est traduit : les mêmes chaînes que celles qu'on accentue (pas les docstrings, ni les
+  `key=`, ni les identifiants, couleurs et champs Altair). f-strings : la clé est le gabarit,
+  chaque `{expression}` devient `{0}`, `{1}`… et les textes cités dans une expression sont
+  traduits aussi.
+- Un texte absent du dictionnaire reste en français. **Après tout ajout ou changement de texte :
+  `python scripts/traductions.py` doit dire « 0 à traduire »** ; sinon `--export f`, traduire,
+  ajouter à `traductions/en.json`. Changer un texte français change sa clé : reporter la
+  traduction sur la nouvelle clé. Les noms de produits, « Delta », « Strike »… sont des entrées
+  identiques (« X » → « X »).
+- Les options des menus sont traduites : une comparaison `== "Marché calme"` reste juste, car les
+  deux chaînes sont traduites pareil. À la bascule, `traduction.bascule()` traduit les réglages
+  texte (page choisie, options) pour que la page reste la même.
+- Testé par `tests/verifie_anglais.py` : toutes les pages en anglais sous les deux modèles, cases
+  cochées, bascule FR/EN, et aucun texte français visible dans titres, métriques et légendes.
+
 ## Contraintes techniques
 
 - **Mémoire** : Streamlit Cloud gratuit plante au-delà de ~1 Go. Garder float32, pas
@@ -295,7 +321,7 @@ au niveau de la barrière sous Black-Scholes + skew (voir Moteur). Reste :
 
 ## Pistes déjà évoquées, non faites
 
-- Version anglaise (bouton FR/EN), prévue après les accents.
+- Version anglaise : faite le 18/10/2026 (voir « Version anglaise »).
 - README : fait le 18/10/2026 (`README.md`, images `docs/*.png` régénérées par
   `scripts/captures_readme.py`, rendu `vl-convert-python` hors requirements).
 - Remonter dans `graphiques.py` les graphes construits dans les pages.

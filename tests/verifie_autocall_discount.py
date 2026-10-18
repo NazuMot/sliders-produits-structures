@@ -177,9 +177,9 @@ meme_affichage("Plancher au-dessus du trigger : ramene au trigger (= trigger fix
 
 
 # =====================================================================
-print("\n3. Indice a décrément\n" + "-" * 21)
+print("\n3. Indice à décrément\n" + "-" * 21)
 # =====================================================================
-DEC = regle("ac_indice", "Indice a décrément", "radio")
+DEC = regle("ac_indice", "Indice à décrément", "radio")
 for modele in (BS, BT):
     res = autocall(chemins(3.0, modele, 0.60, q_=0.0, decrement=5.0))
     at = ouvre(AUTOCALL, modele, [DEC])

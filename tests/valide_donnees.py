@@ -171,12 +171,12 @@ ks = np.array([0.7, 0.8, 0.9, 1.0, 1.1, 1.2])
 t = time.time()
 f_, mc, vf, vm = C.compare_monte_carlo(params, 1.0, 0.03, 0.025, ks, n_paths=80000, pas_par_an=252)
 e_prix = np.abs(mc / f_ - 1)[2:5]
-controle("formule = Monte Carlo du moteur, pas quotidien : prix à 1,5 % pres de 90 % à 110 %",
+controle("formule = Monte Carlo du moteur, pas quotidien : prix à 1,5 % près de 90 % à 110 %",
          e_prix.max() < 0.015, f"{e_prix.max():.2%}, {time.time() - t:.1f}s")
-controle("formule = Monte Carlo du moteur, pas quotidien : vols à 0,3 pt pres de 70 % à 120 %",
+controle("formule = Monte Carlo du moteur, pas quotidien : vols à 0,3 pt près de 70 % à 120 %",
          np.abs(vm - vf).max() * 100 < 0.3, f"{np.abs(vm - vf).max() * 100:.2f} pt")
 f_, mc, vf, vm = C.compare_monte_carlo(params, 1.0, 0.03, 0.025, ks, n_paths=100000, pas_par_an=52)
-controle("pas hebdomadaire de l'appli : vols à 0,4 pt pres (biais de discrétisation connu)",
+controle("pas hebdomadaire de l'appli : vols à 0,4 pt près (biais de discrétisation connu)",
          np.abs(vm - vf).max() * 100 < 0.4, f"{np.abs(vm - vf).max() * 100:.2f} pt")
 
 
@@ -220,7 +220,7 @@ fictif["vol"] = C.vol_implicite_b76(fictif["prix"], o["F"], o["K"], o["T"], o["D
 t = time.time()
 trouve = C.calibre(fictif, departs=C.DEPARTS[:1], verbeux=False)
 _, e_fictif = C.erreur_vols(trouve, fictif)
-controle("calibrage sur une surface fictive : la retrouve à 0,05 pt de vol pres",
+controle("calibrage sur une surface fictive : la retrouve à 0,05 pt de vol près",
          np.abs(e_fictif).max() < 0.05, f"{np.abs(e_fictif).max():.3f} pt, {time.time() - t:.1f}s")
 
 
@@ -250,7 +250,7 @@ brc_e = B.backtest_brc(h2, continu=False)
 ch2 = 100 * np.column_stack([np.ones(len(brc_e.perf_fin)), brc_e.perf_fin])
 pv = M.pv_brc(ch2, 1.0, 0.0, 1.0, 0.7, 1.0, False, 0.07, 0.2)
 moi = (brc_e.capital + 0.07).mean()
-controle("BRC barrière a l'échéance : flux moyens = moteur.pv_brc", abs(pv - moi) < 1e-9,
+controle("BRC barrière à l'échéance : flux moyens = moteur.pv_brc", abs(pv - moi) < 1e-9,
          f"{moi:.6f} vs {pv:.6f}")
 
 # cas fictifs calcules a la main
@@ -264,7 +264,7 @@ controle("indice plat : rendement = 2 % par trimestre, soit (1,02)^(365,25/jours
 baisse = np.maximum(100.0 - 55.0 * np.arange(len(jours)) / 1096.0, 45.0)   # -55 % en 3 ans
 chute = B.historique(jours, baisse, baisse)
 r = B.backtest_autocall(chute, debut="2000-01-01", fin="2000-01-31")
-controle("baisse reguliere de 55 % en 3 ans : autocall a l'échéance, perte = niveau final",
+controle("baisse reguliere de 55 % en 3 ans : autocall à l'échéance, perte = niveau final",
          r.obs_fin[0] == 12 and abs(r.capital[0] - r.perf_fin[0]) < 1e-12
          and abs(r.capital[0] - 0.45) < 0.002, f"capital rendu {r.capital[0]:.1%}")
 controle("baisse reguliere : 6 coupons, tant que l'indice reste au-dessus de 70 %",
@@ -315,7 +315,7 @@ r = brc.resume
 controle("BRC 1 an barrière 70 % depuis 2000 : 15,8 % de pertes, pire cas émis le 03/03/2008",
          abs(r["perte"] - 0.158) < 0.002 and r["pire_emission"] == "2008-03-03",
          f"{r['perte']:.1%}, {r['pire_emission']}")
-controle("sur indice a décrément, plus de pertes que sur l'indice des prix (même coupon)",
+controle("sur indice à décrément, plus de pertes que sur l'indice des prix (même coupon)",
          acd.resume["perte"] > ac.resume["perte"] and brcd.resume["perte"] > brc.resume["perte"])
 
 print()

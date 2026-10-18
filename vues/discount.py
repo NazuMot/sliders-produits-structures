@@ -45,12 +45,12 @@ def affiche(m):
 
     mt = st.columns(4)
     mt[0].metric("Décote", f"{decote*100:,.2f}%",
-                 help=f"Le client paie {prix:,.2f} un sous-jacent qui côté {S0:,.0f}.")
+                 help=f"Le client paie {prix:,.2f} un sous-jacent qui cote {S0:,.0f}.")
     mt[1].metric("Rendement maximal", f"{rm*100:,.2f}%",
                  help=f"Soit {rm_pa*100:,.2f} % par an, si le sous-jacent finit au-dessus "
                       f"du cap {K:,.0f}.")
     mt[2].metric("Point mort", f"{prix:,.2f}",
-                 help="Niveau du sous-jacent a l'échéance (départ 100) sous lequel le client "
+                 help="Niveau du sous-jacent à l'échéance (départ 100) sous lequel le client "
                       "perd de l'argent : c'est le prix qu'il a payé.")
     mt[3].metric("Proba de perte en capital", f"{p_perte*100:,.1f}%")
     st.caption(f"Rendement maximal {rm_pa*100:,.2f} % par an, atteint si le sous-jacent finit "

@@ -72,7 +72,7 @@ NOM_PARAMETRE = {"barriere": "Barrière", "strike": "Strike", "maturite": "Matur
 
 # Libelles courts des lignes de sales.py pour l'axe des graphes en cascade
 COURT = {"zc": "Taux", "coupons": "Coupons", "rappel": "Rappel anticipé", "put": "Put vendu",
-         "credit": "Risque émetteur", "call": "Call achète", "cap": "Call au cap vendu",
+         "credit": "Risque émetteur", "call": "Call acheté", "cap": "Call au cap vendu",
          "marge": "Marge banque", "retro": "Rétro"}
 
 
@@ -423,7 +423,7 @@ def _saisie_demande(produit):
             help="La part de la hausse que le client veut recevoir. 100 % = la hausse entière.")
     else:
         cible = c2.number_input(
-            "Coupon demande (% par an)", 0.5, 40.0, 8.0 if produit == BRC else 5.0, 0.25,
+            "Coupon demandé (% par an)", 0.5, 40.0, 8.0 if produit == BRC else 5.0, 0.25,
             key="as_dem_cpn_brc" if produit == BRC else "as_dem_cpn_ac", bind="query-params",
             help="Le coupon annuel que le client veut toucher, net de la rétrocession. Pour "
                  "l'autocall : l'équivalent annuel des coupons par observation.")
@@ -462,7 +462,7 @@ def _phrase_brute(s, cherche, rep, depasse):
                 f"{_p(x - 1, 0)}, vous ne profitez plus du marché, soit un gain maximum de "
                 f"{_p(obtenu * (x - 1), 0)}.")
     if not rep.possible:
-        quoi = {"barriere": f"avec une barrière a {_p(x, 0)}", "strike": f"avec un strike à {_p(x, 0)}",
+        quoi = {"barriere": f"avec une barrière à {_p(x, 0)}", "strike": f"avec un strike à {_p(x, 0)}",
                 "maturite": f"sur {T}", "barriere_capital": f"avec une barrière de capital à {_p(x, 0)}",
                 "trigger": f"avec un rappel à {_p(x, 0)}"}[cherche]
         piste = {"barriere": "une durée plus longue ou un strike plus haut",
@@ -483,11 +483,10 @@ def _phrase_brute(s, cherche, rep, depasse):
                 "de son niveau de départ.")
     if cherche == "strike":
         return (f"{debut}pour {_p(obtenu, 2)} par an, la perte ne commence que sous "
-                f"{_p(x, 0)} du niveau de départ, si la barrière a {_p(s.barriere, 0)} a été "
+                f"{_p(x, 0)} du niveau de départ, si la barrière à {_p(s.barriere, 0)} a été "
                 "touchée, et elle est plus faible que celle de l'indice.")
     if cherche == "maturite":
-        return (f"{debut}{_p(obtenu, 2)} par an est faisable des {T}, avec une barrière a "
-                f"{_p(s.barriere, 0)}.")
+        return (f"""{debut}{_p(obtenu, 2)} par an est faisable des {T}, avec une barrière à {_p(s.barriere, 0)}.""")
     if cherche == "barriere_capital":
         return (f"{debut}pour {_p(obtenu, 2)} par an, votre capital est rendu en entier à "
                 f"l'échéance tant que {_sous_jacent(s)} n'a pas perdu plus de {_p(1 - x, 0)}.")
@@ -502,7 +501,7 @@ def _retenir(cle, valeur):
 
 def arrondi_client(s, cherche, valeur):
     """
-    La valeur ronde que le Sales propose (au point pres), dans le sens qui
+    La valeur ronde que le Sales propose (au point près), dans le sens qui
     garde la demande satisfaite : barriere, strike et trigger vers le haut,
     protection et cap vers le bas. Renvoie (valeur du curseur, structure).
     """
@@ -531,7 +530,7 @@ def _section_demande(mk, s, cherche, cible):
     k[0].metric(NOM_PARAMETRE[cherche] + (" trouvée" if cherche in ("barriere", "maturite",
                 "barriere_capital", "protection") else " trouve"), exact,
                 help="Le paramètre le plus favorable au client qui respecte sa demande, au "
-                     "dixième pres. Hors d'atteinte : la meilleure valeur possible.")
+                     "dixième près. Hors d'atteinte : la meilleure valeur possible.")
     k[1].metric("Obtenu", f"{rep.obtenu * 100:,.{d}f}{unite}",
                 help="Ce que paie la structure trouvée, net de la rétrocession.")
     k[2].metric("Arrondi pour le client", rond,
@@ -647,7 +646,7 @@ def _budget(cascade):
 
 
 PROVENANCE = {"zc": "des taux", "put": "du put vendu par le client",
-              "credit": "du risque émetteur porte par le client", "cap": "du call au cap vendu"}
+              "credit": "du risque émetteur porté par le client", "cap": "du call au cap vendu"}
 LEGENDE_BUDGET = [("Finance la structure", G.ACCENT), ("Revient au client", G.PRODUIT),
                   ("Frais : banque et distributeur", G.NIVEAU)]
 
@@ -804,7 +803,7 @@ def _section_revente(mk, s):
         else:
             touchee = st.checkbox("La barrière a déjà été touchée", key="as_sec_touchee",
                                   bind="query-params",
-                                  help="Une fois touchée, la protection à disparu pour de bon : "
+                                  help="Une fois touchée, la protection a disparu pour de bon : "
                                        "le produit se comporte comme une obligation plus un put "
                                        "vanille vendu, même si le marché est remonté depuis.")
     elif s.produit == AC:
@@ -905,7 +904,7 @@ def _section_revente(mk, s):
         etapes, f"Revendre aujourd'hui : {G.eur(v.prix_rachat)}, soit "
                 f"{G.eur(v.bilan_client, signe=True)} pour le client",
         "Ce qui a fait bouger la valeur depuis l'émission, facteur par facteur, sur les mêmes "
-        "tirages. Axe coupe.", nominal=N,
+        "tirages. Axe coupé.", nominal=N,
         legende=[("Fait monter la valeur", G.GAIN), ("Fait baisser la valeur", G.PERTE),
                  ("Valeur du produit", G.PRODUIT)])
     G.affiche(graphe)
@@ -1146,7 +1145,7 @@ def pitch(s, profil, vue, f):
                 phrases.append(
                     ("perte", f"Le scénario de perte : si l'indice finit sous son niveau de "
                               f"départ, vous récupérez votre capital sans rien gagner, alors "
-                              f"qu'un placement sans risque à {_p(f['r'], 1)} aurait rapporte "
+                              f"qu'un placement sans risque à {_p(f['r'], 1)} aurait rapporté "
                               f"{G.eur(N * (math.exp(f['r'] * T) - 1))} ; et une revente avant "
                               "l'échéance se fait au prix du marché, qui peut être sous le "
                               "capital."))
@@ -1199,9 +1198,7 @@ def pitch(s, profil, vue, f):
                    f"{f['spread']:,.0f} bp, recouvrement {rec}, soit {G.eur(f['credit'])} de "
                    f"valeur sur {G.eur(N)}.")
         else:
-            txt = (f"Exposition au crédit de l'émetteur, senior non sécurisé, recouvrement "
-                   f"suppose {rec} ; le spread est à 0 bp dans cette vue de marché, chaque "
-                   f"point de spread se retrouverait dans {finance}.")
+            txt = (f"""Exposition au crédit de l'émetteur, senior non sécurisé, recouvrement supposé {rec} ; le spread est à 0 bp dans cette vue de marché, chaque point de spread se retrouverait dans {finance}.""")
     phrases.append(("emetteur", txt))
 
     # une cinquieme phrase selon le profil
@@ -1214,8 +1211,7 @@ def pitch(s, profil, vue, f):
                                      f"{_p(sans, d)}" + ("" if s.produit == CP else " par an")
                                      + "."))
         else:
-            phrases.append(("retro", f"Aucune rétrocession n'est prévue : {finance} affiche "
-                                     "est brut de frais de distribution."))
+            phrases.append(("retro", f"""Aucune rétrocession n'est prévue : {finance} affiché est brut de frais de distribution."""))
     elif profil == INSTIT:
         frais = (f["marge"] + f["retro"]) * T * N
         phrases.append(("liquidite", f"Valeur juste à l'émission {G.eur(N - frais)} pour "
@@ -1250,7 +1246,7 @@ def _section_pitch(mk, s):
     else:
         st.error("Produit mal adapté à cette vue : le pitch le dit et oriente vers autre chose.")
     st.caption(f"{len(p['phrases'])} phrases, construites sur des modèles à partir des chiffres "
-               "des autres sections. Toujours présents : le scénario de perte chiffre et le "
+               "des autres sections. Toujours présents : le scénario de perte chiffré et le "
                "risque émetteur.")
     with st.expander("Texte à copier"):
         st.code(texte, language=None, wrap_lines=True)
@@ -1293,13 +1289,13 @@ def affiche(m):
     s, retro = _structure(produit, cherche)
     mk = S.Marche.depuis_barre(m, retro=retro)
     if produit == AC and s.n_actifs > 1 and mk.bates:
-        st.caption("Worst-of simule en Black-Scholes multi-actifs, comme la page Autocall.")
+        st.caption("Worst-of simulé en Black-Scholes multi-actifs, comme la page Autocall.")
 
     if section == DEMANDE:
         st.subheader("La réponse du desk",
                      help="Le desk balaie le paramètre du plus favorable au client au moins "
                           "favorable, sur les mêmes tirages, et s'arrête au premier qui respecte "
-                          "la demande (affine par dichotomie). Rien n'est suppose monotone.")
+                          "la demande (affiné par dichotomie). Rien n'est supposé monotone.")
         _section_demande(mk, s, cherche, cible)
     elif section == ARGENT:
         st.subheader("Où va l'argent",

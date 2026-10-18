@@ -317,7 +317,7 @@ def points_morts(spots, produit, direct, max_pts=2):
 
     Piege evite ici : quand les deux courbes se superposent sur toute une
     plage (un produit qui suit le sous-jacent a 1:1 par exemple), l'ecart
-    oscille autour de zero au bruit numerique pres et une detection naive
+    oscille autour de zero au bruit numerique près et une detection naive
     signale des centaines de faux croisements. On ignore donc une bande
     morte autour de zero et on ne garde que les changements de signe
     francs, espaces les uns des autres.
@@ -405,8 +405,8 @@ def payoff(spots, produit, direct, nominal, label_produit,
         sous_titre = [sous_titre, note] if sous_titre else note
     chart = courbes(
         spots, series, titre=titre, sous_titre=sous_titre,
-        xlabel="Niveau du sous-jacent a l'échéance", ylabel=ylabel,
-        fmt_x=lambda v: niveau(v, depart), fmt_y=eur, nom_x="Sous-jacent a l'échéance",
+        xlabel="Niveau du sous-jacent à l'échéance", ylabel=ylabel,
+        fmt_x=lambda v: niveau(v, depart), fmt_y=eur, nom_x="Sous-jacent à l'échéance",
         axe_y_eur=True, y_domaine=(lo, hi), niveaux_h=niveaux_h, notes=notes,
         lignes_infobulle=infos, hauteur=hauteur, ticks_y=ticks, nb_ticks_x=10)
 
@@ -426,7 +426,7 @@ def payoff(spots, produit, direct, nominal, label_produit,
         fond.append(alt.Chart(bande).mark_rect(opacity=0.45).encode(
             x=alt.X("a:Q", scale=ech_x), x2="b:Q", y=alt.Y("y0:Q", scale=ech_y), y2="y1:Q",
             color=alt.Color("couleur:N", scale=None),
-            tooltip=[alt.Tooltip("txt:N", title="Sous-jacent a l'échéance entre"),
+            tooltip=[alt.Tooltip("txt:N", title="Sous-jacent à l'échéance entre"),
                      alt.Tooltip("part:N", title="Part des scénarios")]))
         fond.append(alt.Chart(pd.DataFrame([{"x": float(spots.min()), "y": float(bande["y0"].iloc[0] + span * 0.13)}]))
                     .mark_text(align="left", baseline="bottom", dx=4, dy=-2, fontSize=10.5,

@@ -45,7 +45,7 @@ valeurs, et copie l'adresse du site pour partager exactement ce que tu vois.
 - **Risque émetteur** : intensité de défaut déduite du spread de crédit, avec taux de
   recouvrement.
 - **Paniers worst-of** avec corrélation, y compris une corrélation qui monte dans les
-  krachs, et indice a décrément, sur la page Autocall.
+  krachs, et indice à décrément, sur la page Autocall.
 - **Données réelles** : historique de l'Euro Stoxx 50 depuis 1986 et 122 prix d'options
   Eurex, sur lesquels Bates est calibré.
 - **Couverture en delta** simulée avec rebalancement discret et frais de transaction.
@@ -54,6 +54,6 @@ valeurs, et copie l'adresse du site pour partager exactement ce que tu vois.
 
 Pas un pricer de production : le calibrage repose sur une seule photo de marché
 (16/10/2026), alors qu'un desk recalibre chaque matin, et les curseurs restent libres. Les
-niveaux affiches sont des ordres de grandeur, pas des prix de marché. La liste complète des
+niveaux affichés sont des ordres de grandeur, pas des prix de marché. La liste complète des
 limites est en bas de chaque page.
 """)

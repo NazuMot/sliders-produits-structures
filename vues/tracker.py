@@ -36,7 +36,7 @@ def affiche(m):
         titre=("Le tracker suit le sous-jacent, moins les frais"
                if participation == 100 else
                f"Le tracker suit le sous-jacent a {participation}%"),
-        sous_titre=f"Écart permanent de {perte_frais:,.1f}% du au cumul des frais "
+        sous_titre=f"Écart permanent de {perte_frais:,.1f}% dû au cumul des frais "
                    f"sur {T:,.1f} ans",
         niveaux=[(S0, f"départ  {S0:,.0f}")],
         echantillon=trajectoires(T, 1.0)[0][:, -1], legende_zones=True)

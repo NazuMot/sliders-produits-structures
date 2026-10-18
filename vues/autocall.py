@@ -10,7 +10,7 @@ import graphiques as G
 from moteur import S0
 from communs import MAX_CACHE, sim_panier
 
-CLASSIQUE, DECREMENT = "Indice classique", "Indice a décrément"
+CLASSIQUE, DECREMENT = "Indice classique", "Indice à décrément"
 
 # Garde-fou memoire. Simuler un worst-of occupe ~16 octets par sous-jacent,
 # par trajectoire et par pas (mesure) : 4 sous-jacents sur 6 ans avec 40 000
@@ -183,7 +183,7 @@ def affiche(m):
     nominal, q, r, recovery, skew = m.nominal, m.q, m.r, m.recovery, m.skew
     spread, trajectoires, vol_atm = m.spread, m.trajectoires, m.vol_atm
 
-    st.title("Autocall Phoenix", help="**Ce que c'est.** Le produit phare des desks. Coupons conditionnels, et remboursement\nanticipe automatique si le sous-jacent est au-dessus d'un niveau à une date\nd'observation.\n\n**Les trois niveaux à distinguer.**\n- **Trigger** : au-dessus, le produit s'arrête et le client est remboursé.\n- **Barrière de coupon** : au-dessus, le coupon est payé.\n- **Barrière de capital** : observée à l'échéance seulement ; en dessous, le client encaisse\n  toute la baisse.\n\n**Le piège commercial.** Le rappel anticipe coupe les coupons futurs. Regarde la durée de\nvie moyenne : le produit dure rarement jusqu'au bout.\n\n**Le worst-of.** Active plusieurs sous-jacents : le plus mauvais décide de tout. Le coupon\ngrimpe, et la probabilité de perte aussi. C'est la version réellement dominante sur les\ndesks.\n\n**Les variantes du marché.**\n- **Step-down** : le trigger baisse avec le temps, le rappel devient plus facile.\n- **Indice a décrément** : l'indice réinvestit ses dividendes et retire un montant fixe\n  chaque année. Coupon plus haut, risque plus haut, plus de risque de dividende pour la banque.\n- **Corrélation de stress** : sur un worst-of, la corrélation monte dans les krachs. Le\n  desk qui l'ignore surpaie le client.\n- **Grecques du desk** : ce que la banque doit couvrir une fois le produit vendu.")
+    st.title("Autocall Phoenix", help="**Ce que c'est.** Le produit phare des desks. Coupons conditionnels, et remboursement\nanticipé automatique si le sous-jacent est au-dessus d'un niveau à une date\nd'observation.\n\n**Les trois niveaux à distinguer.**\n- **Trigger** : au-dessus, le produit s'arrête et le client est remboursé.\n- **Barrière de coupon** : au-dessus, le coupon est payé.\n- **Barrière de capital** : observée à l'échéance seulement ; en dessous, le client encaisse\n  toute la baisse.\n\n**Le piège commercial.** Le rappel anticipé coupe les coupons futurs. Regarde la durée de\nvie moyenne : le produit dure rarement jusqu'au bout.\n\n**Le worst-of.** Active plusieurs sous-jacents : le plus mauvais décide de tout. Le coupon\ngrimpe, et la probabilité de perte aussi. C'est la version réellement dominante sur les\ndesks.\n\n**Les variantes du marché.**\n- **Step-down** : le trigger baisse avec le temps, le rappel devient plus facile.\n- **Indice à décrément** : l'indice réinvestit ses dividendes et retire un montant fixe\n  chaque année. Coupon plus haut, risque plus haut, plus de risque de dividende pour la banque.\n- **Corrélation de stress** : sur un worst-of, la corrélation monte dans les krachs. Le\n  desk qui l'ignore surpaie le client.\n- **Grecques du desk** : ce que la banque doit couvrir une fois le produit vendu.")
     st.caption("Le produit phare des desks.")
     bandeau_modele()
 
@@ -225,7 +225,7 @@ def affiche(m):
         "Sous-jacent", [CLASSIQUE, DECREMENT], horizontal=True,
         key="ac_indice", bind="query-params",
         help="Indice classique : un indice de prix, dont les dividendes vont à la banque. "
-             "Indice a décrément : l'indice réinvestit ses dividendes et retire chaque "
+             "Indice à décrément : l'indice réinvestit ses dividendes et retire chaque "
              "année un montant fixe de points. Très répandu dans les autocalls vendus en "
              "France.")
     if indice == DECREMENT:
@@ -274,10 +274,10 @@ def affiche(m):
     decrement = indice == DECREMENT and n_actifs == 1
     D = M.decrement_base100(pts_dec, niveau_dec) if decrement else 0.0
     if indice == DECREMENT and n_actifs > 1:
-        s2.caption("Indice a décrément : mono sous-jacent seulement. Le worst-of reste sur "
+        s2.caption("Indice à décrément : mono sous-jacent seulement. Le worst-of reste sur "
                    "des indices classiques.")
     elif decrement:
-        s2.caption(f"{pts_dec} points sur un indice a {niveau_dec:,}".replace(",", " ")
+        s2.caption(f"{pts_dec} points sur un indice à {niveau_dec:,}".replace(",", " ")
                    + f" = **{D:,.2f} %** du niveau initial par an, contre {q*100:,.2f} % de "
                    "dividende sur l'indice classique.")
 
@@ -325,7 +325,7 @@ def affiche(m):
     mt[2].metric("Durée de vie moyenne", f"{duree:,.2f} ans")
     mt[3].metric("Proba de perte en capital", f"{p_perte*100:,.1f}%")
     if n_panier < n_paths:
-        st.caption(f"Worst-of calcule sur {entier(n_panier)} trajectoires au lieu de "
+        st.caption(f"Worst-of calculé sur {entier(n_panier)} trajectoires au lieu de "
                    f"{entier(n_paths)}, pour tenir dans la mémoire du serveur.")
 
     produit = (nominal, n_obs, trig, bar_cp / 100, bar_cap / 100, memoire, marge)
@@ -336,7 +336,7 @@ def affiche(m):
         deg = {"coupon": cpn, "duree": duree, "p_rappel": p_rappel, "p_perte": p_perte}
         st.table([{"Seuil de rappel": nom,
                    "Coupon annuel": f"{x['coupon']*par_an*100:,.2f}%",
-                   "Rappel anticipe": f"{x['p_rappel']*100:,.1f}%",
+                   "Rappel anticipé": f"{x['p_rappel']*100:,.1f}%",
                    "Durée de vie": f"{x['duree']:,.2f} ans",
                    "Proba de perte": f"{x['p_perte']*100:,.1f}%"}
                   for nom, x in ((f"Fixe à {trigger} %", fixe),
@@ -486,13 +486,13 @@ def affiche(m):
 
     cumul = np.cumsum(probas) * 100
     infos = [("Date", [f"{tt[j]:,.2f} an" for j in indices[:-1]] + [f"{T:,.2f} an"]),
-             ("Termine à cette date ou avant", [G.pct(v, 0) for v in cumul])]
+             ("Terminé à cette date ou avant", [G.pct(v, 0) for v in cumul])]
     if step_down:
         infos.insert(1, ("Trigger de rappel", [f"{s*100:,.0f} %" for s in seuils[:-1]] + ["-"]))
     graphe = G.barres(
         labels, np.array(probas) * 100, couleurs,
         f"{(1-probas[-1])*100:,.0f}% des scénarios se terminent avant l'échéance",
-        "Chaque rappel anticipe coupe tous les coupons restants", "Probabilité (%)",
+        "Chaque rappel anticipé coupe tous les coupons restants", "Probabilité (%)",
         nom_x="Observation", infos=infos)
     G.affiche(graphe)
 
@@ -555,7 +555,7 @@ def affiche(m):
                  "si les dividendes montent (forward plus bas, rappels plus rares à financer). "
                  "Pour se couvrir, les desks revendent de la vol longue et des dividendes "
                  "futurs : c'est pour ça que les dividendes futurs cotent sous leur valeur "
-                 "attendue. En 2020, l'annulation des dividendes à coûte cher à tous les desks "
+                 "attendue. En 2020, l'annulation des dividendes a coûté cher à tous les desks "
                  "d'autocalls.")
         if decrement:
             texte += ("\n\n**Sur l'indice à décrément**, la sensibilité au dividende disparaît : "
@@ -582,9 +582,7 @@ def affiche(m):
                    "du produit.")
 
     st.info(
-        f"**Durée de vie moyenne : {duree:,.2f} ans sur {T:,.1f} possibles.** Le rappel "
-        "anticipe coupe les coupons futurs. Un client qui compare le coupon affiche à un "
-        "rendement obligataire se trompe : il ne le touchera peut-être qu'une ou deux fois."
+        f"""**Durée de vie moyenne : {duree:,.2f} ans sur {T:,.1f} possibles.** Le rappel anticipé coupe les coupons futurs. Un client qui compare le coupon affiché à un rendement obligataire se trompe : il ne le touchera peut-être qu'une ou deux fois."""
         + ("\n\n**Sur un worst-of, le coupon spectaculaire à une contrepartie simple** : "
            "il faut que TOUS les sous-jacents tiennent, pas un seul. Plus ils sont "
            "décorrélés, plus il est probable qu'au moins un décroche."

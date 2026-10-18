@@ -34,7 +34,7 @@ import calibration as C   # noqa: E402
 MODELES = ["Black-Scholes + skew", "Bates (vol stochastique + sauts)"]
 SOUS_JACENTS = {"prix": "Indice des prix (SX5E)",
                 "net_return": "Net return (dividendes réinvestis)",
-                "decrement": "Indice a décrément (50 points)"}
+                "decrement": "Indice à décrément (50 points)"}
 BRC = "Barrier Reverse Convertible"
 echecs = []
 
@@ -144,7 +144,7 @@ controle("BRC 1 an barrière 70 % depuis 2000 : 15,8 % de pertes, pire cas 03/03
          m["Pertes en capital"].value == "15.8 %" and m["Pire cas"].delta == "émis le 03/03/2008")
 
 ac = B.backtest_autocall(h, sous_jacent="decrement").resume["perte"]
-controle("indice a décrément : plus de pertes affichees que sur l'indice des prix",
+controle("indice à décrément : plus de pertes affichees que sur l'indice des prix",
          nombre(metriques(ouvre("Backtest historique", reglages=[sous_jacent("decrement")]))
                 ["Pertes en capital"].value) > 3.5, f"{ac:.1%}")
 
@@ -172,7 +172,7 @@ for modele in MODELES:
     dans_brc(lambda a: a.checkbox(key="bt_brc_coupon_marche").check())(at)
     at.run()
     controle(f"{modele.split()[0]:6} | case coupon de marché BRC : coupon backteste = coupon du desk",
-             not at.exception and nombre(metriques(at)["Coupon backteste"].value) == bt, erreur(at))
+             not at.exception and nombre(metriques(at)["Coupon backtesté"].value) == bt, erreur(at))
 
 # 3. Lien, curseurs, cas limites ------------------------------------------------
 at = ouvre("Backtest historique", query={"bt_onglet": "brc"})
@@ -203,7 +203,7 @@ controle("autocall 1 an annuel (une seule observation) : la page s'affiche",
 at = ouvre("Backtest historique", reglages=[onglet_brc, dans_brc(
     lambda a: a.radio(key="bt_brc_observation").set_value("À l'échéance (européenne)"))])
 r = B.backtest_brc(h, continu=False).resume
-controle("BRC barrière a l'échéance : chiffres = backtest.py",
+controle("BRC barrière à l'échéance : chiffres = backtest.py",
          not at.exception and proche(metriques(at)["Pertes en capital"].value, r["perte"]),
          erreur(at) or f"perte {r['perte']:.1%}")
 

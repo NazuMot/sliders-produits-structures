@@ -157,7 +157,7 @@ def demo_securite(m):
     st.caption("BRC 1 an, barrière 70 % continue, strike 100 % : trois façons de "
                "rendre le produit plus sur.")
     variantes = [("BRC de départ", _chemins(m, 1.0, 0.70), 1.0, 0.70, True),
-                 ("Barrière a 60 %", _chemins(m, 1.0, 0.60), 1.0, 0.60, True),
+                 ("Barrière à 60 %", _chemins(m, 1.0, 0.60), 1.0, 0.60, True),
                  ("Barrière observée à l'échéance", _chemins(m, 1.0, 0.70), 1.0, 0.70, False),
                  ("Maturité 6 mois", _chemins(m, 0.5, 0.70), 0.5, 0.70, True)]
     lignes = []
@@ -183,7 +183,7 @@ def demo_autocall(m):
     cpn, duree, _, perte = _autocall(m, ch)
     i1 = M.idx_obs(ch[0].shape[1] - 1, AC_OBS)[0]
     rappel_1 = (ch[0][:, i1] >= S0).mean()
-    _ligne(("Coupon affiche", f"{cpn*100:,.2f}% p.a."),
+    _ligne(("Coupon affiché", f"{cpn*100:,.2f}% p.a."),
            ("Durée de vie moyenne", f"{duree:,.2f} ans sur {AC_T:.0f}"),
            ("Rappelé dès le 1er trimestre", _pct(rappel_1)),
            ("Proba de perte en capital", _pct(perte)))
@@ -219,7 +219,7 @@ def demo_stress(m):
     _ligne(("Proba de perte avant", _pct(p0)),
            ("Après, barrière 70 %", _pct(p1)),
            ("Après, barrière 60 %", _pct(p2)))
-    st.caption("Après une baisse de 20 %, une barrière a 60 % du nouveau niveau se situe "
+    st.caption("Après une baisse de 20 %, une barrière à 60 % du nouveau niveau se situe "
                "à 48 % des plus hauts. Les probabilités sont calculées avec la vol de "
                "stress : si la vol réalisée retombe ensuite, comme souvent après un pic, le "
                "risque réel est plus faible que celui que le prix paie.")
@@ -228,7 +228,7 @@ def demo_stress(m):
 def demo_bonus(m):
     T, bar = 2.0, 0.70
     st.caption("Deux ans, barrière 70 % observée en continu. Sans risque émetteur, pour "
-               "comparer les deux profils à armés égales.")
+               "comparer les deux profils à armes égales.")
     ch, sg = _chemins(m, T, bar)
     ST = ch[:, -1].astype(np.float64)
     p_no = M.proba_non_touche(ch, bar * S0, sg, T)
@@ -301,7 +301,7 @@ def demo_mtm(m):
     v1 = M.pv_brc(ch1, 0.5, m.r, 1.0, 0.70, 1.0, True, 2 * cpn, sg1,
                   m.defauts(len(ch1), 0.5), m.recovery)
     toucher, perte = _risques_brc(apres, T=0.5)
-    _ligne(("Valeur a l'émission", _pct(v0)),
+    _ligne(("Valeur à l'émission", _pct(v0)),
            ("Valeur aujourd'hui", _pct(v1), _pts(v1 - v0)),
            ("Proba de toucher d'ici l'échéance", _pct(toucher)),
            ("Proba de perte en capital", _pct(perte)))
@@ -331,7 +331,7 @@ def demo_capital(m):
     p, zc, budget, cout = _participation(m)
     _ligne(("Mis de côté pour la garantie", f"{zc*m.nominal:,.0f} EUR"),
            ("Budget option, après marge", f"{budget*m.nominal:,.0f} EUR"),
-           ("Prix du call a la monnaie", f"{cout*m.nominal:,.0f} EUR"),
+           ("Prix du call à la monnaie", f"{cout*m.nominal:,.0f} EUR"),
            ("Participation", _pct(p, 0)))
 
 
@@ -350,7 +350,7 @@ def demo_observation(m):
     cc, ce = _brc(m, ch), _brc(m, ch, continu=False)
     pc, pe = _risques_brc(ch)[1], _risques_brc(ch, continu=False)[1]
     _ligne(("Coupon, observation continue", f"{cc*100:,.2f}% p.a."),
-           ("Coupon, a l'échéance", f"{ce*100:,.2f}% p.a.", _pts(ce - cc)),
+           ("Coupon, à l'échéance", f"{ce*100:,.2f}% p.a.", _pts(ce - cc)),
            ("Proba de perte, continue", _pct(pc)),
            ("Proba de perte, à l'échéance", _pct(pe), _pts(pe - pc)))
 
@@ -561,27 +561,27 @@ QUESTIONS = [
       "sécurité.",
       demo_securite),
     Q(CLIENT,
-      "Expliquez un autocall a un client particulier en trente secondes.",
+      "Expliquez un autocall à un client particulier en trente secondes.",
       "« Vous investissez pour trois ans au plus sur l'Euro Stoxx 50. Chaque trimestre, si "
       "l'indice est au-dessus de son niveau de départ, vous êtes remboursé avec un coupon "
       "et le produit s'arrête. S'il est entre 70 % et 100 %, vous touchez le coupon et on "
       "continue. À l'échéance, vous récupérez votre capital tant que l'indice n'a pas perdu "
-      "plus de 40 %. En dessous, vous subissez toute la baisse, comme si vous aviez achète "
+      "plus de 40 %. En dessous, vous subissez toute la baisse, comme si vous aviez acheté "
       "l'indice. » Pas de jargon, trois scénarios, et le risque dit clairement.",
       "Clarté et honnêteté sur le scénario de perte. Les mots trigger, Phoenix ou mémoire "
       "ne servent à rien devant un particulier."),
     Q(CLIENT,
-      "Le client compare le coupon de 8 % d'un autocall a une obligation à 4 %. "
+      "Le client compare le coupon de 8 % d'un autocall à une obligation à 4 %. "
       "Qu'est-ce qui cloche dans la comparaison ?",
       "Deux choses. Le risque d'abord : l'obligation rembourse le nominal sauf défaut, "
-      "l'autocall expose le capital sous la barrière. La durée ensuite : le rappel anticipe "
+      "l'autocall expose le capital sous la barrière. La durée ensuite : le rappel anticipé "
       "coupe les coupons. Si le produit est rappelé dès la première ou la deuxième "
       "observation, le scénario le plus fréquent, le client touche 8 % par an pendant "
       "quelques mois, puis doit replacer son argent, peut-être dans un marché moins "
       "favorable. Il faut raisonner en durée de vie attendue et en probabilité de perte, "
-      "pas en coupon affiche.",
+      "pas en coupon affiché.",
       "Le coupon d'un autocall n'est pas un rendement annuel garanti : durée incertaine et "
-      "capital à risqué.",
+      "capital à risque.",
       demo_autocall),
     Q(CLIENT,
       "Un client veut profiter de la hausse du marché sans risquer son capital. Que "
@@ -619,12 +619,12 @@ QUESTIONS = [
       "Ne pas paniquer sur le prix : comparer à structure identique, expliquer l'écart, "
       "puis négocier en interne."),
     Q(CLIENT,
-      "Le marché vient de perdre 20 % et la volatilité a double. Votre client a peur. Que "
+      "Le marché vient de perdre 20 % et la volatilité a doublé. Votre client a peur. Que "
       "lui proposez-vous ?",
       "C'est souvent le meilleur moment pour vendre de la volatilité, à condition de le "
       "faire prudemment. Une vol élevée rend les puts chers : à barrière égale, le coupon "
       "d'un BRC est bien plus haut qu'avant la baisse. Et comme le niveau de départ est "
-      "déjà 20 % plus bas, une barrière a 60 % correspond à une baisse de 52 % depuis les "
+      "déjà 20 % plus bas, une barrière à 60 % correspond à une baisse de 52 % depuis les "
       "plus hauts. Je propose donc une barrière plus profonde et une maturité courte, la "
       "vol courte étant la plus élevée en période de stress. Mais je ne force pas un client "
       "qui a peur : je chiffre, il décide.",
@@ -633,12 +633,7 @@ QUESTIONS = [
     Q(CLIENT,
       "Un client est légèrement haussier sur deux ans et ne veut pas renoncer à la hausse. "
       "BRC ou Bonus Certificate ?",
-      "Le Bonus. Il garde toute la hausse et assure un remboursement minimum, le bonus, "
-      "tant que la barrière tient. Le BRC plafonne le gain au coupon : si le marché monte "
-      "de 30 %, le client du BRC touche son coupon et rien de plus, ce qui contredit sa "
-      "vue. Le BRC convient mieux à un client qui pense que le marché va stagner, car il "
-      "monétisé directement l'absence de mouvement. Le travail du Sales, c'est d'abord de "
-      "reformuler la vue du client, puis de choisir le payoff qui la paie.",
+      "Le Bonus. Il garde toute la hausse et assure un remboursement minimum, le bonus, tant que la barrière tient. Le BRC plafonne le gain au coupon : si le marché monte de 30 %, le client du BRC touche son coupon et rien de plus, ce qui contredit sa vue. Le BRC convient mieux à un client qui pense que le marché va stagner, car il monétise directement l'absence de mouvement. Le travail du Sales, c'est d'abord de reformuler la vue du client, puis de choisir le payoff qui la paie.",
       "Partir de la vue du client, pas du produit qu'on a envie de vendre.",
       demo_bonus),
     Q(CLIENT,
@@ -657,12 +652,12 @@ QUESTIONS = [
       "est prise sur le budget option, souvent de l'ordre de 0,5 à 1,5 % par an selon le "
       "produit et le client. Elle paie la structuration, le capital immobilisé et les "
       "risques que la banque ne couvre pas parfaitement : saut de delta à la barrière, "
-      "skew, corrélation. Un institutionnel la négocié ; l'important est qu'il sache ce "
+      "skew, corrélation. Un institutionnel la négocie ; l'important est qu'il sache ce "
       "qu'il paie, et pour quoi.",
       "Pas de tabou sur la marge : la justifier par les risques que la banque garde.",
       demo_marge),
     Q(CLIENT,
-      "Comment présentez-vous le même produit a un institutionnel et à un client privé ?",
+      "Comment présentez-vous le même produit à un institutionnel et à un client privé ?",
       "À un institutionnel, je parle prix et risques de marché : quelle vol implicite et "
       "quel skew sont dans le prix, quel spread émetteur, comment le produit se comporte "
       "en mark-to-market, quelle liquidité sur le secondaire. Il compare avec ce qu'il "
@@ -672,7 +667,7 @@ QUESTIONS = [
       "Adapter le discours à l'interlocuteur : grecques pour l'un, scénarios pour l'autre."),
     Q(CLIENT,
       "Votre client a acheté un BRC il y a six mois. Le sous-jacent est à 75 %, la "
-      "barrière a 70 %. Que lui dites-vous ?",
+      "barrière à 70 %. Que lui dites-vous ?",
       "Je l'appelle avant qu'il m'appelle. Je lui donne les faits : la barrière n'est pas "
       "touchée et le coupon reste du quoi qu'il arrive, mais le produit vaut nettement "
       "moins sur le marché secondaire, car le put qu'il a vendu est proche de s'activer. "
@@ -725,11 +720,7 @@ QUESTIONS = [
       "Le piège de la barrière de capital : sous 60 %, la perte se compte depuis 100 %."),
     Q(MECANIQUE,
       "Comment est construit un capital garanti, et d'où vient la participation ?",
-      "Une obligation zéro-coupon qui reconstitué 100 % à l'échéance, plus un call achète "
-      "avec ce qui reste. À 3 % sur 5 ans, garantir 1 000 EUR coûte environ 861 EUR "
-      "aujourd'hui ; les 139 restants, moins la marge, achètent le call. La participation "
-      "est donc un résultat : le budget option divise par le prix du call. La banque ne la "
-      "choisit pas.",
+      "Une obligation zéro-coupon qui reconstitue 100 % à l'échéance, plus un call acheté avec ce qui reste. À 3 % sur 5 ans, garantir 1 000 EUR coûte environ 861 EUR aujourd'hui ; les 139 restants, moins la marge, achètent le call. La participation est donc un résultat : le budget option divisé par le prix du call. La banque ne la choisit pas.",
       "La participation est un reste de budget.",
       demo_capital),
     Q(MECANIQUE,
@@ -742,7 +733,7 @@ QUESTIONS = [
       "Protection conditionnelle n'est pas garantie : le mot à ne jamais employer."),
     Q(MECANIQUE,
       "Qu'est-ce que l'effet mémoire sur un Phoenix, et combien coûte-t-il ?",
-      "Un coupon non verse parce que le sous-jacent était sous la barrière de coupon est "
+      "Un coupon non versé parce que le sous-jacent était sous la barrière de coupon est "
       "rattrapé à la première date où il repasse au-dessus. Le client ne perd donc ses "
       "coupons que si le sous-jacent reste durablement bas. C'est une option supplémentaire "
       "offerte au client : elle a un prix, et la banque le paie en baissant le coupon par "
@@ -763,7 +754,7 @@ QUESTIONS = [
       "Le produit, c'est un tracker plus l'achat d'un put down-and-out à la monnaie. Entre "
       "la barrière et le niveau initial, le put paie : la baisse se transforme en gain. Le "
       "financement vient des dividendes abandonnés. Le danger est la discontinuité : avec "
-      "une barrière a 65 % et une participation de 100 % à la baisse, le client gagne pres "
+      "une barrière à 65 % et une participation de 100 % à la baisse, le client gagne près "
       "de 35 % juste au-dessus de la barrière, et perd 35 % juste en dessous.",
       "Savoir expliquer la discontinuité à la barrière : le profil le plus dangereux à mal "
       "vendre."),
@@ -802,7 +793,7 @@ QUESTIONS = [
       "Le skew rend les puts bas plus chers, en vol, que les options à la monnaie. Or le "
       "risque du put que vend le client d'un BRC se concentre autour de la barrière, loin "
       "sous le spot. Avec du skew, ce put est pricé à une vol plus haute que la vol ATM : "
-      "le coupon monte. Le skew à deux causes : les marchés baissent plus brutalement "
+      "le coupon monte. Le skew a deux causes : les marchés baissent plus brutalement "
       "qu'ils ne montent, et les institutionnels achètent massivement des puts pour se "
       "protéger.",
       "Relier skew, vol au niveau de la barrière, prix du put et coupon.",
@@ -864,20 +855,15 @@ QUESTIONS = [
       "Règle simple : intensité de défaut égale spread divisé par un moins le taux de "
       "recouvrement. À 150 bp avec 40 % de recouvrement, cela donne 2,5 % par an, soit "
       "environ 7 % de probabilité de défaut sur 3 ans. La perte attendue, probabilité fois "
-      "perte en cas de défaut, retombe à peu pres sur le spread : c'est ce que le marché "
-      "fait payer. Ces probabilités sont risqué-neutres, donc plus élevées que les défauts "
+      "perte en cas de défaut, retombe à peu près sur le spread : c'est ce que le marché "
+      "fait payer. Ces probabilités sont risque-neutres, donc plus élevées que les défauts "
       "historiques, car elles incluent une prime de risque.",
       "Savoir passer d'un spread à une probabilité de défaut, et nuancer.",
       demo_defaut),
     Q(EMETTEUR,
       "Deux BRC identiques, deux émetteurs, 60 bp d'écart de coupon. Comment conseillez-vous "
       "un institutionnel ?",
-      "À structure identique, l'écart vient surtout de la signature : l'émetteur qui paie "
-      "plus se finance plus cher, le marché le juge plus risque. Je compare notations et "
-      "CDS, et je regarde l'exposition que le client a déjà sur chaque banque : un "
-      "institutionnel ne veut pas concentrer son risque de contrepartie. On peut repartir "
-      "les tickets entre plusieurs émetteurs, ou, si le risque de crédit le gene vraiment, "
-      "proposer une version collatéralisée en échange d'un coupon plus faible.",
+      "À structure identique, l'écart vient surtout de la signature : l'émetteur qui paie plus se finance plus cher, le marché le juge plus risqué. Je compare notations et CDS, et je regarde l'exposition que le client a déjà sur chaque banque : un institutionnel ne veut pas concentrer son risque de contrepartie. On peut répartir les tickets entre plusieurs émetteurs, ou, si le risque de crédit le gêne vraiment, proposer une version collatéralisée en échange d'un coupon plus faible.",
       "Le coupon supérieur se paie en risque de crédit. Penser diversification des "
       "contreparties."),
     Q(EMETTEUR,
@@ -893,16 +879,12 @@ QUESTIONS = [
     # ---------------- Grecques et couverture ------------------------
     Q(GRECQUES,
       "Quelle est la position en vega d'un client qui achète un BRC ?",
-      "Short vega : il a vendu un put. Si la vol implicite monte après l'achat, le put vaut "
-      "plus cher et la valeur de marché de son BRC baisse, même si le sous-jacent n'a pas "
-      "bouge. En face, la banque est long vega et revend de la vol sur le marché pour se "
-      "couvrir. C'est un phénomène connu : les desks qui ont vendu beaucoup d'autocalls se "
-      "retrouvent longs de vol longue et la revendent, ce qui pèse sur ces vols.",
+      "Short vega : il a vendu un put. Si la vol implicite monte après l'achat, le put vaut plus cher et la valeur de marché de son BRC baisse, même si le sous-jacent n'a pas bougé. En face, la banque est long vega et revend de la vol sur le marché pour se couvrir. C'est un phénomène connu : les desks qui ont vendu beaucoup d'autocalls se retrouvent longs de vol longue et la revendent, ce qui pèse sur ces vols.",
       "Le client d'un BRC ou d'un autocall est vendeur de volatilité.",
       demo_vega),
     Q(GRECQUES,
-      "Pourquoi le gamma explose-t-il pres de la barrière ?",
-      "Juste au-dessus de la barrière, a l'approche de l'échéance, la valeur du put "
+      "Pourquoi le gamma explose-t-il près de la barrière ?",
+      "Juste au-dessus de la barrière, à l'approche de l'échéance, la valeur du put "
       "down-and-in change énormément pour un petit mouvement : un point de plus ou de moins "
       "décide si le client perd 30 % ou rien. Le delta du trader devient très grand, il "
       "peut détenir plusieurs fois le nominal en actions. Si la barrière est touchée, le "
@@ -942,11 +924,11 @@ QUESTIONS = [
       "elle n'est pas un pur profit.",
       "La marge paie aussi un coût de couverture réel."),
     Q(GRECQUES,
-      "Comment calcule-t-on une grecque sur un produit price par Monte Carlo ?",
-      "Par bump and réévalué : on décale un paramètre de peu, on repricé, et on divise "
+      "Comment calcule-t-on une grecque sur un produit pricé par Monte Carlo ?",
+      "Par bump and revalue : on décale un paramètre de peu, on reprice, et on divise "
       "l'écart par le choc. Le détail qui compte : réutiliser exactement les mêmes tirages "
       "aléatoires pour les deux prix. Sinon le bruit de simulation, souvent plus grand que "
-      "l'effet cherche, domine la différence et la grecque est inutilisable. Pour un "
+      "l'effet cherché, domine la différence et la grecque est inutilisable. Pour un "
       "gamma, c'est encore pire, d'où l'intérêt des formules fermées quand elles existent, "
       "comme pour le put down-and-in.",
       "Connaître la technique standard et son piège numérique."),

@@ -29,12 +29,12 @@ echecs = []
 
 
 def pages():
-    """Les pages du menu, lues dans app.py pour ne jamais en oublier une."""
-    arbre = ast.parse(open(APP).read())
+    """Les pages du menu, lues dans principal.py pour ne jamais en oublier une."""
+    arbre = ast.parse(open(os.path.join(RACINE, "principal.py")).read())
     for n in arbre.body:
         if isinstance(n, ast.Assign) and getattr(n.targets[0], "id", "") == "PAGES":
             return [k.value for k in n.value.keys]
-    raise SystemExit("dictionnaire PAGES introuvable dans app.py")
+    raise SystemExit("dictionnaire PAGES introuvable dans principal.py")
 
 
 def ouvre(page, modele, reglages=None):

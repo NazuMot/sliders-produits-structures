@@ -34,7 +34,7 @@ Prélevée sur le budget option, invisible dans le payoff. Divulguée réglement
 
 ### Monte Carlo
 Pricing par simulation : des milliers de trajectoires, le payoff dans chacune, la moyenne
-actualisée. Indispensable des qu'un produit dépend du chemin.
+actualisée. Indispensable dès qu'un produit dépend du chemin.
 
 ### Univers risque-neutre
 Le sous-jacent monte en moyenne au taux (r - q), pas selon une prévision. **Ce n'est pas
@@ -65,17 +65,17 @@ Niveau de référence qui décide du remboursement. Standard : 100% du spot init
 
 ### Participation
 Ratio de suivi. 70% : le sous-jacent fait +20%, le client touche +14%.
-**Jamais choisie, toujours calculée** : budget option divise par prix du call.
+**Jamais choisie, toujours calculée** : budget option divisé par prix du call.
 
 ### Coupon
 **Ce n'est pas un intérêt.** C'est le prix d'une option que le client vend. Trois
 sources : les taux, la prime du put vendu, et le spread émetteur.
 
-Coupon élevé = sinistre probable, ou émetteur risque. Jamais bonne affaire.
+Coupon élevé = sinistre probable, ou émetteur risqué. Jamais bonne affaire.
 
 ### Coupon conditionnel vs inconditionnel
-- **Inconditionnel** (BRC) : paye quoi qu'il arrive.
-- **Conditionnel** (Phoenix) : paye seulement au-dessus de la barrière de coupon.
+- **Inconditionnel** (BRC) : payé quoi qu'il arrive.
+- **Conditionnel** (Phoenix) : payé seulement au-dessus de la barrière de coupon.
 
 ### Effet mémoire
 Les coupons manqués sont rattrapés au premier paiement suivant.
@@ -89,7 +89,7 @@ Si la barrière casse et que le sous-jacent finit sous le strike, le client reç
 actions au lieu de son cash.
 
 ### Worst-of
-Panier ou le plus mauvais des sous-jacents décide de tout. Le coupon affiche est
+Panier où le plus mauvais des sous-jacents décide de tout. Le coupon affiché est
 spectaculaire, et pour cause : il faut que TOUS tiennent, pas un seul.
 
 **La corrélation devient le paramètre dominant** : corrélation haute, les actifs bougent
@@ -106,13 +106,13 @@ GRECQUES = """
 | Grecque | Ce que c'est | Ce que ça change pour toi |
 |---|---|---|
 | **Delta** | Sensibilité au prix du sous-jacent | Le nombre d'actions que le trader détient pour être couvert. Il l'ajuste tous les jours : delta-hedging. |
-| **Gamma** | Vitesse à laquelle le delta change | Explose pres d'une barrière : volumes énormes à trader en peu de temps (pin risk). LA raison du prix dégradé sur les barrières proches du spot. |
+| **Gamma** | Vitesse à laquelle le delta change | Explose près d'une barrière : volumes énormes à trader en peu de temps (pin risk). LA raison du prix dégradé sur les barrières proches du spot. |
 | **Vega** | Sensibilité à la volatilité implicite | Ta grecque. Vol haute au pricing = coupon élevé. Ta fenêtre commerciale. |
 | **Theta** | Érosion du prix avec le temps | Le vendeur d'option gagne du theta chaque jour. Un client qui achète un BRC est structurellement long theta. |
 | **Rho** | Sensibilité aux taux | Déterminante sur le capital garanti, secondaire sur les produits à coupon. |
 
-### Bump and réévalué
-On décale un paramètre de peu, on repricé, on regarde l'écart.
+### Bump and revalue
+On décale un paramètre de peu, on reprice, on regarde l'écart.
 
 **Le détail qui compte** : réutiliser exactement les mêmes tirages aléatoires pour les
 deux évaluations (common random numbers). Sinon le bruit Monte Carlo domine la
@@ -127,12 +127,12 @@ vrai sujet de desk.
 
 VOLATILITE = """
 ### Volatilité implicite
-**Pas une prévision.** Le prix d'une option exprime dans une autre unité. Une option vaut
+**Pas une prévision.** Le prix d'une option exprimé dans une autre unité. Une option vaut
 55 EUR, ou elle vaut 22% de vol : même information.
 
 ### Skew
 Les puts bas coûtent plus cher **en vol** que les options à la monnaie. Typiquement sur
-indice a 1 an : put 70% a 26%, ATM à 18%, call 110% a 16%.
+indice à 1 an : put 70% à 26%, ATM à 18%, call 110% à 16%.
 
 **Deux causes** :
 1. Les actions ne baissent pas comme elles montent. Un krach de -20% en une semaine
@@ -182,18 +182,19 @@ La volatilité devient elle-même un processus aléatoire, qui revient vers une 
 ### Merton (sauts)
 On ajoute des sauts poissonniens au sous-jacent. Un gap de -15% en une séance devient
 possible. Le brownien géométrique en est incapable, et c'est exactement ce qui fait mal
-sur un produit a barrière.
+sur un produit à barrière.
 
 ### Bates
 Heston + Merton. **Le standard de marché pour les exotiques actions.** C'est le modèle
-actif dans cette appli quand tu le sélectionnés.
+actif dans cette appli quand tu le sélectionnes.
 
 ### Ce que les desks utilisent vraiment
-Bates ou une variante, calibre chaque jour sur les prix d'options cotées. Pour certains
-produits, un modèle a volatilité locale (Dupire) qui reproduit exactement la surface
+Bates ou une variante, calibré chaque jour sur les prix d'options cotées. Pour certains
+produits, un modèle à volatilité locale (Dupire) qui reproduit exactement la surface
 observée. Pour les worst-of, un modèle multi-actifs avec corrélation calibrée.
 
-Les paramètres de cette appli sont règles à la main, pas calibrés sur un marché réel.
+Dans cette appli, le mode Black-Scholes + skew utilise une volatilité locale, et Bates peut
+être calibré sur une photo de prix Eurex (Laboratoire modèle), mais les curseurs restent libres.
 C'est la différence entre cet outil et un pricer de production.
 """
 
@@ -202,7 +203,7 @@ JARGON = """
 
 | Rôle | Ce qu'il fait |
 |---|---|
-| **Sales (toi)** | Interface client. Tu traduis une vue de marché en paramètres, tu fais pricer en interne, tu ramenes le prix. **Tu ne portes aucun risque.** |
+| **Sales (toi)** | Interface client. Tu traduis une vue de marché en paramètres, tu fais pricer en interne, tu ramènes le prix. **Tu ne portes aucun risque.** |
 | **Structureur** | Assemble le produit, calcule ce que la banque peut offrir, rédige le termsheet. |
 | **Trader** | Porte le risque et le couvre. Quand un client achète un BRC, la banque se retrouve acheteuse d'un put qu'elle doit gérer pendant toute la durée. |
 
@@ -220,18 +221,18 @@ une protection contre la baisse, et le coupon est le prix qu'elle lui paie pour 
 | Sous-jacent | L'actif dont dépend le produit : action, indice, panier. |
 | Spot | Le prix actuel du sous-jacent. |
 | Termsheet | Le document contractuel. Ce que le client signe. |
-| Autocall | Tout produit avec rappel anticipe automatique. |
-| Phoenix | Autocall a coupons conditionnels, généralement avec effet mémoire. La structure la plus vendue. |
+| Autocall | Tout produit avec rappel anticipé automatique. |
+| Phoenix | Autocall à coupons conditionnels, généralement avec effet mémoire. La structure la plus vendue. |
 | Reverse convertible | Le client vend de l'optionalité contre un coupon. Le "reverse" : c'est l'émetteur qui a le droit de livrer les actions. |
 | Call spread | Achat d'un call + vente d'un call plus haut. Permet de capper un capital garanti pour remonter la participation. |
 | Delta-hedging | L'activité quotidienne du trader : rester neutre à la direction. |
 | Pin risk | Risque de couverture quand le sous-jacent stagne autour d'une barrière. |
-| Wrong-way risk | Le défaut de l'émetteur survient au pire moment, corrélé au marché. Ignore dans cette appli. |
+| Wrong-way risk | Le défaut de l'émetteur survient au pire moment, corrélé au marché. Proposé en option sur la page BRC. |
 | SSPA | Swiss Structured Products Association. Référence du marché suisse, premier marché mondial. |
 | PRIIP / KID | Réglementation européenne : document d'information standardisé pour tout produit structuré vendu au retail. |
 """
 
-TITRE_AIDE = "**Ce que tu trouves ici.** Tout le vocabulaire de l'appli, classe en six onglets : paramètres\nde marché, mécaniques produit, grecques, volatilité, modèles, jargon de desk.\n\n**Comment c'est écrit.** Chaque terme est défini, puis relié à ce qu'il change\nconcrètement : sur le prix, sur la couverture, ou sur la conversation avec un client.\n\n**Astuce.** Chaque curseur de l'appli à aussi sa propre infobulle. Le glossaire sert quand\ntu veux le contexte complet d'une notion.\n\n**Recherche.** Le champ en haut cherche dans les six onglets à la fois, sans tenir compte\ndes accents ni des majuscules, et liste chaque définition trouvée avec son onglet d'origine."
+TITRE_AIDE = "**Ce que tu trouves ici.** Tout le vocabulaire de l'appli, classé en six onglets : paramètres\nde marché, mécaniques produit, grecques, volatilité, modèles, jargon de desk.\n\n**Comment c'est écrit.** Chaque terme est défini, puis relié à ce qu'il change\nconcrètement : sur le prix, sur la couverture, ou sur la conversation avec un client.\n\n**Astuce.** Chaque curseur de l'appli a aussi sa propre infobulle. Le glossaire sert quand\ntu veux le contexte complet d'une notion.\n\n**Recherche.** Le champ en haut cherche dans les six onglets à la fois, sans tenir compte\ndes accents ni des majuscules, et liste chaque définition trouvée avec son onglet d'origine."
 
 
 ONGLETS = [

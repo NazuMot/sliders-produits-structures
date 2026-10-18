@@ -15,7 +15,7 @@ from communs import MAX_CACHE, sim_bs, sim_bates
 SOUS_JACENTS = {
     "Indice des prix (SX5E)": "prix",
     "Net return (dividendes réinvestis)": "net_return",
-    "Indice a décrément (50 points)": "decrement",
+    "Indice à décrément (50 points)": "decrement",
 }
 NOMS_SOUS_JACENT = {"prix": "l'Euro Stoxx 50 (indice des prix)",
                     "net_return": "l'Euro Stoxx 50 dividendes réinvestis",
@@ -144,7 +144,7 @@ def _vol_modele(m, niveau_ref):
 def _graphe_emissions(res, serie, issues, couleurs, details, barriere, titre, sous_titre,
                       i_pire, texte_pire):
     """
-    L'indice dans le temps, un point par emission colore selon l'issue pour
+    L'indice dans le temps, un point par emission coloré selon l'issue pour
     le client. Au survol : ligne verticale, infobulle de l'emission, et sa vie
     (trait bleu au niveau de depart jusqu'a la fin, tirete rouge a la barriere).
     """
@@ -226,8 +226,8 @@ def _graphe_repartition(categories, histo, mc, dates, titre, sous_titre):
                                  clear="pointerout")
     infobulle = [alt.Tooltip("cat:N", title="Issue"), alt.Tooltip("date:N", title="Date"),
                  alt.Tooltip("h:N", title=SOURCES[0]), alt.Tooltip("m:N", title=SOURCES[1]),
-                 alt.Tooltip("ch:N", title="Termine à cette date ou avant (historique)"),
-                 alt.Tooltip("cm:N", title="Termine à cette date ou avant (Monte Carlo)")]
+                 alt.Tooltip("ch:N", title="Terminé à cette date ou avant (historique)"),
+                 alt.Tooltip("cm:N", title="Terminé à cette date ou avant (Monte Carlo)")]
     base = alt.Chart(df)
     return alt.layer(
         base.mark_bar(cornerRadiusTopLeft=3, cornerRadiusTopRight=3).encode(
@@ -261,9 +261,7 @@ def _a_ne_pas_dire(sous_jacent, n, p_capital):
         "de produits Lehman ont récupéré environ 9 cents par dollar.",
     ]
     if sous_jacent == "decrement":
-        lignes.append("Montrer le backtest de l'indice classique pour un produit sur indice a "
-                      "décrément : les 50 points retires chaque année pèsent d'autant plus lourd "
-                      "que l'indice baisse.")
+        lignes.append("Montrer le backtest de l'indice classique pour un produit sur indice à décrément : les 50 points retires chaque année pèsent d'autant plus lourd que l'indice baisse.")
     return lignes
 
 
@@ -364,13 +362,13 @@ def _onglet_autocall(m, sj, debut):
         res, serie, issues, COULEURS_AC, details, bar_cap / 100,
         f"{_p(r['rappel_premiere_date'], 0)} des autocalls rappelés à la 1re date, "
         f"{_p(r['perte'])} en perte",
-        f"Un point par émission mensuelle depuis {debut[:4]}, colore selon l'issue. Survole un "
+        f"Un point par émission mensuelle depuis {debut[:4]}, coloré selon l'issue. Survole un "
         "point : trait bleu = vie du produit, tireté rouge = barrière de capital.",
         i_pire, f"pire cas\n{_p(res.capital[i_pire])} rendu")
     G.affiche(graphe)
     if sj == "decrement":
         st.caption("La courbe est l'indice des prix pour se repérer ; chaque émission est "
-                   "déroulée sur son propre indice a décrément, relance à 1000 le jour de "
+                   "déroulée sur son propre indice à décrément, relance à 1000 le jour de "
                    "l'émission.")
 
     # --- statistiques cles
@@ -398,7 +396,7 @@ def _onglet_autocall(m, sj, debut):
     c = st.columns(4)
     c[0].metric("Durée de vie moyenne", f"{r['duree_moyenne']:.2f} ans",
                 help=f"Sur {T:g} ans possibles. Le rappel coupe les coupons futurs.")
-    c[1].metric("Rappel anticipe", _p(r["rappel_anticipe"]),
+    c[1].metric("Rappel anticipé", _p(r["rappel_anticipe"]),
                 help="Part des émissions rappelées avant l'échéance, à n'importe quelle date.")
     c[2].metric("Échéance sans perte", _p(r["echeance_sans_perte"]),
                 help="Jamais rappelé, mais au-dessus de la barrière de capital à l'échéance.")
@@ -409,7 +407,7 @@ def _onglet_autocall(m, sj, debut):
     st.caption(
         f"{r['n']} émissions du {_date(r['premiere_emission'])} au "
         f"{_date(r['derniere_emission'])}, déroulées sur {NOMS_SOUS_JACENT[sj]}. Biais : seuls "
-        f"les produits termines comptent ({r['n_en_cours']} encore en cours), et des émissions "
+        f"les produits terminés comptent ({r['n_en_cours']} encore en cours), et des émissions "
         "mensuelles qui se chevauchent ne sont pas des expériences indépendantes.")
 
     # --- backtest contre Monte Carlo
@@ -521,7 +519,7 @@ def _onglet_brc(m, sj, debut):
         ("Issue", issue_txt),
         ("Plus bas atteint" if continu else "Niveau à l'échéance",
          [f"{(b - 1) * 100:+.1f} %" for b in res.plus_bas]),
-        ("Sous-jacent a l'échéance", [f"{(s - 1) * 100:+.1f} %" for s in res.perf_fin]),
+        ("Sous-jacent à l'échéance", [f"{(s - 1) * 100:+.1f} %" for s in res.perf_fin]),
         ("Rendement du produit", [_rendement(t) for t in res.tri]),
         ("Détention directe (div. réinvestis)", [_rendement(d) for d in res.direct]),
         ("Produit moins direct", [f"{(t - d) * 100:+.1f} pts par an"
@@ -534,19 +532,19 @@ def _onglet_brc(m, sj, debut):
         res, serie, issues, COULEURS_BRC, details, bar / 100,
         f"{_p(r['barriere_touchee'], 0)} des BRC ont vu la barrière touchée, "
         f"{_p(r['perte'])} en perte",
-        f"Un point par émission mensuelle depuis {debut[:4]}, colore selon l'issue. Survole un "
+        f"Un point par émission mensuelle depuis {debut[:4]}, coloré selon l'issue. Survole un "
         "point : trait bleu = vie du produit, tireté rouge = barrière.",
         i_pire, f"pire cas\n{_p(res.capital[i_pire])} rendu"))
     if sj == "decrement":
         st.caption("La courbe est l'indice des prix pour se repérer ; chaque émission est "
-                   "déroulée sur son propre indice a décrément, relance à 1000 le jour de "
+                   "déroulée sur son propre indice à décrément, relance à 1000 le jour de "
                    "l'émission.")
 
     # --- statistiques cles
     c = st.columns(4)
     c[0].metric("Barrière touchée", _p(r["barriere_touchee"]),
-                help="Part des émissions dont l'indice à clôture au moins une fois sous la "
-                     "barrière (ou à fini sous la barrière, en observation à l'échéance).")
+                help="Part des émissions dont l'indice a clôturé au moins une fois sous la "
+                     "barrière (ou a fini sous la barrière, en observation à l'échéance).")
     c[1].metric("Pertes en capital", _p(r["perte"]),
                 f"perte moyenne {_p(r['perte_moyenne_si_perte'], 0)}" if r["perte"] else None,
                 delta_color="off", delta_arrow="off",
@@ -561,7 +559,7 @@ def _onglet_brc(m, sj, debut):
                 help="Moyenne géométrique pondérée par la durée, coupon compris. Direct = Euro "
                      "Stoxx 50 dividendes nets réinvestis, sur la même période.")
     c = st.columns(4)
-    c[0].metric("Coupon backteste", f"{_p(coupon_pa, 2)} p.a.",
+    c[0].metric("Coupon backtesté", f"{_p(coupon_pa, 2)} p.a.",
                 help="Le même coupon pour toutes les émissions.")
     c[1].metric("Rendement médian", _p(r["tri_median"]),
                 f"direct : {_p(r['direct_median'])}", delta_color="off", delta_arrow="off",
@@ -575,7 +573,7 @@ def _onglet_brc(m, sj, debut):
     st.caption(
         f"{r['n']} émissions du {_date(r['premiere_emission'])} au "
         f"{_date(r['derniere_emission'])}, déroulées sur {NOMS_SOUS_JACENT[sj]}, barrière "
-        f"observée sur les clôtures. Biais : seuls les produits termines comptent, et des "
+        f"observée sur les clôtures. Biais : seuls les produits terminés comptent, et des "
         "émissions mensuelles qui se chevauchent ne sont pas des expériences indépendantes.")
 
     # --- backtest contre Monte Carlo
@@ -627,14 +625,14 @@ def _change_onglet():
 
 
 def affiche(m):
-    st.title("Backtest historique", help="**Ce que c'est.** Le même produit lance chaque mois depuis 2000 et déroule sur les vraies\nclôtures de l'Euro Stoxx 50 : quand à-t-il été rappelé, combien de coupons, quelle perte,\net combien aurait rapporte l'indice sur la même période.\n\n**Comment c'est construit.** Clôtures quotidiennes STOXX de 1986 à octobre 2026, dividendes\nnets réinvestis pour le net return et l'indice à décrément. Dates d'observation : même date\ndu mois que l'émission. Barrière continue = chaque clôture. Seuls les produits termines\ncomptent.\n\n**Pourquoi un client le demande.** C'est la première question en rendez-vous : « et si\nj'avais achète ce produit par le passe ? ». Le Monte Carlo dit ce que coûte le produit\naujourd'hui ; le backtest dit ce qui serait arrive.\n\n**Quoi regarder.** Le pire cas et sa date, la part de pertes, le rendement par année\ninvestie contre la détention directe, et l'écart entre l'histoire et le modèle.")
+    st.title("Backtest historique", help="**Ce que c'est.** Le même produit lancé chaque mois depuis 2000 et déroulé sur les vraies\nclôtures de l'Euro Stoxx 50 : quand à-t-il été rappelé, combien de coupons, quelle perte,\net combien aurait rapporté l'indice sur la même période.\n\n**Comment c'est construit.** Clôtures quotidiennes STOXX de 1986 à octobre 2026, dividendes\nnets réinvestis pour le net return et l'indice à décrément. Dates d'observation : même date\ndu mois que l'émission. Barrière continue = chaque clôture. Seuls les produits terminés\ncomptent.\n\n**Pourquoi un client le demande.** C'est la première question en rendez-vous : « et si\nj'avais acheté ce produit par le passé ? ». Le Monte Carlo dit ce que coûte le produit\naujourd'hui ; le backtest dit ce qui serait arrivé.\n\n**Quoi regarder.** Le pire cas et sa date, la part de pertes, le rendement par année\ninvestie contre la détention directe, et l'écart entre l'histoire et le modèle.")
     st.caption("Et si on avait vendu ce produit chaque mois depuis 2000 ?")
 
     c1, c2 = st.columns([2, 1])
     sj = SOUS_JACENTS[c1.radio(
         "Sous-jacent", list(SOUS_JACENTS), horizontal=True,
         help="Indice des prix : le SX5E classique, dividendes exclus. Net return : dividendes "
-             "nets réinvestis. Indice a décrément : dividendes réinvestis moins 50 points par "
+             "nets réinvestis. Indice à décrément : dividendes réinvestis moins 50 points par "
              "an (base 1000 le jour de l'émission, soit 5 % la première année), le sous-jacent "
              "de la plupart des autocalls vendus en France : coupon plus élevé, mais l'indice "
              "décroche quand les dividendes réels sont sous le prélèvement.",

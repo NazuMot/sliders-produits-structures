@@ -7,7 +7,7 @@ Tom Uzan
     python backtest.py        # resume des produits par defaut
 
 La question que pose tout client, et a laquelle le Monte Carlo ne repond
-pas : « si j'avais achete ce produit par le passe, que se serait-il
+pas : « si j'avais achete ce produit par le passé, que se serait-il
 passe ? ». On lance le meme produit a chaque date d'emission possible
 (chaque mois par defaut) et on le deroule sur les vraies clotures.
 
@@ -412,7 +412,7 @@ def affiche_resume(res):
               f"({r['n_en_cours']} encore en cours, non comptées)")
         print("  fin à chaque observation :",
               " ".join(f"{v * 100:.0f}" for v in r["fin_par_observation"]), "(%)")
-        print(f"  rappel à la 1re date {_pct(r['rappel_premiere_date'])} | rappel anticipe "
+        print(f"  rappel à la 1re date {_pct(r['rappel_premiere_date'])} | rappel anticipé "
               f"{_pct(r['rappel_anticipe'])} | échéance sans perte {_pct(r['echeance_sans_perte'])}"
               f" | perte {_pct(r['perte'])} (moyenne {_pct(r['perte_moyenne_si_perte'])})")
     else:

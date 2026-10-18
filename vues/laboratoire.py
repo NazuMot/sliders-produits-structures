@@ -154,7 +154,7 @@ def affiche(m):
     n_paths, nominal, q, r, recovery = m.n_paths, m.nominal, m.q, m.r, m.recovery
     rho, sig_j, theta_v, vol_atm, xi = m.rho, m.sig_j, m.theta_v, m.vol_atm, m.xi
 
-    st.title("Laboratoire modèle", help="**Ce que tu regardes.** Le même produit price par deux modèles différents : Black-Scholes à\nvolatilité constante, et Bates (volatilité stochastique + sauts).\n\n**Pourquoi c'est important.** Le choix du modèle n'est pas un détail académique. Sur un BRC\na barrière 70%, il change le coupon de pres de 3 points. Black-Scholes sous-estime la\nprobabilité de toucher la barrière, donc sous-estime la valeur du put que vend le client,\ndonc affiche un coupon trop faible.\n\n**Les cinq blocs.**\n1. Le smile : Bates génère un skew réaliste, Black-Scholes donne une droite plate.\n2. Les queues de distribution : Bates produit de vrais krachs.\n3. L'effet sur le prix du BRC.\n4. L'effet du spread émetteur sur le coupon.\n5. Le calibrage : les 8 paramètres de Bates ajustés sur 122 prix d'options Eurex, et un\nbouton pour régler toute l'appli sur le marché.\n\n**A retenir.** Un coupon anormalement élevé doit faire poser deux questions : quel modèle\nle desk utilise-t-il, et quelle est la signature de l'émetteur ?")
+    st.title("Laboratoire modèle", help="**Ce que tu regardes.** Le même produit pricé par deux modèles différents : Black-Scholes à\nvolatilité constante, et Bates (volatilité stochastique + sauts).\n\n**Pourquoi c'est important.** Le choix du modèle n'est pas un détail académique. Sur un BRC\na barrière 70%, il change le coupon de près de 3 points. Black-Scholes sous-estime la\nprobabilité de toucher la barrière, donc sous-estime la valeur du put que vend le client,\ndonc affiche un coupon trop faible.\n\n**Les cinq blocs.**\n1. Le smile : Bates génère un skew réaliste, Black-Scholes donne une droite plate.\n2. Les queues de distribution : Bates produit de vrais krachs.\n3. L'effet sur le prix du BRC.\n4. L'effet du spread émetteur sur le coupon.\n5. Le calibrage : les 8 paramètres de Bates ajustés sur 122 prix d'options Eurex, et un\nbouton pour régler toute l'appli sur le marché.\n\n**A retenir.** Un coupon anormalement élevé doit faire poser deux questions : quel modèle\nle desk utilise-t-il, et quelle est la signature de l'émetteur ?")
     st.caption("Pourquoi le choix du modèle n'est pas un détail académique : "
                "il change le coupon de plusieurs points.")
 
@@ -225,7 +225,7 @@ def affiche(m):
         "Bates produit des krachs, Black-Scholes presque pas",
         f"Sous la barrière : {(st_bs < bar).mean()*100:,.1f}% des scénarios en "
         f"Black-Scholes contre {(st_bt < bar).mean()*100:,.1f}% en Bates",
-        "Sous-jacent a l'échéance", "Part des scénarios (%)", nom_x="Sous-jacent entre",
+        "Sous-jacent à l'échéance", "Part des scénarios (%)", nom_x="Sous-jacent entre",
         fmt_x=lambda v: f"{v:,.0f} et {v + larg:,.0f}", fmt_y=lambda v: G.pct(v, 2),
         x_domaine=(20, 200), y_domaine=(0, max(h_bs.max(), h_bt.max()) * 1.1),
         zone_x=(20, bar, G.FOND_PERTE), niveaux_v=[(bar, f"barrière  {bar:,.0f}", G.PERTE)],
@@ -290,8 +290,8 @@ def affiche(m):
     atm = float(np.interp(1.0, d["ks"], d["vol"]))
     k_bas = d["ks"][0]
     G.affiche(_graphe_smile(
-        d, f"Bates calibre colle au marché a {e['moyenne_quadratique']:.2f} pt de vol pres",
-        f"Échéance du {_date(ech)} : le put {k_bas * 100:.0f} % côté {d['vol'][0] * 100:.1f} % "
+        d, f"Bates calibre colle au marché a {e['moyenne_quadratique']:.2f} pt de vol près",
+        f"Échéance du {_date(ech)} : le put {k_bas * 100:.0f} % cote {d['vol'][0] * 100:.1f} % "
         f"de vol, l'option à la monnaie {atm * 100:.1f} %. Black-Scholes plat ignore ces "
         f"{(d['vol'][0] - atm) * 100:.0f} points de skew."))
     st.caption(f"Taux et dividende implicites de cette échéance (parité call-put Eurex) : "
@@ -301,13 +301,13 @@ def affiche(m):
     c = st.columns(4)
     c[0].metric("Erreur, cette échéance", f"{e['moyenne_quadratique']:.2f} pt",
                 help="Moyenne quadratique des écarts de vol implicite modèle - marché, en points "
-                     "de vol, sur les strikes côtés de cette échéance.")
+                     "de vol, sur les strikes cotés de cette échéance.")
     c[1].metric("Pire écart, cette échéance", f"{np.nanmax(np.abs(ecarts)):.2f} pt",
                 help="Le strike le plus mal reproduit. Les ailes courtes sont les plus dures.")
     c[2].metric("Erreur, toute la surface", f"{erreur['moyenne_quadratique']:.2f} pt",
                 f"{cal['n_options']} options, {len(echeances)} échéances", delta_color="off",
                 delta_arrow="off",
-                help="Un modèle a 8 paramètres constants ne colle jamais parfaitement de 1 mois "
+                help="Un modèle à 8 paramètres constants ne colle jamais parfaitement de 1 mois "
                      "à 5 ans : la taille de l'écart résiduel est l'information.")
     c[3].metric("Aux crans des curseurs", f"{erreur['moyenne_quadratique_curseurs']:.2f} pt",
                 f"cette échéance : {e['moyenne_quadratique_curseurs']:.2f} pt",

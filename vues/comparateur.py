@@ -49,7 +49,7 @@ def affiche(m):
          "Protection": "barrière 70%", "Plafond hausse": f"{cpn_brc*100:,.2f}% p.a.",
          "Vue client": "neutre"},
         {"Produit": "Autocall Phoenix", "Offre": f"Coupon {cpn_ac*100:,.2f}% / trimestre",
-         "Protection": "barrière 65% a l'échéance", "Plafond hausse": "coupons cumulés",
+         "Protection": "barrière 65% à l'échéance", "Plafond hausse": "coupons cumulés",
          "Vue client": "neutre à légèrement haussier"},
     ])
 
@@ -70,13 +70,13 @@ def affiche(m):
          {"nom": f"Capital Protection — plancher, {part*100:,.0f}% de la hausse",
           "y": nominal * (1 + part * np.maximum(perf, 0)), "couleur": G.ACCENT,
           "epaisseur": 2.8},
-         {"nom": f"BRC — coupon {cpn_brc*100:,.2f}%, capital à risqué sous 70",
+         {"nom": f"BRC — coupon {cpn_brc*100:,.2f}%, capital à risque sous 70",
           "y": np.where(spots < 70, nominal * spots / S0, nominal) + cpn_brc * nominal * T,
           "couleur": G.PRODUIT, "epaisseur": 2.8}],
         "Trois façons d'exprimer la même vue de marché",
         "Chaque courbe protège quelque part et abandonne ailleurs",
-        "Niveau du sous-jacent a l'échéance", "Remboursement (EUR)",
-        nom_x="Sous-jacent a l'échéance", fmt_x=lambda v: G.niveau(v, S0), fmt_y=G.eur,
+        "Niveau du sous-jacent à l'échéance", "Remboursement (EUR)",
+        nom_x="Sous-jacent à l'échéance", fmt_x=lambda v: G.niveau(v, S0), fmt_y=G.eur,
         axe_y_eur=True, nb_ticks_x=10,
         niveaux_v=[(70, "barrière du BRC  70"), (S0, f"départ  {S0:,.0f}")],
         niveaux_h=[(nominal, f"nominal  {nominal:,.0f}", G.NIVEAU)], hauteur=420)

@@ -336,7 +336,7 @@ controle("Autocall a 14 mois, 4 observations passées : valeur et coupons = sale
          erreur(at) or f"{m.get('Valeur juste')}, coupons {v.coupons_encaisses:.0f} EUR")
 at, m = revente(A.AC, [lambda a: a.slider(key="as_sec_mois").set_value(14),
                        lambda a: a.number_input(key="as_sec_obs2").set_value(104)])
-controle("Autocall : observation au-dessus du trigger -> produit rappelé, rien a racheter",
+controle("Autocall : observation au-dessus du trigger -> produit rappelé, rien à racheter",
          not at.exception and any("rappelé à l'observation 2" in x.value for x in at.success),
          erreur(at))
 at, m = revente(A.BRC, [lambda a: a.slider(key="as_sec_mois").set_value(11),
@@ -364,7 +364,7 @@ for mk in (MK[BS], MK[BATES].avec(spread=120)):
                 if not 3 <= len(p["phrases"]) <= 5:
                     fautes.append(f"{nom} : {len(p['phrases'])} phrases")
                 if "perte" not in roles or not any(ch.isdigit() for ch in roles["perte"]):
-                    fautes.append(f"{nom} : pas de scénario de perte chiffre")
+                    fautes.append(f"{nom} : pas de scénario de perte chiffré")
                 if 'émetteur' not in roles.get("emetteur", "") or "%" not in roles["emetteur"]:
                     fautes.append(f"{nom} : risque émetteur absent")
                 if mk.spread and profil != A.PARTICULIER and "bp" not in roles["emetteur"]:
