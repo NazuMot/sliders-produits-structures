@@ -109,12 +109,12 @@ for n in ast.walk(arbre):
         continue
     n_widgets += 1
     if not ("key" in kw and cle_ok(kw["key"])):
-        fautes.append(f"ligne {n.lineno} : cle")
+        fautes.append(f"ligne {n.lineno} : clé")
     if not (isinstance(kw.get("bind"), ast.Constant) and kw["bind"].value == "query-params"):
         fautes.append(f"ligne {n.lineno} : bind")
     if "help" not in kw:
         fautes.append(f"ligne {n.lineno} : help")
-controle(f"Les {n_widgets} widgets ont une cle as_..., bind='query-params' et une aide",
+controle(f"Les {n_widgets} widgets ont une clé as_..., bind='query-params' et une aide",
          n_widgets > 20 and not fautes, "; ".join(fautes))
 controle("Le titre a une aide longue", titre_ok)
 
@@ -177,17 +177,17 @@ for produit, option, cible in CAS:
         at, rep, s = demande(produit, option, cible, modele)
         ok, detail = affiche_comme_sales(at, rep, option)
         controle(f"{modele.split()[0]:6} | {produit[:18]:18} | {option} : la page affiche "
-                 f"la reponse de sales.py", not at.exception and ok, erreur(at) or detail)
+                 f"la réponse de sales.py", not at.exception and ok, erreur(at) or detail)
 
 at, rep, s = demande(A.BRC, "barriere", 0.08)
 curseur, s_client = A.arrondi_client(s, "barriere", rep.valeur)
 attendu = S.coupon_brc(MK[BS], 1.0, curseur / 100)
 m = metriques(at)
-controle("BRC 8 % : arrondi au point superieur, coupon recalcule et demande satisfaite",
+controle("BRC 8 % : arrondi au point supérieur, coupon recalcule et demande satisfaite",
          m["Arrondi pour le client"] == f"{curseur}%" and curseur == math.ceil(rep.valeur * 100)
-         and m["Obtenu a l'arrondi"] == pa(attendu) and attendu >= 0.08,
+         and m["Obtenu à l'arrondi"] == pa(attendu) and attendu >= 0.08,
          f"{rep.valeur * 100:.2f} % -> {curseur} %, {attendu * 100:.2f} %")
-phrase = next(x.value for x in at.markdown if x.value.startswith("**A dire au client.**"))
+phrase = next(x.value for x in at.markdown if x.value.startswith("**À dire au client.**"))
 controle("BRC 8 % : la phrase client cite la structure arrondie",
          f"{100 - curseur:.0f} %" in phrase and f"{attendu * 100:,.2f} %" in phrase, phrase[:160])
 
@@ -197,17 +197,17 @@ controle("BRC 30 % : impossible, message clair et meilleure valeur atteignable",
          not rep.possible and any("Impossible" in x.value for x in at.error)
          and m["Obtenu"] == pa(rep.obtenu) and not at.success
          and any("n'est pas faisable" in x.value for x in at.markdown),
-         f"au mieux {m['Obtenu']} avec {m['Barriere trouvee']}")
+         f"au mieux {m['Obtenu']} avec {m['Barrière trouvée']}")
 at, rep, s = demande(A.CP, "cap", 3.0)
-controle("Capital Protection 300 % de participation : impossible, meilleur cap affiche",
+controle("Capital Protection 300 % de participation : impossible, meilleur cap affiché",
          not rep.possible and any("Impossible" in x.value for x in at.error)
          and metriques(at)["Obtenu"] == f"{rep.obtenu * 100:,.0f}%", metriques(at)["Obtenu"])
 at, rep, s = demande(A.AC, "barriere_capital", 0.11, BATES)
-controle("Bates | Autocall 11 % : impossible avec 1 % de retro, meilleure barriere affichee",
+controle("Bates | Autocall 11 % : impossible avec 1 % de rétro, meilleure barrière affichée",
          not rep.possible and any("Impossible" in x.value for x in at.error),
          f"au mieux {rep.obtenu * 100:.2f} %")
 at, rep, s = demande(A.BRC, "barriere", 0.01)
-controle("BRC 1 % : cible depassee des la barriere la plus basse, dit au client",
+controle("BRC 1 % : cible dépassée dès la barrière la plus basse, dit au client",
          rep.possible and any("Bonne nouvelle" in x.value for x in at.markdown))
 
 for produit, option, cible in [(A.BRC, "barriere", 0.07), (A.AC, "barriere_capital", 0.05),
@@ -231,13 +231,13 @@ for produit, option, cible in [(A.BRC, "barriere", 0.07), (A.AC, "barriere_capit
         attendu = S.coupon_brc(MK[BS], 1.0, s_client.barriere)
         ok = m["Coupon offert"] == pa(attendu) and attendu >= cible
         lu_res = m["Coupon offert"]
-    controle(f"Retenir ({produit[:18]}, {option}) : curseur a {curseur}, la section suivante "
+    controle(f"Retenir ({produit[:18]}, {option}) : curseur à {curseur}, la section suivante "
              f"part de cette structure", not at.exception and lu == curseur and ok,
              erreur(at) or f"curseur {lu}, {lu_res}")
 
 
 # 3. Ou va l'argent -------------------------------------------------------------
-print("\n3. Ou va l'argent")
+print("\n3. Où va l'argent")
 s_brc, s_ac, s_cp = A.Structure(A.BRC, 1.0), A.Structure(A.AC, 3.0), A.Structure(A.CP, 5.0)
 for modele in MODELES:
     mk = MK[modele]
@@ -249,19 +249,19 @@ for modele in MODELES:
         c = A._cascade.__wrapped__(mk, s)
         m = metriques(at)
         total = at.table[0].value.iloc[-1]
-        controle(f"{modele.split()[0]:6} | {s.produit[:18]:18} | resultat et total = sales.py",
+        controle(f"{modele.split()[0]:6} | {s.produit[:18]:18} | résultat et total = sales.py",
                  m[libelle] == valeur(c) and total["EUR"] == eur(mk.nominal)
-                 and abs(c.somme - mk.nominal) < 1e-6 and m["Retrocession"] == eur(RETRO * s.T * 1000),
+                 and abs(c.somme - mk.nominal) < 1e-6 and m["Rétrocession"] == eur(RETRO * s.T * 1000),
                  f"{m[libelle]}, total {total['EUR']}")
         ca = A._cascade.__wrapped__(mk.avec(retro=0.005), s)
         cb = A._cascade.__wrapped__(mk.avec(retro=0.015), s)
         va, vb = A._resultat_pa(s, ca), A._resultat_pa(s, cb)
         fa = (lambda x: f"{x * 100:,.0f}%") if s.produit == A.CP else pa
-        lus = [m[k] for k in m if k.startswith("Reseau")]
+        lus = [m[k] for k in m if k.startswith("Réseau")]
         c0 = A._resultat_pa(s, A._cascade.__wrapped__(mk.avec(retro=0.0), s))
         droite = c0 - 1.5 * c.infos["cout_retro_par_pt"]
-        controle(f"{modele.split()[0]:6} | {s.produit[:18]:18} | deux reseaux = sales.py, "
-                 "droite de la retro exacte",
+        controle(f"{modele.split()[0]:6} | {s.produit[:18]:18} | deux réseaux = sales.py, "
+                 "droite de la rétro exacte",
                  lus == [fa(va), fa(vb)] and vb < va and abs(max(droite, 0.0) - vb) < 1e-9,
                  f"A {lus[0]}, B {lus[1]}")
 
@@ -275,7 +275,7 @@ for s in (s_brc, s_ac, A.Structure(A.CP, 5.0, protection=0.95, cap=1.6)):
 
 at = ouvre(A.BRC, A.ARGENT, BS, [lambda a: a.slider(key="as_retro").set_value(0.0)])
 c = A._cascade.__wrapped__(MK[BS].avec(retro=0.0), s_brc)
-controle("Retro nulle : le coupon est celui de la page BRC (7.84 % p.a., vol locale)",
+controle("Rétro nulle : le coupon est celui de la page BRC (7.84 % p.a., vol locale)",
          metriques(at)["Coupon offert"] == pa(S.coupon_brc(S.Marche(), 1.0, 0.70)) == "7.84% p.a.",
          metriques(at)["Coupon offert"])
 
@@ -294,7 +294,7 @@ a_zero = [lambda a: a.slider(key="as_sec_mois").set_value(0),
 # autocall : marge et retro sur la duree de vie attendue (~0,9 an), pas sur 3 ans
 for produit, attendu in [(A.BRC, 982), (A.AC, 983), (A.CP, 910)]:
     at, m = revente(produit, a_zero)
-    controle(f"{produit[:18]:18} a l'emission : valeur = nominal - marge - retro = {attendu} EUR",
+    controle(f"{produit[:18]:18} à l'émission : valeur = nominal - marge - rétro = {attendu} EUR",
              not at.exception and m["Valeur juste"] == eur(attendu)
              and m["Prix de rachat"] == eur(attendu - 5), erreur(at) or m.get("Valeur juste"))
 
@@ -312,7 +312,7 @@ def valeur(m):
 
 base = valeur(m)
 _, m2 = revente(A.BRC, [lambda a: a.checkbox(key="as_sec_touchee").check()])
-controle("BRC : barriere deja touchee -> valeur plus basse", valeur(m2) < base,
+controle("BRC : barrière déjà touchée -> valeur plus basse", valeur(m2) < base,
          f"{base:.0f} -> {valeur(m2):.0f} EUR")
 _, m2 = revente(A.BRC, [lambda a: a.slider(key="as_sec_dvol").set_value(8)])
 controle("BRC : vol +8 pts -> valeur plus basse (le client est vendeur d'options)",
@@ -330,18 +330,18 @@ at, m = revente(A.AC, [lambda a: a.slider(key="as_sec_mois").set_value(14),
                        lambda a: a.number_input(key="as_sec_obs3").set_value(60)])
 v = S.valeur_secondaire_autocall(MK[BS], MK[BS], 3.0, 4, 1.0, 0.70, 0.60, True, 14 / 12, 0.90,
                                  [0.95, 0.85, 0.60, 0.95])
-controle("Autocall a 14 mois, 4 observations passees : valeur et coupons = sales.py",
+controle("Autocall a 14 mois, 4 observations passées : valeur et coupons = sales.py",
          not at.exception and m["Valeur juste"] == eur(v.valeur)
          and v.coupons_encaisses > 0 and v.infos["coupons_manques"] == 0,
          erreur(at) or f"{m.get('Valeur juste')}, coupons {v.coupons_encaisses:.0f} EUR")
 at, m = revente(A.AC, [lambda a: a.slider(key="as_sec_mois").set_value(14),
                        lambda a: a.number_input(key="as_sec_obs2").set_value(104)])
-controle("Autocall : observation au-dessus du trigger -> produit rappele, rien a racheter",
-         not at.exception and any("rappele a l'observation 2" in x.value for x in at.success),
+controle("Autocall : observation au-dessus du trigger -> produit rappelé, rien a racheter",
+         not at.exception and any("rappelé à l'observation 2" in x.value for x in at.success),
          erreur(at))
 at, m = revente(A.BRC, [lambda a: a.slider(key="as_sec_mois").set_value(11),
                         lambda a: a.slider(key="as_brc_maturite").set_value(0.5)])
-controle("BRC : maturite raccourcie apres coup, la date reste dans la vie du produit",
+controle("BRC : maturité raccourcie après coup, la date reste dans la vie du produit",
          not at.exception, erreur(at))
 
 
@@ -364,25 +364,25 @@ for mk in (MK[BS], MK[BATES].avec(spread=120)):
                 if not 3 <= len(p["phrases"]) <= 5:
                     fautes.append(f"{nom} : {len(p['phrases'])} phrases")
                 if "perte" not in roles or not any(ch.isdigit() for ch in roles["perte"]):
-                    fautes.append(f"{nom} : pas de scenario de perte chiffre")
-                if "emetteur" not in roles.get("emetteur", "") or "%" not in roles["emetteur"]:
-                    fautes.append(f"{nom} : risque emetteur absent")
+                    fautes.append(f"{nom} : pas de scénario de perte chiffre")
+                if 'émetteur' not in roles.get("emetteur", "") or "%" not in roles["emetteur"]:
+                    fautes.append(f"{nom} : risque émetteur absent")
                 if mk.spread and profil != A.PARTICULIER and "bp" not in roles["emetteur"]:
                     fautes.append(f"{nom} : spread non cite")
                 if p["adequation"] not in ("oui", "partiel", "non"):
-                    fautes.append(f"{nom} : adequation")
-controle(f"{n} pitchs : 3 a 5 phrases, perte chiffree et risque emetteur toujours nommes",
+                    fautes.append(f"{nom} : adéquation")
+controle(f"{n} pitchs : 3 à 5 phrases, perte chiffrée et risque émetteur toujours nommes",
          not fautes, "; ".join(fautes[:5]))
 
 f = A.faits(MK[BS], s_brc)
 mal = [(s_brc, "Forte hausse"), (s_brc, "Forte baisse"), (s_ac, "Forte baisse"),
-       (s_cp, "Stabilite")]
-controle("Les vues contraires au produit sont dites au client (adequation 'non')",
+       (s_cp, "Stabilité")]
+controle("Les vues contraires au produit sont dites au client (adéquation 'non')",
          all(A.pitch(s, A.PARTICULIER, v, A.faits(MK[BS], s))["adequation"] == "non"
              for s, v in mal))
-p = A.pitch(s_brc, A.CGP, "Stabilite", f)
+p = A.pitch(s_brc, A.CGP, "Stabilité", f)
 sans = (f["resultat"] + RETRO * 100 * f["cout_retro"]) * 100
-controle("Pitch CGP : coupon sans retro = coupon de la page BRC",
+controle("Pitch CGP : coupon sans rétro = coupon de la page BRC",
          f"{sans:,.2f} %" in dict(p["phrases"])["retro"]
          and abs(sans / 100 - S.coupon_brc(S.Marche(), 1.0, 0.70)) < 1e-9, f"{sans:.2f} %")
 
@@ -392,10 +392,10 @@ for produit in A.PRODUITS:
                    [lambda a, p=profil: a.segmented_control(key="as_profil").set_value(p)])
         texte = at.code[0].value if at.code else ""
         attendu = " ".join(t for _, t in A.pitch(
-            {A.BRC: s_brc, A.AC: s_ac, A.CP: s_cp}[produit], profil, "Stabilite",
+            {A.BRC: s_brc, A.AC: s_ac, A.CP: s_cp}[produit], profil, "Stabilité",
             A.faits(MK[BS], {A.BRC: s_brc, A.AC: s_ac, A.CP: s_cp}[produit]))["phrases"])
-        controle(f"Page | {produit[:18]:18} | {profil[:12]:12} : pitch affiche = modele",
-                 not at.exception and texte == attendu and "emetteur" in texte,
+        controle(f"Page | {produit[:18]:18} | {profil[:12]:12} : pitch affiche = modèle",
+                 not at.exception and texte == attendu and 'émetteur' in texte,
                  erreur(at) or texte[:80])
 
 print()

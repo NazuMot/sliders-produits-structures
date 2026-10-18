@@ -19,7 +19,7 @@ MODELE_BATES = "Bates (vol stochastique + sauts)"
 # reglage "curseurs" de data/bates_calibre.json -> cle du curseur dans barre.py
 CLES_BARRE = {"vol_atm": "vol", "theta_v": "vol_lt", "kappa": "kappa", "xi": "vol_vol",
               "rho": "rho", "lam": "sauts", "mu_j": "taille_saut", "sig_j": "disp_saut"}
-NOMS_SMILE = ["Marche Eurex (prix de reglement)", "Bates calibre", "Bates aux crans des curseurs",
+NOMS_SMILE = ["Marché Eurex (prix de règlement)", "Bates calibré", "Bates aux crans des curseurs",
               "Black-Scholes plat"]
 
 
@@ -111,18 +111,18 @@ def _graphe_smile(d, titre, sous_titre):
     ech_y = alt.Scale(domain=[float(toutes.min() - marge), float(toutes.max() + marge)],
                       nice=False, zero=False)
     x = alt.X("x:Q", scale=ech_x, axis=alt.Axis(title="Strike (% du spot)"))
-    y = alt.Y("y:Q", scale=ech_y, axis=alt.Axis(title="Volatilite implicite (%)"))
+    y = alt.Y("y:Q", scale=ech_y, axis=alt.Axis(title="Volatilité implicite (%)"))
     couleur = alt.Scale(domain=NOMS_SMILE, range=[G.ACCENT, G.PRODUIT, G.PRODUIT, G.DIRECT])
     trait = alt.Scale(domain=NOMS_SMILE, range=[[1, 0], [1, 0], G.TRAITS["pointille"],
                                                 G.TRAITS["tirete"]])
     survol = alt.selection_point(name="survol", nearest=True, on="pointerover", fields=["idx"],
                                  empty=False, clear="pointerout")
     infobulle = [alt.Tooltip("strike:N", title="Strike"), alt.Tooltip("type:N", title="Option"),
-                 alt.Tooltip("marche:N", title="Vol de marche"),
-                 alt.Tooltip("bates:N", title="Bates calibre"),
-                 alt.Tooltip("ecart:N", title="Ecart Bates - marche"),
+                 alt.Tooltip("marche:N", title="Vol de marché"),
+                 alt.Tooltip("bates:N", title="Bates calibré"),
+                 alt.Tooltip("ecart:N", title="Écart Bates - marché"),
                  alt.Tooltip("curseurs:N", title="Bates aux crans des curseurs"),
-                 alt.Tooltip("ecart_c:N", title="Ecart curseurs - marche"),
+                 alt.Tooltip("ecart_c:N", title="Écart curseurs - marché"),
                  alt.Tooltip("bs:N", title="Black-Scholes plat"),
                  alt.Tooltip("oi:N", title="Positions ouvertes")]
     spot = pd.DataFrame([{"x": 100.0, "y": float(toutes.min() - marge * 0.6), "txt": "spot"}])
@@ -154,13 +154,13 @@ def affiche(m):
     n_paths, nominal, q, r, recovery = m.n_paths, m.nominal, m.q, m.r, m.recovery
     rho, sig_j, theta_v, vol_atm, xi = m.rho, m.sig_j, m.theta_v, m.vol_atm, m.xi
 
-    st.title("Laboratoire modele", help="**Ce que tu regardes.** Le meme produit price par deux modeles differents : Black-Scholes a\nvolatilite constante, et Bates (volatilite stochastique + sauts).\n\n**Pourquoi c'est important.** Le choix du modele n'est pas un detail academique. Sur un BRC\na barriere 70%, il change le coupon de pres de 3 points. Black-Scholes sous-estime la\nprobabilite de toucher la barriere, donc sous-estime la valeur du put que vend le client,\ndonc affiche un coupon trop faible.\n\n**Les cinq blocs.**\n1. Le smile : Bates genere un skew realiste, Black-Scholes donne une droite plate.\n2. Les queues de distribution : Bates produit de vrais krachs.\n3. L'effet sur le prix du BRC.\n4. L'effet du spread emetteur sur le coupon.\n5. Le calibrage : les 8 parametres de Bates ajustes sur 122 prix d'options Eurex, et un\nbouton pour regler toute l'appli sur le marche.\n\n**A retenir.** Un coupon anormalement eleve doit faire poser deux questions : quel modele\nle desk utilise-t-il, et quelle est la signature de l'emetteur ?")
-    st.caption("Pourquoi le choix du modele n'est pas un detail academique : "
+    st.title("Laboratoire modèle", help="**Ce que tu regardes.** Le même produit price par deux modèles différents : Black-Scholes à\nvolatilité constante, et Bates (volatilité stochastique + sauts).\n\n**Pourquoi c'est important.** Le choix du modèle n'est pas un détail académique. Sur un BRC\na barrière 70%, il change le coupon de pres de 3 points. Black-Scholes sous-estime la\nprobabilité de toucher la barrière, donc sous-estime la valeur du put que vend le client,\ndonc affiche un coupon trop faible.\n\n**Les cinq blocs.**\n1. Le smile : Bates génère un skew réaliste, Black-Scholes donne une droite plate.\n2. Les queues de distribution : Bates produit de vrais krachs.\n3. L'effet sur le prix du BRC.\n4. L'effet du spread émetteur sur le coupon.\n5. Le calibrage : les 8 paramètres de Bates ajustés sur 122 prix d'options Eurex, et un\nbouton pour régler toute l'appli sur le marché.\n\n**A retenir.** Un coupon anormalement élevé doit faire poser deux questions : quel modèle\nle desk utilise-t-il, et quelle est la signature de l'émetteur ?")
+    st.caption("Pourquoi le choix du modèle n'est pas un détail académique : "
                "il change le coupon de plusieurs points.")
 
-    T = st.slider("Maturite (annees)", 0.5, 3.0, 1.0, 0.25,
+    T = st.slider("Maturité (années)", 0.5, 3.0, 1.0, 0.25,
                   key="labo_maturite", bind="query-params")
-    bar = st.slider("Barriere du BRC de reference (%)", 50, 90, 70, 5,
+    bar = st.slider("Barrière du BRC de référence (%)", 50, 90, 70, 5,
                     key="labo_barriere", bind="query-params")
 
     ch_bs, s_bs = sim_bs(S0, T, r, q, vol_atm, n_paths)
@@ -170,28 +170,28 @@ def affiche(m):
     else:
         ch_bt, s_bt = sim_bates(S0, T, r, q, n_paths, vol_atm ** 2, (vol_atm + 0.02) ** 2,
                                 2.0, 0.5, -0.70, 0.3, -0.10, 0.15)
-        st.warning("Le modele actif est Black-Scholes. Les colonnes Bates ci-dessous "
-                   "utilisent des parametres typiques d'indice actions, a titre de "
-                   "comparaison. Bascule le modele dans la barre laterale pour les regler.")
+        st.warning("Le modèle actif est Black-Scholes. Les colonnes Bates ci-dessous "
+                   "utilisent des paramètres typiques d'indice actions, à titre de "
+                   "comparaison. Bascule le modèle dans la barre latérale pour les régler.")
 
-    st.subheader("1. Le smile genere par le modele")
+    st.subheader("1. Le smile généré par le modèle")
     ks = [0.70, 0.80, 0.90, 1.00, 1.10, 1.20]
     vols = M.vol_implicite_bates(ch_bt, T, r, q, ks)
     xs = [k * 100 for k in ks]
     ys = [v * 100 for v in vols]
     graphe = G.courbes(
-        xs, [{"nom": "Volatilite implicite generee par Bates", "y": ys, "couleur": G.PRODUIT,
+        xs, [{"nom": "Volatilité implicite générée par Bates", "y": ys, "couleur": G.PRODUIT,
               "epaisseur": 2.8, "points": True},
-             {"nom": "Volatilite unique de Black-Scholes", "y": [vol_atm * 100] * len(xs),
+             {"nom": "Volatilité unique de Black-Scholes", "y": [vol_atm * 100] * len(xs),
               "couleur": G.DIRECT, "trait": "tirete", "epaisseur": 1.6}],
-        "Bates genere le skew, Black-Scholes l'ignore",
-        "Les puts bas coutent plus cher en vol que les options a la monnaie",
-        "Strike (% du spot)", "Volatilite implicite (%)", nom_x="Strike",
+        "Bates génère le skew, Black-Scholes l'ignore",
+        "Les puts bas coûtent plus cher en vol que les options à la monnaie",
+        "Strike (% du spot)", "Volatilité implicite (%)", nom_x="Strike",
         fmt_x=lambda v: f"{v:.0f} % du spot", fmt_y=lambda v: G.pct(v, 1),
         x_domaine=(66, 124), ticks_x=xs,
         lignes_infobulle=[("Prime de skew sur Black-Scholes",
                            [G.pct(y - vol_atm * 100, 1, signe=True) for y in ys])],
-        niveaux_v=[(100, "a la monnaie")],
+        niveaux_v=[(100, "à la monnaie")],
         notes=[(xs[0], ys[0], f"{(vols[0]-vols[3])*100:+.1f} pts de skew", G.PRODUIT, 10, 4)],
         hauteur=340)
     G.affiche(graphe)
@@ -199,8 +199,8 @@ def affiche(m):
     pente = (vols[0] - vols[3]) * 100
     st.markdown(
         f"Pente 70 % / 100 % : **{pente:+.1f} points de vol**. "
-        "Black-Scholes donne une droite plate — il price le put a 70 % au meme prix "
-        "relatif que l'option a la monnaie, ce que le marche ne fait jamais.")
+        "Black-Scholes donne une droite plate — il price le put a 70 % au même prix "
+        "relatif que l'option à la monnaie, ce que le marché ne fait jamais.")
 
     st.subheader("2. Queues de distribution")
     st_bs = ch_bs[:, -1].astype(float)
@@ -223,12 +223,12 @@ def affiche(m):
                     {"nom": "Bates", "y": h_bt, "couleur": G.PRODUIT, "aire": True,
                      "epaisseur": 1.2}],
         "Bates produit des krachs, Black-Scholes presque pas",
-        f"Sous la barriere : {(st_bs < bar).mean()*100:,.1f}% des scenarios en "
+        f"Sous la barrière : {(st_bs < bar).mean()*100:,.1f}% des scénarios en "
         f"Black-Scholes contre {(st_bt < bar).mean()*100:,.1f}% en Bates",
-        "Sous-jacent a l'echeance", "Part des scenarios (%)", nom_x="Sous-jacent entre",
+        "Sous-jacent a l'échéance", "Part des scénarios (%)", nom_x="Sous-jacent entre",
         fmt_x=lambda v: f"{v:,.0f} et {v + larg:,.0f}", fmt_y=lambda v: G.pct(v, 2),
         x_domaine=(20, 200), y_domaine=(0, max(h_bs.max(), h_bt.max()) * 1.1),
-        zone_x=(20, bar, G.FOND_PERTE), niveaux_v=[(bar, f"barriere  {bar:,.0f}", G.PERTE)],
+        zone_x=(20, bar, G.FOND_PERTE), niveaux_v=[(bar, f"barrière  {bar:,.0f}", G.PERTE)],
         lignes_infobulle=[("Black-Scholes : finir sous ce niveau", [G.pct(v, 1) for v in sous_bs]),
                           ("Bates : finir sous ce niveau", [G.pct(v, 1) for v in sous_bt])],
         hauteur=340)
@@ -240,49 +240,49 @@ def affiche(m):
                          ("Bates (vol stochastique + sauts)", ch_bt, s_bt)]:
         pn = M.proba_non_touche(ch_, bar / 100 * S0, s_, T)
         cp = M.coupon_brc(ch_, T, r, nominal, bar / 100, 1.0, True, marge, s_)
-        lignes.append({"Modele": nom,
+        lignes.append({"Modèle": nom,
                        "Proba de toucher": f"{(1-pn.mean())*100:,.1f}%",
-                       "Coupon equitable": f"{cp*100:,.2f}% p.a."})
+                       "Coupon équitable": f"{cp*100:,.2f}% p.a."})
     st.table(lignes)
 
     st.error(
         "**C'est le point le plus important de cette appli.** Black-Scholes sous-estime "
-        "la probabilite de franchir la barriere, donc sous-estime la valeur du put que le "
+        "la probabilité de franchir la barrière, donc sous-estime la valeur du put que le "
         "client vend, donc affiche un coupon trop faible. Un desk qui pricerait en "
-        "Black-Scholes plat vendrait systematiquement trop cher pour le client et se ferait "
+        "Black-Scholes plat vendrait systématiquement trop cher pour le client et se ferait "
         "arbitrer par la concurrence.\n\n"
-        "Inversement, un Sales qui recoit un coupon nettement au-dessus du marche doit se "
-        "demander ce que le modele du desk suppose, ou quel est le spread de l'emetteur.")
+        "Inversement, un Sales qui reçoit un coupon nettement au-dessus du marché doit se "
+        "demander ce que le modèle du desk suppose, ou quel est le spread de l'émetteur.")
 
-    st.subheader("4. Spread emetteur")
+    st.subheader("4. Spread émetteur")
     lignes = []
     for sp in [0, 50, 100, 200, 400]:
         tau = M.tire_defaut(len(ch_bt), T, sp, recovery)
         cp = M.coupon_brc(ch_bt, T, r, nominal, bar / 100, 1.0, True, marge, s_bt,
                           tau, recovery)
-        lignes.append({"Spread emetteur": f"{sp} bp",
-                       "Proba de defaut sur la periode": f"{(tau <= T).mean()*100:,.1f}%",
+        lignes.append({"Spread émetteur": f"{sp} bp",
+                       "Proba de défaut sur la période": f"{(tau <= T).mean()*100:,.1f}%",
                        "Coupon": f"{cp*100:,.2f}% p.a."})
     st.table(lignes)
     st.info(
-        "**Le contre-intuitif a retenir** : le spread emetteur augmente le coupon. La "
-        "banque se finance moins cher via le produit structure que sur le marche "
-        "obligataire, et reverse l'economie au client.\n\n"
-        "**Ce que ca implique en clientele** : comparer deux coupons de deux emetteurs "
-        "differents sans regarder leur signature n'a aucun sens. En 2008, les porteurs de "
-        "produits Lehman ont recupere environ 9 cents par dollar, barrieres intactes ou non.")
+        "**Le contre-intuitif à retenir** : le spread émetteur augmente le coupon. La "
+        "banque se finance moins cher via le produit structuré que sur le marché "
+        "obligataire, et reverse l'économie au client.\n\n"
+        "**Ce que ça implique en clientèle** : comparer deux coupons de deux émetteurs "
+        "différents sans regarder leur signature n'a aucun sens. En 2008, les porteurs de "
+        "produits Lehman ont récupéré environ 9 cents par dollar, barrières intactes ou non.")
 
-    st.subheader("5. Calibrage sur le marche")
+    st.subheader("5. Calibrage sur le marché")
     cal, _ = _surface()
     echeances = [e["echeance"] for e in cal["par_echeance"]]
     par_ech = {e["echeance"]: e for e in cal["par_echeance"]}
     ech = st.selectbox(
-        "Echeance Eurex", echeances, index=next(i for i, e in enumerate(cal["par_echeance"])
+        "Échéance Eurex", echeances, index=next(i for i, e in enumerate(cal["par_echeance"])
                                                 if e["maturite"] >= 1.0),
         format_func=lambda e: f"{_date(e)} ({_duree(par_ech[e]['maturite'])})",
-        help=f"Options europeennes sur l'Euro Stoxx 50 (Eurex OESX), prix de reglement du "
-             f"{_date(cal['date_marche'])}, de 1 mois a 5 ans. Un seul jeu de 8 parametres "
-             "doit coller a toutes les echeances a la fois.",
+        help=f"Options européennes sur l'Euro Stoxx 50 (Eurex OESX), prix de règlement du "
+             f"{_date(cal['date_marche'])}, de 1 mois à 5 ans. Un seul jeu de 8 paramètres "
+             "doit coller à toutes les échéances à la fois.",
         key="labo_echeance", bind="query-params")
     d = _smiles(ech)
     e = par_ech[ech]
@@ -290,85 +290,85 @@ def affiche(m):
     atm = float(np.interp(1.0, d["ks"], d["vol"]))
     k_bas = d["ks"][0]
     G.affiche(_graphe_smile(
-        d, f"Bates calibre colle au marche a {e['moyenne_quadratique']:.2f} pt de vol pres",
-        f"Echeance du {_date(ech)} : le put {k_bas * 100:.0f} % cote {d['vol'][0] * 100:.1f} % "
-        f"de vol, l'option a la monnaie {atm * 100:.1f} %. Black-Scholes plat ignore ces "
+        d, f"Bates calibre colle au marché a {e['moyenne_quadratique']:.2f} pt de vol pres",
+        f"Échéance du {_date(ech)} : le put {k_bas * 100:.0f} % côté {d['vol'][0] * 100:.1f} % "
+        f"de vol, l'option à la monnaie {atm * 100:.1f} %. Black-Scholes plat ignore ces "
         f"{(d['vol'][0] - atm) * 100:.0f} points de skew."))
-    st.caption(f"Taux et dividende implicites de cette echeance (parite call-put Eurex) : "
+    st.caption(f"Taux et dividende implicites de cette échéance (parité call-put Eurex) : "
                f"{d['r'] * 100:.2f} % et {d['q'] * 100:.2f} % par an.")
 
     erreur = cal["erreur_pts_vol"]
     c = st.columns(4)
-    c[0].metric("Erreur, cette echeance", f"{e['moyenne_quadratique']:.2f} pt",
-                help="Moyenne quadratique des ecarts de vol implicite modele - marche, en points "
-                     "de vol, sur les strikes cotes de cette echeance.")
-    c[1].metric("Pire ecart, cette echeance", f"{np.nanmax(np.abs(ecarts)):.2f} pt",
+    c[0].metric("Erreur, cette échéance", f"{e['moyenne_quadratique']:.2f} pt",
+                help="Moyenne quadratique des écarts de vol implicite modèle - marché, en points "
+                     "de vol, sur les strikes côtés de cette échéance.")
+    c[1].metric("Pire écart, cette échéance", f"{np.nanmax(np.abs(ecarts)):.2f} pt",
                 help="Le strike le plus mal reproduit. Les ailes courtes sont les plus dures.")
     c[2].metric("Erreur, toute la surface", f"{erreur['moyenne_quadratique']:.2f} pt",
-                f"{cal['n_options']} options, {len(echeances)} echeances", delta_color="off",
+                f"{cal['n_options']} options, {len(echeances)} échéances", delta_color="off",
                 delta_arrow="off",
-                help="Un modele a 8 parametres constants ne colle jamais parfaitement de 1 mois "
-                     "a 5 ans : la taille de l'ecart residuel est l'information.")
+                help="Un modèle a 8 paramètres constants ne colle jamais parfaitement de 1 mois "
+                     "à 5 ans : la taille de l'écart résiduel est l'information.")
     c[3].metric("Aux crans des curseurs", f"{erreur['moyenne_quadratique_curseurs']:.2f} pt",
-                f"cette echeance : {e['moyenne_quadratique_curseurs']:.2f} pt",
+                f"cette échéance : {e['moyenne_quadratique_curseurs']:.2f} pt",
                 delta_color="off", delta_arrow="off",
-                help="Erreur avec les valeurs que le bouton applique a la barre laterale, "
-                     "arrondies aux crans de chaque curseur puis recalibrees sur cette grille.")
+                help="Erreur avec les valeurs que le bouton applique à la barre latérale, "
+                     "arrondies aux crans de chaque curseur puis recalibrées sur cette grille.")
 
     p, cu = cal["parametres"], cal["curseurs"]
     st.table([
-        {"Parametre": "Vol de depart", "Calibre": G.pct(math.sqrt(p["v0"]) * 100),
+        {"Paramètre": "Vol de départ", "Calibré": G.pct(math.sqrt(p["v0"]) * 100),
          "Curseur": G.pct(cu["vol_atm"], 0),
-         "Ce que dit le marche": "la vol courte du jour, " + (
-             "sous la vol longue : marche calme" if p["v0"] < p["theta"]
-             else "au-dessus de la vol longue : marche tendu")},
-        {"Parametre": "Vol long terme", "Calibre": G.pct(math.sqrt(p["theta"]) * 100),
+         "Ce que dit le marché": "la vol courte du jour, " + (
+             "sous la vol longue : marché calme" if p["v0"] < p["theta"]
+             else "au-dessus de la vol longue : marché tendu")},
+        {"Paramètre": "Vol long terme", "Calibré": G.pct(math.sqrt(p["theta"]) * 100),
          "Curseur": G.pct(cu["theta_v"], 0),
-         "Ce que dit le marche": "le niveau vers lequel le marche attend que la vol revienne"},
-        {"Parametre": "Vitesse de retour a la moyenne", "Calibre": f"{p['kappa']:.2f}",
+         "Ce que dit le marché": "le niveau vers lequel le marché attend que la vol revienne"},
+        {"Paramètre": "Vitesse de retour à la moyenne", "Calibré": f"{p['kappa']:.2f}",
          "Curseur": f"{cu['kappa']:.1f}",
-         "Ce que dit le marche": f"un choc de vol s'efface aux deux tiers en "
+         "Ce que dit le marché": f"un choc de vol s'efface aux deux tiers en "
                                  f"{1 / p['kappa']:.1f} an"},
-        {"Parametre": "Vol de la vol", "Calibre": f"{p['xi']:.2f}", "Curseur": f"{cu['xi']:.2f}",
-         "Ce que dit le marche": "la courbure du smile : les ailes se paient cher"},
-        {"Parametre": "Correlation spot / vol", "Calibre": f"{p['rho']:+.2f}",
+        {"Paramètre": "Vol de la vol", "Calibré": f"{p['xi']:.2f}", "Curseur": f"{cu['xi']:.2f}",
+         "Ce que dit le marché": "la courbure du smile : les ailes se paient cher"},
+        {"Paramètre": "Corrélation spot / vol", "Calibré": f"{p['rho']:+.2f}",
          "Curseur": f"{cu['rho']:+.2f}",
-         "Ce que dit le marche": "le skew : la vol monte quand le marche baisse"},
-        {"Parametre": "Frequence des sauts", "Calibre": f"{p['lam']:.3f} par an",
+         "Ce que dit le marché": "le skew : la vol monte quand le marché baisse"},
+        {"Paramètre": "Fréquence des sauts", "Calibré": f"{p['lam']:.3f} par an",
          "Curseur": f"{cu['lam']:.1f} par an",
-         "Ce que dit le marche": f"un krach tous les {1 / p['lam']:.0f} ans environ"},
-        {"Parametre": "Taille moyenne d'un saut", "Calibre": G.pct(p["mu_j"] * 100, 0),
+         "Ce que dit le marché": f"un krach tous les {1 / p['lam']:.0f} ans environ"},
+        {"Paramètre": "Taille moyenne d'un saut", "Calibré": G.pct(p["mu_j"] * 100, 0),
          "Curseur": G.pct(cu["mu_j"], 0),
-         "Ce que dit le marche": "rare mais violent" + (
+         "Ce que dit le marché": "rare mais violent" + (
              f" : bute sur la borne {C.BORNES['mu_j'][0] * 100:.0f} % du curseur"
              if p["mu_j"] <= C.BORNES["mu_j"][0] + 1e-6 else "")},
-        {"Parametre": "Dispersion des sauts", "Calibre": G.pct(p["sig_j"] * 100, 0),
+        {"Paramètre": "Dispersion des sauts", "Calibré": G.pct(p["sig_j"] * 100, 0),
          "Curseur": G.pct(cu["sig_j"], 0),
-         "Ce que dit le marche": "l'incertitude sur la taille du krach"},
+         "Ce que dit le marché": "l'incertitude sur la taille du krach"},
     ])
     st.caption(
-        f"Calibrage maison : formule fermee de Bates (Lewis) et optimiseur Nelder-Mead sur les "
-        f"vols implicites. Les curseurs ne sont pas de simples arrondis : arrondir la frequence "
-        f"de sauts a 0 effacerait le skew court, donc les autres parametres sont recalibres sur "
+        f"Calibrage maison : formule fermée de Bates (Lewis) et optimiseur Nelder-Mead sur les "
+        f"vols implicites. Les curseurs ne sont pas de simples arrondis : arrondir la fréquence "
+        f"de sauts à 0 effacerait le skew court, donc les autres paramètres sont recalibrés sur "
         f"les crans ({erreur['moyenne_quadratique_curseurs']:.2f} pt au lieu de "
         f"{erreur['moyenne_quadratique']:.2f}). Condition de Feller 2 kappa theta / xi^2 = "
-        f"{cal['feller']:.2f} < 1 : la variance peut toucher zero, comme presque toujours sur "
+        f"{cal['feller']:.2f} < 1 : la variance peut toucher zéro, comme presque toujours sur "
         "indice actions.")
 
     st.button("Appliquer le calibrage", key="labo_appliquer", type="primary",
               on_click=_applique_calibrage, args=(cu,),
-              help="Passe la barre laterale sous Bates avec ces valeurs aux crans des curseurs. "
+              help="Passe la barre latérale sous Bates avec ces valeurs aux crans des curseurs. "
                    "Toutes les pages pricent alors avec la surface Eurex du "
                    f"{_date(cal['date_marche'])}.")
     if st.session_state.pop("labo_calibrage_applique", False):
         st.success(
-            f"Barre laterale sous Bates, reglee sur le marche du {_date(cal['date_marche'])} : "
-            f"vol de depart {cu['vol_atm']:.0f} %, vol long terme {cu['theta_v']:.0f} %, "
-            f"retour {cu['kappa']:.1f}, vol de la vol {cu['xi']:.2f}, correlation "
+            f"Barre latérale sous Bates, réglée sur le marché du {_date(cal['date_marche'])} : "
+            f"vol de départ {cu['vol_atm']:.0f} %, vol long terme {cu['theta_v']:.0f} %, "
+            f"retour {cu['kappa']:.1f}, vol de la vol {cu['xi']:.2f}, corrélation "
             f"{cu['rho']:+.2f}, {cu['lam']:.1f} saut par an de {cu['mu_j']:.0f} % "
-            f"(dispersion {cu['sig_j']:.0f} %). Les blocs 1 a 4 ci-dessus utilisent deja ces "
+            f"(dispersion {cu['sig_j']:.0f} %). Les blocs 1 à 4 ci-dessus utilisent déjà ces "
             "valeurs.")
-    st.info("**Pourquoi un desk recalibre chaque matin.** Les parametres de Bates ne sont pas "
-            "des constantes de la nature mais les valeurs qui font coller le modele aux prix "
-            "d'options du jour : si le marche bouge pendant la nuit et que le desk garde ceux "
-            "d'hier, il price et couvre ses exotiques sur un marche qui n'existe plus.")
+    st.info("**Pourquoi un desk recalibre chaque matin.** Les paramètres de Bates ne sont pas "
+            "des constantes de la nature mais les valeurs qui font coller le modèle aux prix "
+            "d'options du jour : si le marché bouge pendant la nuit et que le desk garde ceux "
+            "d'hier, il price et couvre ses exotiques sur un marché qui n'existe plus.")

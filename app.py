@@ -17,7 +17,7 @@ from vues import (accueil, comparateur, atelier_sales, tracker, capital_protecti
                   autocall, bonus, twin_win, discount, backtest, laboratoire, grecques,
                   couverture, entrainement, glossaire)
 
-st.set_page_config(page_title="Sliders Produits Structures", layout="wide")
+st.set_page_config(page_title="Sliders Produits Structurés", layout="wide")
 
 # Pour ajouter une page : un fichier dans vues/ avec une fonction affiche(m),
 # puis une entree ici. L'ordre du dictionnaire est celui du menu.
@@ -33,10 +33,10 @@ PAGES = {
     "6 - Twin-Win": twin_win,
     "7 - Discount Certificate": discount,
     "Backtest historique": backtest,
-    "Laboratoire modele": laboratoire,
+    "Laboratoire modèle": laboratoire,
     "Les grecques en mouvement": grecques,
-    "Cout de couverture": couverture,
-    "Entrainement": entrainement,
+    "Coût de couverture": couverture,
+    "Entraînement": entrainement,
     "Glossaire": glossaire,
 }
 
@@ -52,55 +52,55 @@ page.affiche(m)
 # =====================================================================
 
 st.markdown("---")
-with st.expander("Limites du modele"):
+with st.expander("Limites du modèle"):
     st.markdown("""
 ### Traite
 
-**Volatilite stochastique et sauts.** Le modele de Bates genere le skew au lieu de le
-postuler, via la correlation spot-vol, et produit de vrais gaps a la baisse. C'est le
-standard de marche pour les exotiques actions. Compare les deux modeles dans le
-Laboratoire : l'ecart sur le coupon d'un BRC depasse regulierement 2 points.
+**Volatilité stochastique et sauts.** Le modèle de Bates génère le skew au lieu de le
+postuler, via la corrélation spot-vol, et produit de vrais gaps à la baisse. C'est le
+standard de marché pour les exotiques actions. Compare les deux modèles dans le
+Laboratoire : l'écart sur le coupon d'un BRC dépasse régulièrement 2 points.
 
-**Barrieres continues.** Correction par pont brownien, generalisee a une volatilite
-variable. Evite le biais classique des simulations discretes, qui sous-estiment
-systematiquement la probabilite de franchissement.
+**Barrières continues.** Correction par pont brownien, généralisée à une volatilité
+variable. Évite le biais classique des simulations discrètes, qui sous-estiment
+systématiquement la probabilité de franchissement.
 
-**Risque emetteur.** Intensite de defaut deduite du spread de credit, avec taux de
-recouvrement. Le spread augmente le coupon, ce qui est contre-intuitif et essentiel a
-comprendre en clientele.
+**Risque émetteur.** Intensité de défaut déduite du spread de crédit, avec taux de
+recouvrement. Le spread augmente le coupon, ce qui est contre-intuitif et essentiel à
+comprendre en clientèle.
 
-**Paniers worst-of avec correlation.** Decomposition de Cholesky. La correlation devient
-le parametre de pricing dominant, comme sur un vrai desk.
+**Paniers worst-of avec corrélation.** Décomposition de Cholesky. La corrélation devient
+le paramètre de pricing dominant, comme sur un vrai desk.
 
-**Cout de couverture.** Simulation de la couverture en delta avec rebalancement discret
-et frais de transaction. Montre que la marge n'est pas un simple prelevement.
+**Coût de couverture.** Simulation de la couverture en delta avec rebalancement discret
+et frais de transaction. Montre que la marge n'est pas un simple prélèvement.
 
 ### Limites
 
-**1. Calibrage sur une seule photo de marche.**
+**1. Calibrage sur une seule photo de marché.**
 Le Laboratoire calibre Bates sur 122 prix Eurex du 16/10/2026 (0,9 point de vol d'erreur
 moyenne aux crans des curseurs). Un desk recalibre chaque matin ; ici les curseurs restent
-libres et la photo vieillit. Les niveaux sont donc indicatifs, pas des prix de marche.
+libres et la photo vieillit. Les niveaux sont donc indicatifs, pas des prix de marché.
 
 **2. Worst-of simule en Black-Scholes multi-actifs.**
-Un Bates multi-dimensionnel demanderait de correler aussi les volatilites entre actifs.
-Le mecanisme de correlation est juste, la dynamique de vol ne l'est pas.
+Un Bates multi-dimensionnel demanderait de corréler aussi les volatilités entre actifs.
+Le mécanisme de corrélation est juste, la dynamique de vol ne l'est pas.
 
-**3. Correlation de stress simplifiee.**
-Sur l'Autocall, une option fait monter la correlation quand le marche baisse, mais en deux
-regimes seulement, et sans que la volatilite monte en meme temps.
+**3. Corrélation de stress simplifiée.**
+Sur l'Autocall, une option fait monter la corrélation quand le marché baisse, mais en deux
+régimes seulement, et sans que la volatilité monte en même temps.
 
 **4. Wrong-way risk seulement sur demande.**
-Par defaut, le defaut de l'emetteur est independant du sous-jacent. La page BRC propose une
-correlation (copule gaussienne sur le niveau final) : elle montre l'effet, sans modele de
-credit complet.
+Par défaut, le défaut de l'émetteur est indépendant du sous-jacent. La page BRC propose une
+corrélation (copule gaussienne sur le niveau final) : elle montre l'effet, sans modèle de
+crédit complet.
 
-**5. Discretisation hebdomadaire de la variance sous Bates.**
-Euler a troncature complete introduit un biais modeste sur le processus de variance. Un
-schema de type QE (Andersen) serait plus propre pour des maturites longues.
+**5. Discrétisation hebdomadaire de la variance sous Bates.**
+Euler à troncature complète introduit un biais modeste sur le processus de variance. Un
+schéma de type QE (Andersen) serait plus propre pour des maturités longues.
 
-**6. Couverture simulee sur un put vanille, pas sur un put a barriere.**
-Sur un vrai BRC le gamma explose autour de la barriere. Le cout affiche est un plancher.
+**6. Couverture simulée sur un put vanille, pas sur un put a barrière.**
+Sur un vrai BRC le gamma explose autour de la barrière. Le coût affiche est un plancher.
 """)
 
 st.caption("Tom Uzan")

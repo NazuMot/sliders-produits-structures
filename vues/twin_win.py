@@ -12,13 +12,13 @@ from moteur import S0
 def affiche(m):
     bandeau_modele, marge, nominal, r, trajectoires = m.bandeau_modele, m.marge, m.nominal, m.r, m.trajectoires
 
-    st.title("Twin-Win", help="**Ce que c'est.** Le client gagne a la hausse ET a la baisse moderee, tant que la barriere\ntient.\n\n**Comment c'est construit.** Tracker plus achat d'un put down-and-out. Le put transforme la\nbaisse en gain, et s'evapore si la barriere casse.\n\n**Pourquoi un client l'achete.** Il pense que le marche va bouger sans savoir dans quel sens,\nmais sans krach.\n\n**Le point dangereux.** Entre la barriere et le niveau initial, le client gagne. Sous la\nbarriere, il perd d'un coup toute cette zone de gain. La discontinuite est brutale : c'est\nle profil le plus difficile a bien expliquer a un client.")
-    st.caption("Gagne a la hausse ET a la baisse moderee, tant que la barriere tient.")
+    st.title("Twin-Win", help="**Ce que c'est.** Le client gagne à la hausse ET à la baisse modérée, tant que la barrière\ntient.\n\n**Comment c'est construit.** Tracker plus achat d'un put down-and-out. Le put transforme la\nbaisse en gain, et s'évapore si la barrière casse.\n\n**Pourquoi un client l'achète.** Il pense que le marché va bouger sans savoir dans quel sens,\nmais sans krach.\n\n**Le point dangereux.** Entre la barrière et le niveau initial, le client gagne. Sous la\nbarrière, il perd d'un coup toute cette zone de gain. La discontinuité est brutale : c'est\nle profil le plus difficile à bien expliquer à un client.")
+    st.caption("Gagne à la hausse ET à la baisse modérée, tant que la barrière tient.")
     bandeau_modele()
 
     c1, c2 = st.columns(2)
-    T = c1.slider("Maturite (annees)", 0.5, 4.0, 2.0, 0.25, key="tw_maturite", bind="query-params")
-    bar = c2.slider("Barriere (% du spot)", 50, 90, 65, 5, key="tw_barriere", bind="query-params")
+    T = c1.slider("Maturité (années)", 0.5, 4.0, 2.0, 0.25, key="tw_maturite", bind="query-params")
+    bar = c2.slider("Barrière (% du spot)", 50, 90, 65, 5, key="tw_barriere", bind="query-params")
 
     ch, sg = trajectoires(T, bar / 100)
     ST = ch[:, -1].astype(np.float64)
@@ -38,8 +38,8 @@ def affiche(m):
     part_bas = lo
 
     m = st.columns(3)
-    m[0].metric("Participation a la baisse", f"{part_bas*100:,.0f}%")
-    m[1].metric("Participation a la hausse", "100%")
+    m[0].metric("Participation à la baisse", f"{part_bas*100:,.0f}%")
+    m[1].metric("Participation à la hausse", "100%")
     m[2].metric("Proba de toucher", f"{(1-p_no.mean())*100:,.1f}%")
 
     spots = np.linspace(30, 200, 500)
@@ -49,21 +49,21 @@ def affiche(m):
     direct = nominal * spots / S0
     y_bar = np.interp(bar / 100 * S0, spots, intact)
     graphe = G.payoff(
-        spots, intact, direct, nominal, "Si la barriere a tenu",
-        titre="La baisse rapporte, jusqu'a la barriere",
+        spots, intact, direct, nominal, "Si la barrière a tenu",
+        titre="La baisse rapporte, jusqu'à la barrière",
         sous_titre=f"Entre {bar/100*S0:,.0f} et {S0:,.0f} le client gagne. Sous la "
-                   "barriere il perd d'un coup toute cette zone.",
-        niveaux=[(bar / 100 * S0, f"barriere  {bar/100*S0:,.0f}"),
-                 (S0, f"depart  {S0:,.0f}")],
-        label_direct="Si la barriere a casse (ou detention directe)",
+                   "barrière il perd d'un coup toute cette zone.",
+        niveaux=[(bar / 100 * S0, f"barrière  {bar/100*S0:,.0f}"),
+                 (S0, f"départ  {S0:,.0f}")],
+        label_direct="Si la barrière a cassé (ou détention directe)",
         echantillon=ST, seuil_densite=bar / 100 * S0,
-        notes=[(bar / 100 * S0, y_bar, "chute brutale\nsi la barriere casse", G.PERTE, 10, -10)],
+        notes=[(bar / 100 * S0, y_bar, "chute brutale\nsi la barrière casse", G.PERTE, 10, -10)],
         legende_zones=True)
     G.affiche(graphe)
 
     st.info(
-        "**Decomposition** : tracker plus achat d'un put down-and-out. Le put transforme "
-        "la baisse en gain et s'evapore si la barriere casse.\n\n"
-        "**Le point a ne jamais laisser passer** : entre la barriere et le niveau initial, "
-        "le client gagne. Sous la barriere, il perd d'un coup toute cette zone de gain. "
-        "La discontinuite est brutale : le profil le plus dangereux a mal expliquer.")
+        "**Décomposition** : tracker plus achat d'un put down-and-out. Le put transforme "
+        "la baisse en gain et s'évapore si la barrière casse.\n\n"
+        "**Le point à ne jamais laisser passer** : entre la barrière et le niveau initial, "
+        "le client gagne. Sous la barrière, il perd d'un coup toute cette zone de gain. "
+        "La discontinuité est brutale : le profil le plus dangereux à mal expliquer.")

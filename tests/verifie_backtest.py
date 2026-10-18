@@ -33,8 +33,8 @@ import calibration as C   # noqa: E402
 
 MODELES = ["Black-Scholes + skew", "Bates (vol stochastique + sauts)"]
 SOUS_JACENTS = {"prix": "Indice des prix (SX5E)",
-                "net_return": "Net return (dividendes reinvestis)",
-                "decrement": "Indice a decrement (50 points)"}
+                "net_return": "Net return (dividendes réinvestis)",
+                "decrement": "Indice a décrément (50 points)"}
 BRC = "Barrier Reverse Convertible"
 echecs = []
 
@@ -102,97 +102,97 @@ for modele in MODELES:
             continue
         m = metriques(at)
         r = B.backtest_autocall(h, sous_jacent=sj).resume
-        ok = (proche(m["Rappeles a la 1re date"].value, r["rappel_premiere_date"])
+        ok = (proche(m["Rappelés à la 1re date"].value, r["rappel_premiere_date"])
               and proche(m["Pertes en capital"].value, r["perte"])
               and proche(m["Pire cas"].value, r["pire_capital"])
-              and m["Pire cas"].delta == "emis le " + "/".join(r["pire_emission"].split("-")[::-1])
-              and proche(m["Rendement par annee investie"].value, r["tri_par_annee"])
-              and f"({r['direct_par_annee'] * 100:.1f} %)" in m["Rendement par annee investie"].delta)
+              and m["Pire cas"].delta == "émis le " + "/".join(r["pire_emission"].split("-")[::-1])
+              and proche(m["Rendement par année investie"].value, r["tri_par_annee"])
+              and f"({r['direct_par_annee'] * 100:.1f} %)" in m["Rendement par année investie"].delta)
         controle(nom + " : chiffres = backtest.py", ok,
-                 f"rappel {m['Rappeles a la 1re date'].value}, perte {m['Pertes en capital'].value}"
+                 f"rappel {m['Rappelés à la 1re date'].value}, perte {m['Pertes en capital'].value}"
                  f", pire {m['Pire cas'].value} {m['Pire cas'].delta}, {time.time() - t:.1f}s")
 
         onglet_brc(at)
         at.run()
         nom = f"{modele.split()[0]:6} | {sj:10} | BRC"
-        if at.exception or "Barriere touchee" not in metriques(at):
-            controle(nom, False, erreur(at) or "onglet BRC non affiche")
+        if at.exception or "Barrière touchée" not in metriques(at):
+            controle(nom, False, erreur(at) or "onglet BRC non affiché")
             continue
         m = metriques(at)
         r = B.backtest_brc(h, sous_jacent=sj).resume
-        ok = (proche(m["Barriere touchee"].value, r["barriere_touchee"])
+        ok = (proche(m["Barrière touchée"].value, r["barriere_touchee"])
               and proche(m["Pertes en capital"].value, r["perte"])
               and proche(m["Pire cas"].value, r["pire_capital"])
-              and m["Pire cas"].delta == "emis le " + "/".join(r["pire_emission"].split("-")[::-1])
-              and proche(m["Rendement par annee investie"].value, r["tri_par_annee"]))
+              and m["Pire cas"].delta == "émis le " + "/".join(r["pire_emission"].split("-")[::-1])
+              and proche(m["Rendement par année investie"].value, r["tri_par_annee"]))
         controle(nom + " : chiffres = backtest.py", ok,
-                 f"touchee {m['Barriere touchee'].value}, perte {m['Pertes en capital'].value}, "
+                 f"touchée {m['Barrière touchée'].value}, perte {m['Pertes en capital'].value}, "
                  f"pire {m['Pire cas'].value} {m['Pire cas'].delta}")
 
 # chiffres de reference de tests/valide_donnees.py, tels qu'affiches
 at = ouvre("Backtest historique")
 m = metriques(at)
-controle("Autocall 3 ans depuis 2000 : 57,7 % rappeles a la 1re date, 3,5 % de pertes, "
+controle("Autocall 3 ans depuis 2000 : 57,7 % rappelés à la 1re date, 3,5 % de pertes, "
          "pire cas 02/05/2000 (42,7 % rendu)",
-         m["Rappeles a la 1re date"].value == "57.7 %" and m["Pertes en capital"].value == "3.5 %"
-         and m["Pire cas"].value == "42.7 % rendu" and m["Pire cas"].delta == "emis le 02/05/2000"
-         and any("286 emissions" in c.value for c in at.caption))
+         m["Rappelés à la 1re date"].value == "57.7 %" and m["Pertes en capital"].value == "3.5 %"
+         and m["Pire cas"].value == "42.7 % rendu" and m["Pire cas"].delta == "émis le 02/05/2000"
+         and any("286 émissions" in c.value for c in at.caption))
 onglet_brc(at)
 at.run()
 m = metriques(at)
-controle("BRC 1 an barriere 70 % depuis 2000 : 15,8 % de pertes, pire cas 03/03/2008",
-         m["Pertes en capital"].value == "15.8 %" and m["Pire cas"].delta == "emis le 03/03/2008")
+controle("BRC 1 an barrière 70 % depuis 2000 : 15,8 % de pertes, pire cas 03/03/2008",
+         m["Pertes en capital"].value == "15.8 %" and m["Pire cas"].delta == "émis le 03/03/2008")
 
 ac = B.backtest_autocall(h, sous_jacent="decrement").resume["perte"]
-controle("indice a decrement : plus de pertes affichees que sur l'indice des prix",
+controle("indice a décrément : plus de pertes affichees que sur l'indice des prix",
          nombre(metriques(ouvre("Backtest historique", reglages=[sous_jacent("decrement")]))
                 ["Pertes en capital"].value) > 3.5, f"{ac:.1%}")
 
 # 2. Coupon de la vue de marche ------------------------------------------------
 for modele in MODELES:
     at = ouvre("Backtest historique", modele)
-    bt = nombre(metriques(at)["Coupon de la vue de marche"].value)
-    ref = nombre(metriques(ouvre("4 - Autocall Phoenix", modele))["Equivalent annuel"].value)
-    controle(f"{modele.split()[0]:6} | coupon de la vue de marche = page Autocall", bt == ref,
+    bt = nombre(metriques(at)["Coupon de la vue de marché"].value)
+    ref = nombre(metriques(ouvre("4 - Autocall Phoenix", modele))["Équivalent annuel"].value)
+    controle(f"{modele.split()[0]:6} | coupon de la vue de marché = page Autocall", bt == ref,
              f"{bt} vs {ref} %")
     at.checkbox(key="bt_ac_coupon_marche").check().run()
     r = B.backtest_autocall(h, coupon_pa=bt / 100).resume
-    controle(f"{modele.split()[0]:6} | case coupon de marche : le backtest prend ce coupon",
+    controle(f"{modele.split()[0]:6} | case coupon de marché : le backtest prend ce coupon",
              not at.exception and at.slider(key="bt_ac_coupon").disabled
-             and abs(nombre(metriques(at)["Rendement par annee investie"].value)
+             and abs(nombre(metriques(at)["Rendement par année investie"].value)
                      - r["tri_par_annee"] * 100) < 0.06, erreur(at))
 
     onglet_brc(at)
     at.run()
-    bt = nombre(metriques(at)["Coupon de la vue de marche"].value)
+    bt = nombre(metriques(at)["Coupon de la vue de marché"].value)
     ref = nombre(metriques(ouvre("3 - Barrier Reverse Convertible", modele))
-                 ["Coupon equitable"].value)
-    controle(f"{modele.split()[0]:6} | coupon de la vue de marche = page BRC", bt == ref,
+                 ["Coupon équitable"].value)
+    controle(f"{modele.split()[0]:6} | coupon de la vue de marché = page BRC", bt == ref,
              f"{bt} vs {ref} %")
     dans_brc(lambda a: a.checkbox(key="bt_brc_coupon_marche").check())(at)
     at.run()
-    controle(f"{modele.split()[0]:6} | case coupon de marche BRC : coupon backteste = coupon du desk",
+    controle(f"{modele.split()[0]:6} | case coupon de marché BRC : coupon backteste = coupon du desk",
              not at.exception and nombre(metriques(at)["Coupon backteste"].value) == bt, erreur(at))
 
 # 3. Lien, curseurs, cas limites ------------------------------------------------
 at = ouvre("Backtest historique", query={"bt_onglet": "brc"})
 controle("lien ?bt_onglet=brc : l'onglet BRC s'ouvre directement",
-         not at.exception and "Barriere touchee" in metriques(at), erreur(at))
+         not at.exception and "Barrière touchée" in metriques(at), erreur(at))
 
 at = ouvre("Backtest historique", reglages=[lambda a: a.slider(key="bt_debut").set_value(2009)])
 r = B.backtest_autocall(h, debut="2009-01-01").resume
-controle("premiere emission en 2009 : moins d'emissions, chiffres = backtest.py",
+controle("première émission en 2009 : moins d'émissions, chiffres = backtest.py",
          not at.exception and proche(metriques(at)["Pertes en capital"].value, r["perte"])
-         and any(f"{r['n']} emissions" in c.value for c in at.caption),
-         f"{r['n']} emissions, perte {r['perte']:.1%}")
+         and any(f"{r['n']} émissions" in c.value for c in at.caption),
+         f"{r['n']} émissions, perte {r['perte']:.1%}")
 
 at = ouvre("Backtest historique", reglages=[
     lambda a: a.slider(key="bt_debut").set_value(2020),
     lambda a: a.slider(key="bt_ac_maturite").set_value(6.0)])
 r = B.backtest_autocall(h, T=6.0, debut="2020-01-01").resume
-controle("cas extreme (2020, 6 ans) : peu d'emissions terminees, chiffres = backtest.py",
-         not at.exception and any(f"{r['n']} emissions" in c.value for c in at.caption),
-         erreur(at) or f"{r['n']} emissions")
+controle("cas extrême (2020, 6 ans) : peu d'émissions terminees, chiffres = backtest.py",
+         not at.exception and any(f"{r['n']} émissions" in c.value for c in at.caption),
+         erreur(at) or f"{r['n']} émissions")
 
 at = ouvre("Backtest historique", reglages=[
     lambda a: a.selectbox(key="bt_ac_frequence").set_value("Annuelle"),
@@ -201,9 +201,9 @@ controle("autocall 1 an annuel (une seule observation) : la page s'affiche",
          not at.exception, erreur(at))
 
 at = ouvre("Backtest historique", reglages=[onglet_brc, dans_brc(
-    lambda a: a.radio(key="bt_brc_observation").set_value("A l'echeance (europeenne)"))])
+    lambda a: a.radio(key="bt_brc_observation").set_value("À l'échéance (européenne)"))])
 r = B.backtest_brc(h, continu=False).resume
-controle("BRC barriere a l'echeance : chiffres = backtest.py",
+controle("BRC barrière a l'échéance : chiffres = backtest.py",
          not at.exception and proche(metriques(at)["Pertes en capital"].value, r["perte"]),
          erreur(at) or f"perte {r['perte']:.1%}")
 
@@ -211,7 +211,7 @@ at = ouvre("Backtest historique")
 t = time.time()
 at.slider(key="bt_ac_coupon").set_value(9.0).run()
 duree = time.time() - t
-controle("curseur deplace : la page se recalcule vite (backtest et Monte Carlo en cache)",
+controle("curseur déplacé : la page se recalcule vite (backtest et Monte Carlo en cache)",
          not at.exception and duree < 3.0, f"{duree:.2f}s")
 
 # 4. Laboratoire : calibrage ----------------------------------------------------
@@ -221,9 +221,9 @@ BARRE = {"vol": cu["vol_atm"], "vol_lt": cu["theta_v"], "kappa": cu["kappa"],
          "vol_vol": cu["xi"], "rho": cu["rho"], "sauts": cu["lam"],
          "taille_saut": cu["mu_j"], "disp_saut": cu["sig_j"]}
 
-at = ouvre("Laboratoire modele")
+at = ouvre("Laboratoire modèle")
 m = metriques(at)
-controle("Laboratoire : erreur de calibrage affichee = fichier (0,77 pt, curseurs 0,91 pt)",
+controle("Laboratoire : erreur de calibrage affichée = fichier (0,77 pt, curseurs 0,91 pt)",
          not at.exception
          and m["Erreur, toute la surface"].value == f"{cal['erreur_pts_vol']['moyenne_quadratique']:.2f} pt"
          and m["Aux crans des curseurs"].value
@@ -231,17 +231,17 @@ controle("Laboratoire : erreur de calibrage affichee = fichier (0,77 pt, curseur
 rates = []
 for e in cal["par_echeance"]:
     at.selectbox(key="labo_echeance").set_value(e["echeance"]).run()
-    if at.exception or metriques(at)["Erreur, cette echeance"].value != f"{e['moyenne_quadratique']:.2f} pt":
+    if at.exception or metriques(at)["Erreur, cette échéance"].value != f"{e['moyenne_quadratique']:.2f} pt":
         rates.append(e["echeance"] + " " + erreur(at))
-controle(f"Laboratoire : les {len(cal['par_echeance'])} echeances Eurex s'affichent",
+controle(f"Laboratoire : les {len(cal['par_echeance'])} échéances Eurex s'affichent",
          not rates, "; ".join(rates))
 
 for modele, avant in ((MODELES[0], []), (MODELES[1], [lambda a: a.slider(key="kappa").set_value(4.0),
                                                        lambda a: a.slider(key="rho").set_value(-0.2)])):
-    at = ouvre("Laboratoire modele", modele, avant)
+    at = ouvre("Laboratoire modèle", modele, avant)
     at.button(key="labo_appliquer").click().run()
     valeurs = {k: at.slider(key=k).value for k in BARRE} if not at.exception else {}
-    controle(f"{modele.split()[0]:6} | bouton Appliquer : barre laterale sous Bates, valeurs calibrees",
+    controle(f"{modele.split()[0]:6} | bouton Appliquer : barre latérale sous Bates, valeurs calibrees",
              not at.exception and at.sidebar.radio[0].value == MODELES[1]
              and all(abs(valeurs[k] - v) < 1e-9 for k, v in BARRE.items())
              and len(at.success) == 1, erreur(at) or str(valeurs))
@@ -251,13 +251,13 @@ for modele, avant in ((MODELES[0], []), (MODELES[1], [lambda a: a.slider(key="ka
              and all(lien[k] and abs(float(lien[k]) - v) < 1e-9 for k, v in BARRE.items()),
              str(lien))
     at.run()
-    controle(f"{modele.split()[0]:6} | apres un nouveau rendu, les valeurs restent et le message part",
+    controle(f"{modele.split()[0]:6} | après un nouveau rendu, les valeurs restent et le message part",
              not at.exception and all(abs(at.slider(key=k).value - v) < 1e-9 for k, v in BARRE.items())
              and not at.success, erreur(at))
 
 at.sidebar.selectbox[0].set_value("3 - Barrier Reverse Convertible").run()
-c = nombre(metriques(at)["Coupon equitable"].value) if not at.exception else 0
-controle("apres calibrage, la page BRC price sous Bates calibre", not at.exception and c > 0,
+c = nombre(metriques(at)["Coupon équitable"].value) if not at.exception else 0
+controle("après calibrage, la page BRC price sous Bates calibré", not at.exception and c > 0,
          erreur(at) or f"coupon {c:.2f} %")
 
 print()

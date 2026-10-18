@@ -14,10 +14,10 @@ def affiche(m):
     q, r, recovery, skew, trajectoires = m.q, m.r, m.recovery, m.skew, m.trajectoires
     vol_atm = m.vol_atm
 
-    st.title("Comparateur", help="**Ce que tu regardes.** Quatre structures pricees sous la meme vue de marche, avec la meme\nmaturite, cote a cote.\n\n**Pourquoi c'est utile.** Un produit structure n'est jamais bon ou mauvais dans l'absolu :\nil est adapte ou non a une vue de marche. Le comparateur montre ce que chaque structure\ndonne et ce qu'elle prend en echange.\n\n**La regle a retenir.** Protection, participation, coupon : on n'en a jamais trois sur trois.\nLe budget est fixe, il ne fait que changer de forme.\n\n**Ce qu'il faut faire.** Bouge la volatilite ou les taux dans la barre laterale et regarde\nquelles offres s'ameliorent et lesquelles se degradent. Elles ne bougent pas toutes dans\nle meme sens.")
+    st.title("Comparateur", help="**Ce que tu regardes.** Quatre structures pricées sous la même vue de marché, avec la même\nmaturité, côte à côte.\n\n**Pourquoi c'est utile.** Un produit structuré n'est jamais bon ou mauvais dans l'absolu :\nil est adapté ou non à une vue de marché. Le comparateur montre ce que chaque structure\ndonne et ce qu'elle prend en échange.\n\n**La règle à retenir.** Protection, participation, coupon : on n'en a jamais trois sur trois.\nLe budget est fixé, il ne fait que changer de forme.\n\n**Ce qu'il faut faire.** Bouge la volatilité ou les taux dans la barre latérale et regarde\nquelles offres s'améliorent et lesquelles se dégradent. Elles ne bougent pas toutes dans\nle même sens.")
     bandeau_modele()
 
-    T = st.slider("Maturite (annees)", 1.0, 5.0, 2.0, 0.5,
+    T = st.slider("Maturité (années)", 1.0, 5.0, 2.0, 0.5,
                   key="comp_maturite", bind="query-params")
 
     ch_brc, s_brc = trajectoires(T, 0.70)
@@ -43,21 +43,21 @@ def affiche(m):
         {"Produit": "Tracker", "Offre": "Participation 100%", "Protection": "aucune",
          "Plafond hausse": "aucun", "Vue client": "haussier franc"},
         {"Produit": "Capital Protection", "Offre": f"Participation {part*100:,.0f}%",
-         "Protection": "capital garanti", "Plafond hausse": "participation reduite",
+         "Protection": "capital garanti", "Plafond hausse": "participation réduite",
          "Vue client": "haussier prudent"},
         {"Produit": "Barrier Reverse Conv.", "Offre": f"Coupon {cpn_brc*100:,.2f}% p.a.",
-         "Protection": "barriere 70%", "Plafond hausse": f"{cpn_brc*100:,.2f}% p.a.",
+         "Protection": "barrière 70%", "Plafond hausse": f"{cpn_brc*100:,.2f}% p.a.",
          "Vue client": "neutre"},
         {"Produit": "Autocall Phoenix", "Offre": f"Coupon {cpn_ac*100:,.2f}% / trimestre",
-         "Protection": "barriere 65% a l'echeance", "Plafond hausse": "coupons cumules",
-         "Vue client": "neutre a legerement haussier"},
+         "Protection": "barrière 65% a l'échéance", "Plafond hausse": "coupons cumulés",
+         "Vue client": "neutre à légèrement haussier"},
     ])
 
     c = st.columns(3)
     c[0].metric("Proba de hausse du sous-jacent",
                 f"{(ch_ac[:, -1] > S0).mean()*100:,.1f}%",
-                help="Sous mesure risque-neutre. Ce n'est pas une prevision.")
-    c[1].metric("Duree de vie moyenne autocall", f"{duree:,.2f} ans")
+                help="Sous mesure risque-neutre. Ce n'est pas une prévision.")
+    c[1].metric("Durée de vie moyenne autocall", f"{duree:,.2f} ans")
     c[2].metric("Proba de perte autocall", f"{p_perte*100:,.1f}%")
 
     spots = np.linspace(30, 190, 400)
@@ -65,26 +65,26 @@ def affiche(m):
     direct = nominal * (1 + perf)
     graphe = G.courbes(
         spots,
-        [{"nom": "Detention directe du sous-jacent", "y": direct, "couleur": G.DIRECT,
+        [{"nom": "Détention directe du sous-jacent", "y": direct, "couleur": G.DIRECT,
           "trait": "tirete", "epaisseur": 1.6},
          {"nom": f"Capital Protection — plancher, {part*100:,.0f}% de la hausse",
           "y": nominal * (1 + part * np.maximum(perf, 0)), "couleur": G.ACCENT,
           "epaisseur": 2.8},
-         {"nom": f"BRC — coupon {cpn_brc*100:,.2f}%, capital a risque sous 70",
+         {"nom": f"BRC — coupon {cpn_brc*100:,.2f}%, capital à risqué sous 70",
           "y": np.where(spots < 70, nominal * spots / S0, nominal) + cpn_brc * nominal * T,
           "couleur": G.PRODUIT, "epaisseur": 2.8}],
-        "Trois facons d'exprimer la meme vue de marche",
-        "Chaque courbe protege quelque part et abandonne ailleurs",
-        "Niveau du sous-jacent a l'echeance", "Remboursement (EUR)",
-        nom_x="Sous-jacent a l'echeance", fmt_x=lambda v: G.niveau(v, S0), fmt_y=G.eur,
+        "Trois façons d'exprimer la même vue de marché",
+        "Chaque courbe protège quelque part et abandonne ailleurs",
+        "Niveau du sous-jacent a l'échéance", "Remboursement (EUR)",
+        nom_x="Sous-jacent a l'échéance", fmt_x=lambda v: G.niveau(v, S0), fmt_y=G.eur,
         axe_y_eur=True, nb_ticks_x=10,
-        niveaux_v=[(70, "barriere du BRC  70"), (S0, f"depart  {S0:,.0f}")],
+        niveaux_v=[(70, "barrière du BRC  70"), (S0, f"départ  {S0:,.0f}")],
         niveaux_h=[(nominal, f"nominal  {nominal:,.0f}", G.NIVEAU)], hauteur=420)
     G.affiche(graphe)
 
     st.info(
-        "**La regle qui structure tout le metier** : protection, participation, coupon. "
-        "Jamais trois sur trois. Le budget est fixe : il vient des taux, des dividendes, "
-        "du spread emetteur et de ce que le client accepte de vendre comme optionalite.\n\n"
-        "**Ta question au client** : quelle est ta vue, et qu'es-tu pret a abandonner "
+        "**La règle qui structure tout le métier** : protection, participation, coupon. "
+        "Jamais trois sur trois. Le budget est fixé : il vient des taux, des dividendes, "
+        "du spread émetteur et de ce que le client accepte de vendre comme optionalité.\n\n"
+        "**Ta question au client** : quelle est ta vue, et qu'es-tu prêt à abandonner "
         "pour l'exprimer ?")

@@ -33,25 +33,25 @@ from communs import MAX_CACHE
 
 BRC, AC, CP = "Barrier Reverse Convertible", "Autocall Phoenix", "Capital Protection"
 PRODUITS = [BRC, AC, CP]
-DEMANDE, ARGENT, REVENTE, PITCH = ("Le client demande", "Ou va l'argent",
+DEMANDE, ARGENT, REVENTE, PITCH = ("Le client demande", "Où va l'argent",
                                    "Revendre en cours de vie", "Pitch client")
 SECTIONS = [DEMANDE, ARGENT, REVENTE, PITCH]
 PARTICULIER, CGP, INSTIT = "Particulier", "Conseiller en gestion de patrimoine", "Institutionnel"
 PROFILS = [PARTICULIER, CGP, INSTIT]
-VUES = {"Forte hausse": "le marche va fortement monter",
-        "Hausse moderee": "le marche va monter un peu",
-        "Stabilite": "le marche va peu bouger",
-        "Baisse moderee": "le marche peut baisser un peu",
-        "Forte baisse": "le marche va fortement baisser"}
+VUES = {"Forte hausse": "le marché va fortement monter",
+        "Hausse modérée": "le marché va monter un peu",
+        "Stabilité": "le marché va peu bouger",
+        "Baisse modérée": "le marché peut baisser un peu",
+        "Forte baisse": "le marché va fortement baisser"}
 FREQUENCES = {"Trimestrielle": 4, "Semestrielle": 2, "Annuelle": 1}
 PERIODE = {4: "trimestre", 2: "semestre", 1: "an"}
 
 # Ce que le client fixe, et le parametre que le desk cherche (cle de sales.py)
 CHERCHE = {
-    BRC: {"Un coupon, avec la barriere la plus basse possible": "barriere",
+    BRC: {"Un coupon, avec la barrière la plus basse possible": "barriere",
           "Un coupon, avec le strike le plus bas possible": "strike",
-          "Un coupon, sur la duree la plus courte possible": "maturite"},
-    AC: {"Un coupon, avec la barriere de capital la plus basse possible": "barriere_capital",
+          "Un coupon, sur la durée la plus courte possible": "maturite"},
+    AC: {"Un coupon, avec la barrière de capital la plus basse possible": "barriere_capital",
          "Un coupon, avec le trigger de rappel le plus bas possible": "trigger"},
     CP: {"Une participation, avec le cap le plus haut possible": "cap",
          "Une participation, avec la protection la plus haute possible": "protection"},
@@ -66,14 +66,14 @@ CURSEUR = {"barriere": ("as_brc_barriere", math.ceil), "strike": ("as_brc_strike
 EXTREME = {"barriere": "la plus basse", "strike": "le plus bas", "maturite": "la plus courte",
            "barriere_capital": "la plus basse", "trigger": "le plus bas",
            "protection": "la plus haute", "cap": "le plus haut"}
-NOM_PARAMETRE = {"barriere": "Barriere", "strike": "Strike", "maturite": "Maturite",
-                 "barriere_capital": "Barriere de capital", "trigger": "Trigger de rappel",
+NOM_PARAMETRE = {"barriere": "Barrière", "strike": "Strike", "maturite": "Maturité",
+                 "barriere_capital": "Barrière de capital", "trigger": "Trigger de rappel",
                  "protection": "Protection", "cap": "Cap"}
 
 # Libelles courts des lignes de sales.py pour l'axe des graphes en cascade
-COURT = {"zc": "Taux", "coupons": "Coupons", "rappel": "Rappel anticipe", "put": "Put vendu",
-         "credit": "Risque emetteur", "call": "Call achete", "cap": "Call au cap vendu",
-         "marge": "Marge banque", "retro": "Retro"}
+COURT = {"zc": "Taux", "coupons": "Coupons", "rappel": "Rappel anticipé", "put": "Put vendu",
+         "credit": "Risque émetteur", "call": "Call achète", "cap": "Call au cap vendu",
+         "marge": "Marge banque", "retro": "Rétro"}
 
 
 # =====================================================================
@@ -114,23 +114,23 @@ def _structure(produit, cherche=None):
         return cherche == p
 
     def aide(p, texte):
-        return ("Trouve par le desk dans la section « Le client demande » : ce curseur est "
-                "ignore ici. « Retenir cette structure » y inscrit la reponse.\n\n" + texte
+        return ("Trouvé par le desk dans la section « Le client demande » : ce curseur est "
+                "ignoré ici. « Retenir cette structure » y inscrit la réponse.\n\n" + texte
                 if gris(p) else texte)
 
-    retro_aide = ("Ce que la banque reverse au reseau qui place le produit (banque privee, "
-                  "reseau d'agences, conseiller). Payee d'avance sur toute la duree, comme la "
-                  "marge, et prise sur le budget option : chaque point de retro se paie en "
+    retro_aide = ("Ce que la banque reverse au réseau qui place le produit (banque privée, "
+                  "réseau d'agences, conseiller). Payée d'avance sur toute la durée, comme la "
+                  "marge, et prise sur le budget option : chaque point de rétro se paie en "
                   "coupon. Toutes les sections en tiennent compte.")
     with st.container(border=True):
         if produit == BRC:
             c = st.columns(4)
-            T = c[0].slider("Maturite (annees)", 0.25, 3.0, _v("as_brc_maturite", 1.0), 0.25,
+            T = c[0].slider("Maturité (années)", 0.25, 3.0, _v("as_brc_maturite", 1.0), 0.25,
                             disabled=gris("maturite"), key="as_brc_maturite",
                             bind="query-params", help=aide(
-                                "maturite", "Plus c'est long, plus la barriere a le temps "
-                                "d'etre touchee : le put vendu vaut plus, le coupon monte."))
-            bar = c[1].slider("Barriere (%)", 40, 100, _v("as_brc_barriere", 70), 1,
+                                "maturite", "Plus c'est long, plus la barrière a le temps "
+                                "d'être touchée : le put vendu vaut plus, le coupon monte."))
+            bar = c[1].slider("Barrière (%)", 40, 100, _v("as_brc_barriere", 70), 1,
                               disabled=gris("barriere"), key="as_brc_barriere",
                               bind="query-params", help=aide(
                                   "barriere", "Le niveau qui arme le risque. Plus elle est "
@@ -138,79 +138,79 @@ def _structure(produit, cherche=None):
             strike = c[2].slider("Strike (%)", 70, 120, _v("as_brc_strike", 100), 1,
                                  disabled=gris("strike"), key="as_brc_strike",
                                  bind="query-params", help=aide(
-                                     "strike", "Sous ce niveau a l'echeance, et si la barriere "
-                                     "a ete touchee, le client perd comme le sous-jacent "
-                                     "rapporte au strike. Un strike sous 100 % (BRC decote) "
+                                     "strike", "Sous ce niveau à l'échéance, et si la barrière "
+                                     "a été touchée, le client perd comme le sous-jacent "
+                                     "rapporte au strike. Un strike sous 100 % (BRC décote) "
                                      "fait perdre plus tard et moins."))
-            retro = c[3].slider("Retrocession (% par an)", 0.0, 2.5, 1.0, 0.1, key="as_retro",
+            retro = c[3].slider("Rétrocession (% par an)", 0.0, 2.5, 1.0, 0.1, key="as_retro",
                                 bind="query-params", help=retro_aide)
             continu = st.radio(
-                "Observation de la barriere", ["Continue (americaine)", "A l'echeance (europeenne)"],
+                "Observation de la barrière", ["Continue (américaine)", "À l'échéance (européenne)"],
                 horizontal=True, key="as_brc_observation", bind="query-params",
-                help="Continue : la barriere est surveillee chaque jour, un seul passage suffit "
-                     "a l'armer. Europeenne : seul le niveau final compte, le client est mieux "
-                     "protege et touche moins.").startswith("Continue")
+                help="Continue : la barrière est surveillée chaque jour, un seul passage suffit "
+                     "à l'armer. Européenne : seul le niveau final compte, le client est mieux "
+                     "protégé et touche moins.").startswith("Continue")
             s = Structure(BRC, T, barriere=bar / 100, strike=strike / 100, continu=continu)
         elif produit == AC:
             c = st.columns(4)
-            T = c[0].slider("Maturite maximale (annees)", 1.0, 6.0, 3.0, 0.5,
+            T = c[0].slider("Maturité maximale (années)", 1.0, 6.0, 3.0, 0.5,
                             key="as_ac_maturite", bind="query-params",
-                            help="Duree maximale : le produit est presque toujours rappele avant.")
-            freq = c[1].selectbox("Frequence d'observation", list(FREQUENCES),
+                            help="Durée maximale : le produit est presque toujours rappelé avant.")
+            freq = c[1].selectbox("Fréquence d'observation", list(FREQUENCES),
                                   key="as_ac_frequence", bind="query-params",
-                                  help="Une date d'observation par periode : coupon, rappel "
-                                       "et memoire se jouent a ces dates seulement.")
+                                  help="Une date d'observation par période : coupon, rappel "
+                                       "et mémoire se jouent à ces dates seulement.")
             trig = c[2].slider("Trigger de rappel (%)", 80, 120, _v("as_ac_trigger", 100), 1,
                                disabled=gris("trigger"), key="as_ac_trigger",
                                bind="query-params", help=aide(
-                                   "trigger", "Au-dessus a une date d'observation, le produit "
-                                   "s'arrete et rembourse le nominal plus le coupon. Plus il "
-                                   "est bas, plus le rappel est frequent, plus le coupon baisse."))
-            retro = c[3].slider("Retrocession (% par an)", 0.0, 2.5, 1.0, 0.1, key="as_retro",
+                                   "trigger", "Au-dessus à une date d'observation, le produit "
+                                   "s'arrête et rembourse le nominal plus le coupon. Plus il "
+                                   "est bas, plus le rappel est fréquent, plus le coupon baisse."))
+            retro = c[3].slider("Rétrocession (% par an)", 0.0, 2.5, 1.0, 0.1, key="as_retro",
                                 bind="query-params", help=retro_aide)
             c = st.columns(4)
-            bcp = c[0].slider("Barriere de coupon (%)", 50, 100, 70, 1, key="as_ac_bar_coupon",
+            bcp = c[0].slider("Barrière de coupon (%)", 50, 100, 70, 1, key="as_ac_bar_coupon",
                               bind="query-params",
-                              help="Le coupon n'est verse que si le sous-jacent est au-dessus "
-                                   "a la date d'observation.")
-            bcap = c[1].slider("Barriere de capital (%)", 30, 100, _v("as_ac_bar_capital", 60), 1,
+                              help="Le coupon n'est versé que si le sous-jacent est au-dessus "
+                                   "à la date d'observation.")
+            bcap = c[1].slider("Barrière de capital (%)", 30, 100, _v("as_ac_bar_capital", 60), 1,
                                disabled=gris("barriere_capital"), key="as_ac_bar_capital",
                                bind="query-params", help=aide(
-                                   "barriere_capital", "Observee a l'echeance seulement. "
+                                   "barriere_capital", "Observée à l'échéance seulement. "
                                    "Dessous, le client encaisse toute la baisse : c'est le vrai "
                                    "risque du produit."))
             n_actifs = c[2].select_slider(
                 "Sous-jacents (worst-of)", [1, 2, 3, 4], 1, key="as_ac_sous_jacents",
                 bind="query-params",
-                help="Le plus mauvais des sous-jacents decide de tout. Plus il y en a, plus le "
-                     "coupon monte, et la probabilite de perte aussi.")
-            correl = c[3].slider("Correlation", 0.0, 0.95, 0.60, 0.05, disabled=n_actifs == 1,
+                help="Le plus mauvais des sous-jacents décide de tout. Plus il y en a, plus le "
+                     "coupon monte, et la probabilité de perte aussi.")
+            correl = c[3].slider("Corrélation", 0.0, 0.95, 0.60, 0.05, disabled=n_actifs == 1,
                                  key="as_ac_correlation", bind="query-params",
-                                 help="Correlation basse : il y a presque toujours un trainard, "
-                                      "coupon eleve et risque eleve.")
-            memoire = st.checkbox("Effet memoire", value=True, key="as_ac_memoire",
+                                 help="Corrélation basse : il y a presque toujours un traînard, "
+                                      "coupon élevé et risque élevé.")
+            memoire = st.checkbox("Effet mémoire", value=True, key="as_ac_memoire",
                                   bind="query-params",
-                                  help="Un coupon manque est rattrape a la premiere date ou la "
-                                       "barriere de coupon est de nouveau respectee.")
+                                  help="Un coupon manque est rattrapé à la première date où la "
+                                       "barrière de coupon est de nouveau respectée.")
             s = Structure(AC, T, par_an=FREQUENCES[freq], trigger=trig / 100,
                           bar_coupon=bcp / 100, bar_capital=bcap / 100, memoire=memoire,
                           n_actifs=n_actifs, correlation=correl)
         else:
             c = st.columns(4)
-            T = c[0].slider("Maturite (annees)", 1.0, 10.0, 5.0, 0.5, key="as_cp_maturite",
+            T = c[0].slider("Maturité (années)", 1.0, 10.0, 5.0, 0.5, key="as_cp_maturite",
                             bind="query-params",
-                            help="Plus c'est long, moins la banque doit mettre de cote pour "
+                            help="Plus c'est long, moins la banque doit mettre de côté pour "
                                  "garantir : le budget option grossit.")
             prot = c[1].slider("Protection (%)", 70, 100, _v("as_cp_protection", 100), 1,
                                disabled=gris("protection"), key="as_cp_protection",
                                bind="query-params", help=aide(
-                                   "protection", "Le minimum rendu a l'echeance. Chaque point "
-                                   "abandonne libere du budget pour la participation."))
+                                   "protection", "Le minimum rendu à l'échéance. Chaque point "
+                                   "abandonné libère du budget pour la participation."))
             cap = c[2].slider("Cap (%)", 105, 300, _v("as_cp_cap", 300), 1,
                               disabled=gris("cap"), key="as_cp_cap", bind="query-params",
-                              help=aide("cap", "Au-dela, le client ne profite plus de la "
+                              help=aide("cap", "Au-delà, le client ne profite plus de la "
                                                "hausse. 300 % = pas de cap."))
-            retro = c[3].slider("Retrocession (% par an)", 0.0, 2.5, 1.0, 0.1, key="as_retro",
+            retro = c[3].slider("Rétrocession (% par an)", 0.0, 2.5, 1.0, 0.1, key="as_retro",
                                 bind="query-params", help=retro_aide)
             s = Structure(CP, T, protection=prot / 100, cap=cap / 100)
     return s, retro / 100
@@ -374,7 +374,7 @@ def graphe_cascade(etapes, titre, sous_titre=None, nominal=None, zero=False, leg
                                               opacity=0.7).encode(
         x=alt.X("c:Q", scale=ech_x), x2="d:Q", y=alt.Y("fin:Q", scale=ech_y)))
     infobulle = [alt.Tooltip("libelle:N", title="Ligne"), alt.Tooltip("montant:N", title="Montant"),
-                 alt.Tooltip("cumul:N", title="Cumul apres cette ligne")]
+                 alt.Tooltip("cumul:N", title="Cumul après cette ligne")]
     if nominal:
         infobulle.append(alt.Tooltip("part:N", title="En % du nominal"))
     infobulle.append(alt.Tooltip("pourquoi:N", title="Pourquoi"))
@@ -413,20 +413,20 @@ def _saisie_demande(produit):
     demande = c1.selectbox(
         "Le client veut", list(choix), key=f"as_dem_{'brc' if produit == BRC else 'ac' if produit == AC else 'cp'}",
         bind="query-params",
-        help="La contrainte que le client pose au telephone. Le desk cherche le parametre le "
+        help="La contrainte que le client pose au téléphone. Le desk cherche le paramètre le "
              "plus favorable au client qui la respecte ; tout le reste de la structure vient "
              "du cadre en dessous.")
     if produit == CP:
         cible = c2.number_input(
-            "Participation demandee (%)", 5.0, 300.0, 60.0, 5.0, key="as_dem_part",
+            "Participation demandée (%)", 5.0, 300.0, 60.0, 5.0, key="as_dem_part",
             bind="query-params",
-            help="La part de la hausse que le client veut recevoir. 100 % = la hausse entiere.")
+            help="La part de la hausse que le client veut recevoir. 100 % = la hausse entière.")
     else:
         cible = c2.number_input(
             "Coupon demande (% par an)", 0.5, 40.0, 8.0 if produit == BRC else 5.0, 0.25,
             key="as_dem_cpn_brc" if produit == BRC else "as_dem_cpn_ac", bind="query-params",
-            help="Le coupon annuel que le client veut toucher, net de la retrocession. Pour "
-                 "l'autocall : l'equivalent annuel des coupons par observation.")
+            help="Le coupon annuel que le client veut toucher, net de la rétrocession. Pour "
+                 "l'autocall : l'équivalent annuel des coupons par observation.")
     return choix[demande], cible / 100
 
 
@@ -443,56 +443,56 @@ def _phrase_brute(s, cherche, rep, depasse):
         if not rep.possible:
             if cherche == "cap":
                 return (f"{_p(cible, 0)} de participation n'est pas faisable aujourd'hui avec "
-                        f"{_p(s.protection, 0)} du capital protege : au mieux {_p(obtenu, 0)}. "
+                        f"{_p(s.protection, 0)} du capital protégé : au mieux {_p(obtenu, 0)}. "
                         "Pour aller plus haut, il faut accepter une protection plus basse ou "
-                        "une duree plus longue.")
-            return (f"{_p(cible, 0)} de participation demanderait de proteger moins de "
-                    f"{_p(x, 0)} du capital : au mieux {_p(obtenu, 0)} avec {_p(x, 0)} protege. "
-                    "Un cap sur la hausse ou une duree plus longue permettrait d'aller plus loin.")
+                        "une durée plus longue.")
+            return (f"{_p(cible, 0)} de participation demanderait de protéger moins de "
+                    f"{_p(x, 0)} du capital : au mieux {_p(obtenu, 0)} avec {_p(x, 0)} protégé. "
+                    "Un cap sur la hausse ou une durée plus longue permettrait d'aller plus loin.")
         if depasse:
-            return (f"Bonne nouvelle : meme sans rien ceder, vous recevez {_p(obtenu, 0)} de la "
+            return (f"Bonne nouvelle : même sans rien céder, vous recevez {_p(obtenu, 0)} de la "
                     f"hausse sur {T}, avec {_p(s.protection if cherche == 'cap' else x, 0)} du "
-                    "capital protege a l'echeance.")
+                    "capital protégé à l'échéance.")
         if cherche == "protection":
             return (f"Pour {_p(cible, 0)} de la hausse sur {T}, il faut accepter une protection "
-                    f"a {_p(x, 0)} : au pire, vous perdez {_p(1 - x, 0)} de votre capital a "
-                    "l'echeance.")
-        return (f"Avec {_p(s.protection, 0)} du capital protege sur {T}, {_p(cible, 0)} de la "
-                f"hausse est possible si le gain est plafonne : au-dela d'une hausse de "
-                f"{_p(x - 1, 0)}, vous ne profitez plus du marche, soit un gain maximum de "
+                    f"à {_p(x, 0)} : au pire, vous perdez {_p(1 - x, 0)} de votre capital à "
+                    "l'échéance.")
+        return (f"Avec {_p(s.protection, 0)} du capital protégé sur {T}, {_p(cible, 0)} de la "
+                f"hausse est possible si le gain est plafonné : au-delà d'une hausse de "
+                f"{_p(x - 1, 0)}, vous ne profitez plus du marché, soit un gain maximum de "
                 f"{_p(obtenu * (x - 1), 0)}.")
     if not rep.possible:
-        quoi = {"barriere": f"avec une barriere a {_p(x, 0)}", "strike": f"avec un strike a {_p(x, 0)}",
-                "maturite": f"sur {T}", "barriere_capital": f"avec une barriere de capital a {_p(x, 0)}",
-                "trigger": f"avec un rappel a {_p(x, 0)}"}[cherche]
-        piste = {"barriere": "une duree plus longue ou un strike plus haut",
-                 "strike": "une barriere plus haute",
-                 "maturite": "une barriere ou un strike plus haut",
-                 "barriere_capital": "une barriere de coupon plus haute, un panier de plusieurs "
-                                     "sous-jacents ou une duree plus longue",
-                 "trigger": "une barriere de capital plus haute"}[cherche]
+        quoi = {"barriere": f"avec une barrière a {_p(x, 0)}", "strike": f"avec un strike à {_p(x, 0)}",
+                "maturite": f"sur {T}", "barriere_capital": f"avec une barrière de capital à {_p(x, 0)}",
+                "trigger": f"avec un rappel à {_p(x, 0)}"}[cherche]
+        piste = {"barriere": "une durée plus longue ou un strike plus haut",
+                 "strike": "une barrière plus haute",
+                 "maturite": "une barrière ou un strike plus haut",
+                 "barriere_capital": "une barrière de coupon plus haute, un panier de plusieurs "
+                                     "sous-jacents ou une durée plus longue",
+                 "trigger": "une barrière de capital plus haute"}[cherche]
         return (f"{_p(cible, 2)} par an n'est pas faisable aujourd'hui : le maximum est "
                 f"{_p(obtenu, 2)} par an, {quoi}. Pour aller plus haut, il faudrait accepter "
                 f"{piste}.")
     debut = "Bonne nouvelle : " if depasse else ""
     if cherche == "barriere":
-        quand = ("a un moment quelconque de la vie du produit" if s.continu
-                 else "a l'echeance")
+        quand = ("à un moment quelconque de la vie du produit" if s.continu
+                 else "à l'échéance")
         return (f"{debut}pour {_p(obtenu, 2)} par an sur {T}, votre capital n'est en risque que "
                 f"si l'indice perd plus de {_p(1 - x, 0)} {quand} et finit sous {_p(s.strike, 0)} "
-                "de son niveau de depart.")
+                "de son niveau de départ.")
     if cherche == "strike":
         return (f"{debut}pour {_p(obtenu, 2)} par an, la perte ne commence que sous "
-                f"{_p(x, 0)} du niveau de depart, si la barriere a {_p(s.barriere, 0)} a ete "
-                "touchee, et elle est plus faible que celle de l'indice.")
+                f"{_p(x, 0)} du niveau de départ, si la barrière a {_p(s.barriere, 0)} a été "
+                "touchée, et elle est plus faible que celle de l'indice.")
     if cherche == "maturite":
-        return (f"{debut}{_p(obtenu, 2)} par an est faisable des {T}, avec une barriere a "
+        return (f"{debut}{_p(obtenu, 2)} par an est faisable des {T}, avec une barrière a "
                 f"{_p(s.barriere, 0)}.")
     if cherche == "barriere_capital":
-        return (f"{debut}pour {_p(obtenu, 2)} par an, votre capital est rendu en entier a "
-                f"l'echeance tant que {_sous_jacent(s)} n'a pas perdu plus de {_p(1 - x, 0)}.")
-    return (f"{debut}pour {_p(obtenu, 2)} par an, le produit est rembourse par anticipation "
-            f"des que {_sous_jacent(s)} est au-dessus de {_p(x, 0)} de son niveau de depart a une "
+        return (f"{debut}pour {_p(obtenu, 2)} par an, votre capital est rendu en entier à "
+                f"l'échéance tant que {_sous_jacent(s)} n'a pas perdu plus de {_p(1 - x, 0)}.")
+    return (f"{debut}pour {_p(obtenu, 2)} par an, le produit est remboursé par anticipation "
+            f"dès que {_sous_jacent(s)} est au-dessus de {_p(x, 0)} de son niveau de départ à une "
             "date d'observation.")
 
 
@@ -528,26 +528,26 @@ def _section_demande(mk, s, cherche, cible):
     else:
         exact, rond = f"{rep.valeur * 100:,.1f}%", f"{curseur}%"
     k = st.columns(4)
-    k[0].metric(NOM_PARAMETRE[cherche] + (" trouvee" if cherche in ("barriere", "maturite",
+    k[0].metric(NOM_PARAMETRE[cherche] + (" trouvée" if cherche in ("barriere", "maturite",
                 "barriere_capital", "protection") else " trouve"), exact,
-                help="Le parametre le plus favorable au client qui respecte sa demande, au "
-                     "dixieme pres. Hors d'atteinte : la meilleure valeur possible.")
+                help="Le paramètre le plus favorable au client qui respecte sa demande, au "
+                     "dixième pres. Hors d'atteinte : la meilleure valeur possible.")
     k[1].metric("Obtenu", f"{rep.obtenu * 100:,.{d}f}{unite}",
-                help="Ce que paie la structure trouvee, net de la retrocession.")
+                help="Ce que paie la structure trouvée, net de la rétrocession.")
     k[2].metric("Arrondi pour le client", rond,
                 help="La valeur ronde que le Sales propose, arrondie dans le sens qui garde la "
                      "demande satisfaite. « Retenir » l'inscrit dans la structure.")
-    k[3].metric("Obtenu a l'arrondi", f"{obtenu_client * 100:,.{d}f}{unite}",
-                help="Recalcule sur la structure arrondie, avec les memes tirages.")
+    k[3].metric("Obtenu à l'arrondi", f"{obtenu_client * 100:,.{d}f}{unite}",
+                help="Recalculé sur la structure arrondie, avec les mêmes tirages.")
 
     if rep.possible:
-        st.success("**Reponse du desk.** " + rep.message)
+        st.success("**Réponse du desk.** " + rep.message)
     else:
         st.error("**Hors d'atteinte.** " + rep.message)
     rep_client = replace(rep, valeur=s_client.T if cherche == "maturite" else curseur / 100,
                          obtenu=obtenu_client)
     with st.container(border=True):
-        st.markdown("**A dire au client.** " + _phrase_client(s_client, cherche, rep_client,
+        st.markdown("**À dire au client.** " + _phrase_client(s_client, cherche, rep_client,
                                                                depasse))
 
     # --- graphe : l'arbitrage, avec la demande et la reponse
@@ -555,7 +555,7 @@ def _section_demande(mk, s, cherche, cible):
     x = np.array([a for a, _ in pts])
     y = np.array([b for _, b in pts]) * 100
     if cherche == "maturite":
-        fmt_x, xlabel, x_aff = (lambda v: f"{v:,.2f} an"), "Maturite (annees)", x
+        fmt_x, xlabel, x_aff = (lambda v: f"{v:,.2f} an"), "Maturité (années)", x
     else:
         fmt_x, xlabel, x_aff = (lambda v: f"{v:,.0f} %"), NOM_PARAMETRE[cherche] + " (%)", x * 100
     sol_x = rep.valeur if cherche == "maturite" else rep.valeur * 100
@@ -568,24 +568,24 @@ def _section_demande(mk, s, cherche, cible):
     couleur_v = G.PERTE if cherche in ("barriere", "barriere_capital") else G.NIVEAU
     etiquette = f"{NOM_PARAMETRE[cherche].lower()}  {fmt_x(sol_x)}"
     if rep.possible:
-        titre = (f"{NOM_PARAMETRE[cherche]} a {fmt_x(sol_x)} : {EXTREME[cherche]} qui paie "
+        titre = (f"{NOM_PARAMETRE[cherche]} à {fmt_x(sol_x)} : {EXTREME[cherche]} qui paie "
                  f"{fmt_y(rep.cible * 100)}")
     else:
         titre = (f"{fmt_y(rep.cible * 100)} hors d'atteinte : au mieux {fmt_y(rep.obtenu * 100)}"
                  f" ({NOM_PARAMETRE[cherche].lower()} {fmt_x(sol_x)})")
-    sous = {"barriere": "Plus la barriere est haute, plus le put vendu vaut cher, plus le coupon "
-                        "monte. Au-dessus du strike, elle ne sert plus a rien.",
-            "strike": "Plus le strike est haut, plus le client perd tot et fort : le put vaut "
+    sous = {"barriere": "Plus la barrière est haute, plus le put vendu vaut cher, plus le coupon "
+                        "monte. Au-dessus du strike, elle ne sert plus à rien.",
+            "strike": "Plus le strike est haut, plus le client perd tôt et fort : le put vaut "
                       "plus, le coupon monte.",
-            "maturite": "Le coupon est annuel : allonger donne plus de temps a la barriere, "
+            "maturite": "Le coupon est annuel : allonger donne plus de temps à la barrière, "
                         "mais la courbe finit par plafonner.",
-            "barriere_capital": "La barriere de capital est le vrai risque : la remonter paie "
+            "barriere_capital": "La barrière de capital est le vrai risque : la remonter paie "
                                 "le coupon.",
-            "trigger": "Un trigger bas rappelle plus tot et plus souvent : chaque rappel coupe "
+            "trigger": "Un trigger bas rappelle plus tôt et plus souvent : chaque rappel coupe "
                        "les coupons suivants.",
-            "protection": "Chaque point de protection abandonne libere du budget pour la "
+            "protection": "Chaque point de protection abandonné libère du budget pour la "
                           "participation.",
-            "cap": "Capper vend un call de strike eleve : sa prime paie de la participation. "
+            "cap": "Capper vend un call de strike élevé : sa prime paie de la participation. "
                    "300 % = pas de cap."}[cherche]
     graphe = G.courbes(
         x_aff, [{"nom": nom_y, "y": y, "couleur": G.PRODUIT, "epaisseur": 2.8}],
@@ -597,17 +597,17 @@ def _section_demande(mk, s, cherche, cible):
         lignes_infobulle=[("Respecte la demande", atteint)], legende=False, hauteur=360)
     G.affiche(graphe)
     if not mk.bates and cherche in ("barriere", "barriere_capital"):
-        st.caption("Sous Black-Scholes + skew, la vol du niveau de barriere s'applique a toute "
-                   "la trajectoire : la courbe peut redescendre quand la barriere monte. Le "
+        st.caption("Sous Black-Scholes + skew, la vol du niveau de barrière s'applique à toute "
+                   "la trajectoire : la courbe peut redescendre quand la barrière monte. Le "
                    "desk balaie toute la grille au lieu de la supposer croissante. Sous Bates, "
                    "elle est monotone.")
 
     st.button(f"Retenir : {NOM_PARAMETRE[cherche].lower()} {rond.replace('%', ' %')}",
               key="as_retenir", type="primary", on_click=_retenir,
               args=(CURSEUR[cherche][0], curseur),
-              help="Inscrit la reponse dans le cadre de la structure, arrondie au point dans le "
+              help="Inscrit la réponse dans le cadre de la structure, arrondie au point dans le "
                    "sens qui garde la demande du client satisfaite. Les autres sections "
-                   "(ou va l'argent, revente, pitch) partent alors de cette structure.")
+                   "(où va l'argent, revente, pitch) partent alors de cette structure.")
 
 
 # =====================================================================
@@ -626,10 +626,10 @@ def _budget(cascade):
     for l in cascade.lignes:
         if l.cle == "zc":
             sources.append({"cle": "zc", "court": "Taux",
-                            "libelle": "Ce que l'obligation libere (taux)",
+                            "libelle": "Ce que l'obligation libère (taux)",
                             "valeur": N - l.montant, "couleur": G.ACCENT,
-                            "pourquoi": f"{G.eur(l.montant)} places en obligation zero-coupon "
-                                        f"rendent le nominal a l'echeance ; le reste est le "
+                            "pourquoi": f"{G.eur(l.montant)} placés en obligation zéro-coupon "
+                                        f"rendent le nominal à l'échéance ; le reste est le "
                                         "budget que donnent les taux."})
         elif l.cle in ("marge", "retro"):
             emplois.append({"cle": l.cle, "court": COURT[l.cle], "libelle": l.libelle,
@@ -647,7 +647,7 @@ def _budget(cascade):
 
 
 PROVENANCE = {"zc": "des taux", "put": "du put vendu par le client",
-              "credit": "du risque emetteur porte par le client", "cap": "du call au cap vendu"}
+              "credit": "du risque émetteur porte par le client", "cap": "du call au cap vendu"}
 LEGENDE_BUDGET = [("Finance la structure", G.ACCENT), ("Revient au client", G.PRODUIT),
                   ("Frais : banque et distributeur", G.NIVEAU)]
 
@@ -677,13 +677,13 @@ def _section_argent(mk, s):
     _metriques_resultat(s, cascade, k[0], "Participation offerte" if s.produit == CP
                         else "Coupon offert")
     k[1].metric("Marge banque", G.eur(mk.marge * T * N),
-                help=f"{mk.marge * 100:,.1f}% par an sur {_duree(T)}, prelevee d'avance.")
-    k[2].metric("Retrocession", G.eur(mk.retro * T * N),
-                help=f"{mk.retro * 100:,.1f}% par an sur {_duree(T)}, payee d'avance au "
+                help=f"{mk.marge * 100:,.1f}% par an sur {_duree(T)}, prélevée d'avance.")
+    k[2].metric("Rétrocession", G.eur(mk.retro * T * N),
+                help=f"{mk.retro * 100:,.1f}% par an sur {_duree(T)}, payée d'avance au "
                      "distributeur.")
-    k[3].metric("Cout de 1 % de retro", f"{cout * 100:,.{0 if s.produit == CP else 2}f} pt"
+    k[3].metric("Coût de 1 % de rétro", f"{cout * 100:,.{0 if s.produit == CP else 2}f} pt"
                 + ("" if s.produit == CP else " p.a."),
-                help=f"Ce que le client perd en {quoi} pour chaque point de retrocession par an.")
+                help=f"Ce que le client perd en {quoi} pour chaque point de rétrocession par an.")
 
     etapes = _budget(cascade)
     sources = sum(e["valeur"] for e in etapes if e["valeur"] > 0)
@@ -697,40 +697,40 @@ def _section_argent(mk, s):
                  f"{provenance}")
     graphe = graphe_cascade(
         etapes, titre,
-        f"Sur {G.eur(N)}, {G.eur(zc)} sont places en obligation pour rendre le nominal. Les "
+        f"Sur {G.eur(N)}, {G.eur(zc)} sont placés en obligation pour rendre le nominal. Les "
         "barres montantes financent la structure, les descendantes la consomment : on retombe "
-        "a zero.", nominal=N, zero=True, legende=LEGENDE_BUDGET)
+        "à zéro.", nominal=N, zero=True, legende=LEGENDE_BUDGET)
     G.affiche(graphe)
 
     lignes = [{"Composante": l.libelle, "EUR": G.eur(l.montant),
                "% du nominal": f"{l.montant / N * 100:,.2f}%", "Pourquoi": l.explication}
               for l in cascade.lignes]
-    lignes.append({"Composante": "Total = nominal paye par le client", "EUR": G.eur(cascade.somme),
+    lignes.append({"Composante": "Total = nominal payé par le client", "EUR": G.eur(cascade.somme),
                    "% du nominal": f"{cascade.somme / N * 100:,.2f}%", "Pourquoi": ""})
     st.table(lignes, hide_index=True)
 
     # --- deux reseaux
-    st.subheader("Deux reseaux, deux coupons",
-                 help="Le meme produit, chez le meme emetteur, le meme jour, place par deux "
-                      "distributeurs qui ne prennent pas la meme retrocession. Le client ne paie "
+    st.subheader("Deux réseaux, deux coupons",
+                 help="Le même produit, chez le même émetteur, le même jour, placé par deux "
+                      "distributeurs qui ne prennent pas la même rétrocession. Le client ne paie "
                       "pas de commission visible : il la paie en coupon.")
     c = st.columns(2)
-    ra = c[0].slider("Reseau A : retro (% par an)", 0.0, 2.5, 0.5, 0.1, key="as_retro_a",
+    ra = c[0].slider("Réseau A : rétro (% par an)", 0.0, 2.5, 0.5, 0.1, key="as_retro_a",
                      bind="query-params",
-                     help="Par exemple une banque privee ou un mandat de gestion, qui facture "
-                          "ses honoraires a part.")
-    rb = c[1].slider("Reseau B : retro (% par an)", 0.0, 2.5, 1.5, 0.1, key="as_retro_b",
+                     help="Par exemple une banque privée ou un mandat de gestion, qui facture "
+                          "ses honoraires à part.")
+    rb = c[1].slider("Réseau B : rétro (% par an)", 0.0, 2.5, 1.5, 0.1, key="as_retro_b",
                      bind="query-params",
-                     help="Par exemple un reseau d'agences grand public, remunere par la "
-                          "retrocession.")
+                     help="Par exemple un réseau d'agences grand public, rémunéré par la "
+                          "rétrocession.")
     ca, cb = _cascade(mk.avec(retro=ra / 100), s), _cascade(mk.avec(retro=rb / 100), s)
     va, vb = _resultat_pa(s, ca), _resultat_pa(s, cb)
     d = 0 if s.produit == CP else 2
     k = st.columns(3)
-    _metriques_resultat(s, ca, k[0], f"Reseau A, retro {ra:,.1f}%")
-    _metriques_resultat(s, cb, k[1], f"Reseau B, retro {rb:,.1f}%")
-    k[2].metric("Ecart pour le client", f"{(vb - va) * 100:+,.{d}f} pt",
-                help=f"{abs(rb - ra):,.1f} pt de retro par an sur {_duree(T)} = "
+    _metriques_resultat(s, ca, k[0], f"Réseau A, rétro {ra:,.1f}%")
+    _metriques_resultat(s, cb, k[1], f"Réseau B, rétro {rb:,.1f}%")
+    k[2].metric("Écart pour le client", f"{(vb - va) * 100:+,.{d}f} pt",
+                help=f"{abs(rb - ra):,.1f} pt de rétro par an sur {_duree(T)} = "
                      f"{G.eur(abs(rb - ra) / 100 * T * N)} pris sur le budget option.")
 
     # le resultat est affine dans les frais : une droite, exacte, ancree sans retro
@@ -741,31 +741,31 @@ def _section_argent(mk, s):
     nom = "Participation offerte" if s.produit == CP else "Coupon offert (p.a.)"
     graphe = G.courbes(
         xr, [{"nom": nom, "y": yr, "couleur": G.PRODUIT, "epaisseur": 2.8}],
-        f"Le meme produit : {fmt(va * 100)} chez A, {fmt(vb * 100)} chez B",
-        f"Chaque point de retro par an coute {cout * 100:,.{d}f} pt de {quoi} au client"
+        f"Le même produit : {fmt(va * 100)} chez A, {fmt(vb * 100)} chez B",
+        f"Chaque point de rétro par an coûte {cout * 100:,.{d}f} pt de {quoi} au client"
         + ("" if s.produit == CP else " par an"),
-        "Retrocession du distributeur (% par an)",
+        "Rétrocession du distributeur (% par an)",
         "Participation offerte (%)" if s.produit == CP else "Coupon offert (% p.a.)",
-        fmt_x=lambda v: f"{v:,.1f} % par an", fmt_y=fmt, nom_x="Retrocession",
-        niveaux_v=[(ra, f"reseau A  {ra:,.1f} %", G.NIVEAU), (rb, f"reseau B  {rb:,.1f} %",
+        fmt_x=lambda v: f"{v:,.1f} % par an", fmt_y=fmt, nom_x="Rétrocession",
+        niveaux_v=[(ra, f"réseau A  {ra:,.1f} %", G.NIVEAU), (rb, f"réseau B  {rb:,.1f} %",
                                                              G.NIVEAU)],
         marqueurs=[(ra, va * 100, G.PRODUIT), (rb, vb * 100, G.PRODUIT)],
-        lignes_infobulle=[("Retro payee sur la duree",
+        lignes_infobulle=[("Rétro payée sur la durée",
                            [G.eur(v / 100 * T * N) for v in xr])],
         legende=False, hauteur=320)
     G.affiche(graphe)
 
-    comp = [{"Composante": la.libelle, "Reseau A": G.eur(la.montant),
-             "Reseau B": G.eur(lb.montant), "Ecart": G.eur(lb.montant - la.montant, signe=True)}
+    comp = [{"Composante": la.libelle, "Réseau A": G.eur(la.montant),
+             "Réseau B": G.eur(lb.montant), "Écart": G.eur(lb.montant - la.montant, signe=True)}
             for la, lb in zip(ca.lignes, cb.lignes)]
     st.table(comp, hide_index=True)
-    st.info(f"**Pourquoi deux {quoi}s differents.** La retro est payee d'avance sur toute la "
-            f"duree : {abs(rb - ra):,.1f} pt par an sur {_duree(T)}, c'est "
+    st.info(f"**Pourquoi deux {quoi}s différents.** La rétro est payée d'avance sur toute la "
+            f"durée : {abs(rb - ra):,.1f} pt par an sur {_duree(T)}, c'est "
             f"{G.eur(abs(rb - ra) / 100 * T * N)} de moins dans le budget option pour le "
-            f"reseau B. La banque achete donc moins d'optionalite pour le client : le {quoi} "
+            f"réseau B. La banque achète donc moins d'optionalité pour le client : le {quoi} "
             "baisse, la marge de la banque ne bouge pas.\n\n"
-            "**A dire a un client qui compare deux offres** : a structure egale, l'ecart de "
-            f"{quoi} mesure l'ecart de frais de distribution, pas la qualite de l'emetteur.")
+            "**À dire à un client qui compare deux offres** : à structure égale, l'écart de "
+            f"{quoi} mesure l'écart de frais de distribution, pas la qualité de l'émetteur.")
 
 
 # =====================================================================
@@ -776,42 +776,42 @@ def _section_revente(mk, s):
     T, N = s.T, mk.nominal
     mois_max = max(int(round(T * 12)) - 1, 0)
     c = st.columns(3)
-    mois = c[0].slider("Temps ecoule (mois)", 0, mois_max, min(mois_max, int(T * 12) // 2), 1,
+    mois = c[0].slider("Temps écoulé (mois)", 0, mois_max, min(mois_max, int(T * 12) // 2), 1,
                        key="as_sec_mois", bind="query-params",
-                       help="Depuis l'emission. A 0, on mesure ce que coute une revente le "
+                       help="Depuis l'émission. À 0, on mesure ce que coûte une revente le "
                             "lendemain du lancement.")
     niveau = c[1].slider("Sous-jacent aujourd'hui (% du niveau initial)", 30, 160, 90, 1,
                          key="as_sec_niveau", bind="query-params",
                          help="Le niveau du jour" + (" (du plus mauvais du panier)"
                                                     if s.produit == AC and s.n_actifs > 1 else "")
-                              + ". C'est lui qui pese le plus sur la valeur.")
+                              + ". C'est lui qui pèse le plus sur la valeur.")
     fourchette = c[2].slider("Fourchette de rachat (%)", 0.0, 3.0, 1.0, 0.25,
                              key="as_sec_fourchette", bind="query-params",
-                             help="Ecart entre le prix d'achat et le prix de vente de la "
-                                  "banque. Le client qui revend recoit la valeur moins la "
-                                  "moitie de la fourchette.")
+                             help="Écart entre le prix d'achat et le prix de vente de la "
+                                  "banque. Le client qui revend reçoit la valeur moins la "
+                                  "moitié de la fourchette.")
     t = min(mois, mois_max) / 12
 
     touchee, observes = False, ()
     if s.produit == BRC:
         if not s.continu:
-            st.caption("Barriere europeenne : seul le niveau final compte, l'historique ne "
+            st.caption("Barrière européenne : seul le niveau final compte, l'historique ne "
                        "change rien.")
         elif niveau <= s.barriere * 100:
-            st.caption(f"Le sous-jacent est sous la barriere ({s.barriere * 100:,.0f} %) : elle "
-                       "est forcement touchee.")
+            st.caption(f"Le sous-jacent est sous la barrière ({s.barriere * 100:,.0f} %) : elle "
+                       "est forcément touchée.")
             touchee = True
         else:
-            touchee = st.checkbox("La barriere a deja ete touchee", key="as_sec_touchee",
+            touchee = st.checkbox("La barrière a déjà été touchée", key="as_sec_touchee",
                                   bind="query-params",
-                                  help="Une fois touchee, la protection a disparu pour de bon : "
+                                  help="Une fois touchée, la protection à disparu pour de bon : "
                                        "le produit se comporte comme une obligation plus un put "
-                                       "vanille vendu, meme si le marche est remonte depuis.")
+                                       "vanille vendu, même si le marché est remonté depuis.")
     elif s.produit == AC:
         dt_obs = T / s.n_obs
         passees = sum(1 for k in range(s.n_obs) if (k + 1) * dt_obs <= t + 1e-9)
         if passees:
-            st.markdown(f"**Niveaux aux {passees} observation(s) deja passee(s)** (% du niveau "
+            st.markdown(f"**Niveaux aux {passees} observation(s) déjà passée(s)** (% du niveau "
                         "initial" + (", plus mauvais du panier" if s.n_actifs > 1 else "") + ")")
             cols = st.columns(min(passees, 6))
             vals = []
@@ -819,28 +819,28 @@ def _section_revente(mk, s):
                 vals.append(cols[k % len(cols)].number_input(
                     f"Obs {k + 1} ({(k + 1) * dt_obs * 12:,.0f} mois)", 20, 200, 95, 1,
                     key=f"as_sec_obs{k + 1}", bind="query-params",
-                    help="Au-dessus du trigger, le produit a ete rappele a cette date. "
-                         "Au-dessus de la barriere de coupon, le coupon (et ceux en memoire) "
-                         "a ete verse.") / 100)
+                    help="Au-dessus du trigger, le produit a été rappelé à cette date. "
+                         "Au-dessus de la barrière de coupon, le coupon (et ceux en mémoire) "
+                         "a été versé.") / 100)
             observes = tuple(vals)
             etat = S.etat_autocall(observes, s.trigger, s.bar_coupon, s.memoire)
             if etat["vivant"]:
-                st.caption(f"{etat['coupons_verses']} coupon(s) deja verse(s), "
-                           f"{etat['manques']} en attente" + (" (memoire)" if s.memoire else "")
+                st.caption(f"{etat['coupons_verses']} coupon(s) déjà versé(s), "
+                           f"{etat['manques']} en attente" + (" (mémoire)" if s.memoire else "")
                            + ".")
 
-    st.markdown("**Le marche depuis l'emission**")
+    st.markdown("**Le marché depuis l'émission**")
     c = st.columns(3)
-    dvol = c[0].slider("Volatilite (pts)", -10, 20, 0, 1, key="as_sec_dvol", bind="query-params",
-                       help="Hausse de la vol depuis l'emission. Le client est vendeur "
+    dvol = c[0].slider("Volatilité (pts)", -10, 20, 0, 1, key="as_sec_dvol", bind="query-params",
+                       help="Hausse de la vol depuis l'émission. Le client est vendeur "
                             "d'options (BRC, autocall) : la vol qui monte fait baisser la "
                             "valeur. Il est acheteur sur un Capital Protection.")
     dtaux = c[1].slider("Taux (bp)", -200, 200, 0, 25, key="as_sec_dtaux", bind="query-params",
                         help="Hausse des taux : l'obligation sous-jacente vaut moins, surtout "
                              "sur les produits longs.")
-    dspread = c[2].slider("Spread emetteur (bp)", -100, 400, 0, 25, key="as_sec_dspread",
+    dspread = c[2].slider("Spread émetteur (bp)", -100, 400, 0, 25, key="as_sec_dspread",
                           bind="query-params",
-                          help="Si la signature de la banque se degrade, le marche exige plus "
+                          help="Si la signature de la banque se dégrade, le marché exige plus "
                                "pour porter son risque : la valeur du produit baisse.")
     choc = {"vol_atm": max(mk.vol_atm + dvol / 100, 0.04), "r": mk.r + dtaux / 10000,
             "spread": max(mk.spread + dspread, 0)}
@@ -851,39 +851,39 @@ def _section_revente(mk, s):
     v = _secondaire(mk, mk_j, s, t, niveau / 100, touchee, observes, fourchette / 100)
     if not v.decomposition:          # autocall deja rappele
         st.success(v.message)
-        st.metric("Coupons encaisses", G.eur(v.coupons_encaisses),
-                  help="Plus le nominal rendu a la date de rappel.")
+        st.metric("Coupons encaissés", G.eur(v.coupons_encaisses),
+                  help="Plus le nominal rendu à la date de rappel.")
         return
 
     k = st.columns(4)
     k[0].metric("Valeur juste", G.eur(v.valeur), f"{v.valeur / N * 100:,.1f}% du nominal",
-                delta_color="off", help="Valeur des flux restants, sur les memes tirages que "
-                                        "le pricing a l'emission.")
+                delta_color="off", help="Valeur des flux restants, sur les mêmes tirages que "
+                                        "le pricing à l'émission.")
     k[1].metric("Prix de rachat", G.eur(v.prix_rachat),
                 help="Ce que la banque paie au client qui revend : valeur moins la "
                      "demi-fourchette.")
     k[2].metric("Bilan si revente", G.eur(v.bilan_client, signe=True),
-                help="Prix de rachat plus coupons deja encaisses, moins le nominal investi.")
+                help="Prix de rachat plus coupons déjà encaissés, moins le nominal investi.")
     if s.produit == CP:
         k[3].metric("Dont obligation", G.eur(v.infos["obligation"]),
-                    help="La part de la valeur qui garantit la protection a l'echeance. Elle "
+                    help="La part de la valeur qui garantit la protection à l'échéance. Elle "
                          "baisse quand les taux ou le spread montent.")
     else:
-        k[3].metric("Proba de perte a l'echeance", f"{v.infos['proba_perte'] * 100:,.1f}%",
-                    help="Vue d'aujourd'hui, sous le modele de la barre laterale.")
+        k[3].metric("Proba de perte à l'échéance", f"{v.infos['proba_perte'] * 100:,.1f}%",
+                    help="Vue d'aujourd'hui, sous le modèle de la barre latérale.")
 
-    etapes = [{"court": "A l'emission", "libelle": "Valeur juste a l'emission",
+    etapes = [{"court": "À l'émission", "libelle": "Valeur juste à l'émission",
                "valeur": v.valeur_emission, "total": True, "couleur": G.PRODUIT,
-               "pourquoi": "Nominal moins marge et retro, payees d'avance."}]
-    pourquoi = {"Temps ecoule": "Le temps qui passe : coupons qui courent, options vendues qui "
+               "pourquoi": "Nominal moins marge et rétro, payées d'avance."}]
+    pourquoi = {"Temps écoulé": "Le temps qui passe : coupons qui courent, options vendues qui "
                                 "perdent de leur valeur, obligation qui se rapproche du pair.",
-                "Sous-jacent": "Le niveau du sous-jacent (et l'historique de la barriere ou "
+                "Sous-jacent": "Le niveau du sous-jacent (et l'historique de la barrière ou "
                                "des observations).",
-                "Volatilite": "Le changement de vol depuis l'emission.",
-                "Taux et dividende": "Le changement de taux depuis l'emission.",
-                "Spread emetteur": "Le changement de spread de credit de l'emetteur."}
+                "Volatilité": "Le changement de vol depuis l'émission.",
+                "Taux et dividende": "Le changement de taux depuis l'émission.",
+                "Spread émetteur": "Le changement de spread de crédit de l'émetteur."}
     for nom, effet in v.decomposition:
-        etapes.append({"court": nom.replace(" et dividende", "").replace(" emetteur", ""),
+        etapes.append({"court": nom.replace(" et dividende", "").replace(" émetteur", ""),
                        "libelle": nom, "valeur": effet,
                        "couleur": G.GAIN if effet >= 0 else G.PERTE, "pourquoi": pourquoi[nom]})
     etapes.append({"court": "Aujourd'hui", "libelle": "Valeur juste aujourd'hui", "total": True,
@@ -893,18 +893,18 @@ def _section_revente(mk, s):
                    "pourquoi": "Ce que la banque garde pour racheter le produit."})
     etapes.append({"court": "Rachat", "libelle": "Prix de rachat", "total": True,
                    "valeur": v.prix_rachat, "couleur": G.PRODUIT,
-                   "pourquoi": "Ce que le client recoit s'il revend aujourd'hui."})
+                   "pourquoi": "Ce que le client reçoit s'il revend aujourd'hui."})
     if v.coupons_encaisses:
-        etapes.append({"court": "Coupons recus", "libelle": "Coupons deja encaisses",
+        etapes.append({"court": "Coupons reçus", "libelle": "Coupons déjà encaissés",
                        "valeur": v.coupons_encaisses, "couleur": G.GAIN,
-                       "pourquoi": "Verses aux observations passees."})
+                       "pourquoi": "Versés aux observations passées."})
         etapes.append({"court": "Total client", "libelle": "Total pour le client", "total": True,
                        "valeur": v.prix_rachat + v.coupons_encaisses, "couleur": G.PRODUIT,
-                       "pourquoi": "Prix de rachat plus coupons encaisses."})
+                       "pourquoi": "Prix de rachat plus coupons encaissés."})
     graphe = graphe_cascade(
         etapes, f"Revendre aujourd'hui : {G.eur(v.prix_rachat)}, soit "
                 f"{G.eur(v.bilan_client, signe=True)} pour le client",
-        "Ce qui a fait bouger la valeur depuis l'emission, facteur par facteur, sur les memes "
+        "Ce qui a fait bouger la valeur depuis l'émission, facteur par facteur, sur les mêmes "
         "tirages. Axe coupe.", nominal=N,
         legende=[("Fait monter la valeur", G.GAIN), ("Fait baisser la valeur", G.PERTE),
                  ("Valeur du produit", G.PRODUIT)])
@@ -913,15 +913,15 @@ def _section_revente(mk, s):
 
     frais = (mk.marge + mk.retro) * T * N
     if s.produit == CP:
-        st.info(f"**La protection ne joue qu'a l'echeance.** Avant, le produit vaut une "
+        st.info(f"**La protection ne joue qu'à l'échéance.** Avant, le produit vaut une "
                 f"obligation ({G.eur(v.infos['obligation'])} aujourd'hui) plus des options : "
                 "une hausse des taux ou du spread le fait passer sous le niveau garanti. Le "
-                "client « garanti » qui revend avant l'echeance peut perdre.")
+                "client « garanti » qui revend avant l'échéance peut perdre.")
     else:
-        st.info(f"**Revendre le lendemain de l'emission coute deja {G.eur(frais + fourchette / 200 * N)}** : "
-                f"marge ({G.eur(mk.marge * T * N)}) et retro ({G.eur(mk.retro * T * N)}) "
-                f"payees d'avance, plus la demi-fourchette ({G.eur(fourchette / 200 * N)}). "
-                "Un produit structure se garde jusqu'a l'echeance ou au rappel.")
+        st.info(f"**Revendre le lendemain de l'émission coûte déjà {G.eur(frais + fourchette / 200 * N)}** : "
+                f"marge ({G.eur(mk.marge * T * N)}) et rétro ({G.eur(mk.retro * T * N)}) "
+                f"payées d'avance, plus la demi-fourchette ({G.eur(fourchette / 200 * N)}). "
+                "Un produit structuré se garde jusqu'à l'échéance ou au rappel.")
 
 
 # =====================================================================
@@ -948,66 +948,66 @@ def faits(mk, s):
     return f
 
 
-def _adequation(s, vue, f, sj="le sous-jacent", recupere="le client recupere"):
+def _adequation(s, vue, f, sj="le sous-jacent", recupere="le client récupère"):
     """(niveau d'adequation, reponse a la vue du client), selon le produit."""
     c = f["resultat"]
     if s.produit == BRC:
         return {
-            "Forte hausse": ("non", f"ce produit n'est pas le bon, le gain est plafonne au "
-                                    f"coupon ({_p(c * s.T)} au total) ; une participation a la "
-                                    "hausse, Tracker ou Capital Protection, colle mieux a "
+            "Forte hausse": ("non", f"ce produit n'est pas le bon, le gain est plafonné au "
+                                    f"coupon ({_p(c * s.T)} au total) ; une participation à la "
+                                    "hausse, Tracker ou Capital Protection, colle mieux à "
                                     "cette vue"),
-            "Hausse moderee": ("oui", f"le coupon de {_p(c, 2)} par an est acquis meme si la "
+            "Hausse modérée": ("oui", f"le coupon de {_p(c, 2)} par an est acquis même si la "
                                       "hausse n'arrive pas"),
-            "Stabilite": ("oui", "c'est exactement le scenario que ce produit remunere"),
-            "Baisse moderee": ("oui" if s.barriere <= 0.75 else "partiel",
-                               f"une baisse jusqu'a {_p(1 - s.barriere, 0)} ne coute rien, le "
-                               "coupon est verse quand meme" + (
+            "Stabilité": ("oui", "c'est exactement le scénario que ce produit rémunère"),
+            "Baisse modérée": ("oui" if s.barriere <= 0.75 else "partiel",
+                               f"une baisse jusqu'à {_p(1 - s.barriere, 0)} ne coûte rien, le "
+                               "coupon est versé quand même" + (
                                    "" if s.barriere <= 0.75 else
-                                   ", mais une barriere a " + _p(s.barriere, 0) +
+                                   ", mais une barrière a " + _p(s.barriere, 0) +
                                    " laisse peu de marge")),
-            "Forte baisse": ("non", "c'est precisement le scenario ou ce produit perd ; mieux "
+            "Forte baisse": ("non", "c'est précisément le scénario où ce produit perd ; mieux "
                                     "vaut rester liquide ou acheter de la protection"),
         }[vue]
     if s.produit == AC:
         return {
-            "Forte hausse": ("partiel", f"le produit sera sans doute rappele des la premiere "
+            "Forte hausse": ("partiel", f"le produit sera sans doute rappelé dès la première "
                                         f"date avec un coupon de {_p(f['coupon_obs'], 2)} : le "
-                                        "capital revient vite, mais le gain s'arrete la"),
-            "Hausse moderee": ("oui", f"au-dessus de {_p(s.trigger, 0)} a une date "
+                                        "capital revient vite, mais le gain s'arrête la"),
+            "Hausse modérée": ("oui", f"au-dessus de {_p(s.trigger, 0)} à une date "
                                       "d'observation, le produit rembourse avec son coupon, "
-                                      f"{_p(f['rappel_1'], 0)} de chances des la premiere date"),
-            "Stabilite": ("oui" if s.trigger <= 1.0 else "partiel",
+                                      f"{_p(f['rappel_1'], 0)} de chances dès la première date"),
+            "Stabilité": ("oui" if s.trigger <= 1.0 else "partiel",
                           f"le coupon tombe tant que {sj} reste au-dessus de "
                           f"{_p(s.bar_coupon, 0)}" + (
-                              ", et un marche stable suffit a declencher le rappel"
+                              ", et un marché stable suffit à déclencher le rappel"
                               if s.trigger <= 1.0 else
-                              ", mais un trigger a " + _p(s.trigger, 0) + " demande de la hausse "
-                              "pour etre rappele")),
-            "Baisse moderee": ("oui" if s.bar_coupon <= 0.80 else "partiel",
+                              ", mais un trigger à " + _p(s.trigger, 0) + " demande de la hausse "
+                              "pour être rappelé")),
+            "Baisse modérée": ("oui" if s.bar_coupon <= 0.80 else "partiel",
                                f"tant que {sj} reste au-dessus de "
                                f"{_p(s.bar_coupon, 0)} aux dates d'observation, le coupon est "
-                               "verse" + (", et la memoire rattrape les coupons manques"
+                               "versé" + (", et la mémoire rattrape les coupons manqués"
                                           if s.memoire else "")),
-            "Forte baisse": ("non", f"sous {_p(s.bar_capital, 0)} a l'echeance, toute la "
+            "Forte baisse": ("non", f"sous {_p(s.bar_capital, 0)} à l'échéance, toute la "
                                     "baisse est subie ; ce n'est pas le produit pour cette vue"),
         }[vue]
     gain = (", sans plafond" if s.cap >= 2.995 else
-            f", jusqu'a un gain maximum de {_p(c * (s.cap - 1), 0)}")
+            f", jusqu'à un gain maximum de {_p(c * (s.cap - 1), 0)}")
     return {
         "Forte hausse": ("oui" if s.cap >= 1.5 else "partiel",
                          f"le produit capte {_p(c, 0)} de la hausse{gain}"),
-        "Hausse moderee": ("oui", f"le capital est protege a {_p(s.protection, 0)} et la hausse "
-                                  f"est captee a {_p(c, 0)}"),
-        "Stabilite": ("non", f"sans mouvement de marche, {recupere} {_p(s.protection, 0)} "
-                             f"sans rien gagner pendant {_duree(s.T)} ; un depot a terme fait "
+        "Hausse modérée": ("oui", f"le capital est protégé à {_p(s.protection, 0)} et la hausse "
+                                  f"est captée à {_p(c, 0)}"),
+        "Stabilité": ("non", f"sans mouvement de marché, {recupere} {_p(s.protection, 0)} "
+                             f"sans rien gagner pendant {_duree(s.T)} ; un dépôt à terme fait "
                              "mieux"),
-        "Baisse moderee": ("partiel", f"la protection a {_p(s.protection, 0)} joue a "
-                                      "l'echeance, mais le placement ne rapporte rien si la "
+        "Baisse modérée": ("partiel", f"la protection à {_p(s.protection, 0)} joue à "
+                                      "l'échéance, mais le placement ne rapporte rien si la "
                                       "baisse se confirme"),
-        "Forte baisse": ("partiel", "la protection limite la casse a l'echeance, mais sans "
-                                    "aucun rendement : se proteger coute la renonciation aux "
-                                    "interets"),
+        "Forte baisse": ("partiel", "la protection limite la casse à l'échéance, mais sans "
+                                    "aucun rendement : se protéger coûte la renonciation aux "
+                                    "intérêts"),
     }[vue]
 
 
@@ -1024,7 +1024,7 @@ def pitch(s, profil, vue, f):
         f"le plus faible des {s.n_actifs} sous-jacents" if s.produit == AC and s.n_actifs > 1
         else "le sous-jacent")
     niveau_adequation, reponse = _adequation(
-        s, vue, f, sj, "vous recuperez" if profil == PARTICULIER else "le client recupere")
+        s, vue, f, sj, "vous récupérez" if profil == PARTICULIER else "le client récupère")
     vue_txt = VUES[vue]
     if profil == PARTICULIER:
         accroche = f"Vous pensez que {vue_txt} : {reponse}."
@@ -1042,34 +1042,34 @@ def pitch(s, profil, vue, f):
         if s.continu:
             rendu_entier = (f"s'il ne perd jamais plus de {_p(1 - s.barriere, 0)} en cours de "
                             f"route, ou s'il finit au-dessus de {_p(s.strike, 0)} de son niveau "
-                            "de depart")
+                            "de départ")
         else:
             rendu_entier = (f"s'il ne finit pas plus de {_p(1 - s.barriere, 0)} sous son niveau "
-                            "de depart")
+                            "de départ")
         if profil == PARTICULIER:
             phrases += [
                 ("gain", f"Vous touchez {_p(c, 2)} par an pendant {duree}, soit "
                          f"{G.eur(c * T * N)} pour {G.eur(N)} investis, quoi que fasse "
                          f"l'indice ; votre capital est rendu en entier {rendu_entier}."),
                 ("perte", f"Le revers : si l'indice passe sous {_p(s.barriere, 0)} de son niveau "
-                          f"de depart et finit sous {_p(s.strike, 0)}, vous perdez comme lui, "
-                          f"par exemple {G.eur(rendu)} rendus, coupon compris, s'il finit a "
+                          f"de départ et finit sous {_p(s.strike, 0)}, vous perdez comme lui, "
+                          f"par exemple {G.eur(rendu)} rendus, coupon compris, s'il finit à "
                           f"{_p(L, 0)} ; dans nos simulations, cela arrive dans "
                           f"{_p(f['p_perte'], 0)} des cas."),
             ]
         elif profil == CGP:
             phrases += [
-                ("gain", f"Coupon garanti de {_p(c, 2)} par an sur {duree}, barriere "
+                ("gain", f"Coupon garanti de {_p(c, 2)} par an sur {duree}, barrière "
                          f"{_p(s.barriere, 0)} {'continue' if s.continu else 'europeenne'}, "
                          f"strike {_p(s.strike, 0)}."),
-                ("perte", f"Scenario de perte a presenter clairement : barriere franchie et "
-                          f"sous-jacent sous le strike a l'echeance, le client perd comme le "
-                          f"sous-jacent ({G.eur(rendu)} rendus pour un fixing a {_p(L, 0)}) ; "
-                          f"probabilite de perte en capital de {_p(f['p_perte'], 0)} dans le "
-                          "modele."),
+                ("perte", f"Scénario de perte à présenter clairement : barrière franchie et "
+                          f"sous-jacent sous le strike à l'échéance, le client perd comme le "
+                          f"sous-jacent ({G.eur(rendu)} rendus pour un fixing à {_p(L, 0)}) ; "
+                          f"probabilité de perte en capital de {_p(f['p_perte'], 0)} dans le "
+                          "modèle."),
             ]
         else:
-            credit = (f" et le risque de credit ({G.eur(f['credit'])}) s'ajoutent"
+            credit = (f" et le risque de crédit ({G.eur(f['credit'])}) s'ajoutent"
                       if f["credit"] >= 0.5 else " s'ajoute")
             phrases += [
                 ("gain", f"Coupon de {_p(c, 2)} p.a. sur {duree} : la prime du put "
@@ -1078,9 +1078,9 @@ def pitch(s, profil, vue, f):
                          f"({G.eur(f['put'])}){credit} aux {G.eur(f['taux'])} que donnent les "
                          "taux."),
                 ("perte", f"Perte en capital si knock-in et fixing final sous "
-                          f"{_p(s.strike, 0)} : probabilite risque-neutre {_p(f['p_perte'])}, "
+                          f"{_p(s.strike, 0)} : probabilité risque-neutre {_p(f['p_perte'])}, "
                           f"knock-in {_p(f['p_touche'])}, soit {G.eur(rendu)} rendus coupon "
-                          f"compris pour un fixing a {_p(L, 0)}."),
+                          f"compris pour un fixing à {_p(L, 0)}."),
             ]
     elif s.produit == AC:
         L = max(s.bar_capital - 0.10, 0.20)
@@ -1089,78 +1089,78 @@ def pitch(s, profil, vue, f):
         if profil == PARTICULIER:
             phrases += [
                 ("gain", f"Chaque {per}, si {sj} est au-dessus de {_p(s.bar_coupon, 0)} de son "
-                         f"niveau de depart, vous touchez {_p(f['coupon_obs'], 2)} "
-                         f"({_p(c, 2)} par an)" + (", et les coupons manques sont rattrapes"
+                         f"niveau de départ, vous touchez {_p(f['coupon_obs'], 2)} "
+                         f"({_p(c, 2)} par an)" + (", et les coupons manqués sont rattrapés"
                                                    if s.memoire else "")
-                         + f" ; au-dessus de {_p(s.trigger, 0)}, le produit s'arrete et vous "
-                           f"recuperez votre capital, en moyenne apres {f['duree']:,.1f} an(s) "
+                         + f" ; au-dessus de {_p(s.trigger, 0)}, le produit s'arrête et vous "
+                           f"récupérez votre capital, en moyenne après {f['duree']:,.1f} an(s) "
                            f"sur {duree} possibles."),
-                ("perte", f"Le revers : si a l'echeance {sj} a perdu plus de "
+                ("perte", f"Le revers : si à l'échéance {sj} a perdu plus de "
                           f"{_p(1 - s.bar_capital, 0)}, vous subissez toute la baisse, par "
-                          f"exemple {G.eur(N * L)} rendus pour {G.eur(N)} s'il finit a "
+                          f"exemple {G.eur(N * L)} rendus pour {G.eur(N)} s'il finit à "
                           f"{_p(L, 0)} ; dans nos simulations, cela arrive dans "
                           f"{_p(f['p_perte'], 0)} des cas."),
             ]
         elif profil == CGP:
             phrases += [
                 ("gain", f"Coupon conditionnel de {_p(f['coupon_obs'], 2)} par {per} "
-                         f"({_p(c, 2)} par an), barriere de coupon {_p(s.bar_coupon, 0)}"
-                         + (" avec memoire" if s.memoire else " sans memoire")
-                         + f", rappel a {_p(s.trigger, 0)}, duree de vie moyenne "
+                         f"({_p(c, 2)} par an), barrière de coupon {_p(s.bar_coupon, 0)}"
+                         + (" avec mémoire" if s.memoire else " sans mémoire")
+                         + f", rappel à {_p(s.trigger, 0)}, durée de vie moyenne "
                            f"{f['duree']:,.1f} an(s) sur {duree}."),
-                ("perte", f"Scenario de perte a presenter clairement : sous "
-                          f"{_p(s.bar_capital, 0)} a l'echeance, le client subit toute la "
-                          f"baisse de {sj} ({G.eur(N * L)} rendus pour un fixing a "
-                          f"{_p(L, 0)}) ; probabilite de perte en capital de "
-                          f"{_p(f['p_perte'], 0)} dans le modele."),
+                ("perte", f"Scénario de perte à présenter clairement : sous "
+                          f"{_p(s.bar_capital, 0)} à l'échéance, le client subit toute la "
+                          f"baisse de {sj} ({G.eur(N * L)} rendus pour un fixing à "
+                          f"{_p(L, 0)}) ; probabilité de perte en capital de "
+                          f"{_p(f['p_perte'], 0)} dans le modèle."),
             ]
         else:
-            panier = (f" sur un worst-of de {s.n_actifs} sous-jacents (correlation "
+            panier = (f" sur un worst-of de {s.n_actifs} sous-jacents (corrélation "
                       f"{s.correlation:.2f})" if s.n_actifs > 1 else "")
             phrases += [
                 ("gain", f"Coupon de {_p(f['coupon_obs'], 2)} par observation ({_p(c, 2)} "
-                         f"p.a.){panier}, trigger {_p(s.trigger, 0)}, barriere de coupon "
-                         f"{_p(s.bar_coupon, 0)}" + (" memoire" if s.memoire else "")
-                         + f" ; finance par un put down-and-in europeen {_p(s.bar_capital, 0)} "
-                           f"({G.eur(f['put'])}) ; duree de vie moyenne {f['duree']:,.2f} an."),
+                         f"p.a.){panier}, trigger {_p(s.trigger, 0)}, barrière de coupon "
+                         f"{_p(s.bar_coupon, 0)}" + (" mémoire" if s.memoire else "")
+                         + f" ; finance par un put down-and-in européen {_p(s.bar_capital, 0)} "
+                           f"({G.eur(f['put'])}) ; durée de vie moyenne {f['duree']:,.2f} an."),
                 ("perte", f"Perte en capital si le fixing final {'du worst-of ' if s.n_actifs > 1 else ''}"
-                          f"est sous {_p(s.bar_capital, 0)} : probabilite risque-neutre "
-                          f"{_p(f['p_perte'])}, perte lineaire des la barriere "
-                          f"({G.eur(N * L)} rendus pour un fixing a {_p(L, 0)})."),
+                          f"est sous {_p(s.bar_capital, 0)} : probabilité risque-neutre "
+                          f"{_p(f['p_perte'])}, perte linéaire dès la barrière "
+                          f"({G.eur(N * L)} rendus pour un fixing à {_p(L, 0)})."),
             ]
     else:
         gain_max = ("" if s.cap >= 2.995 else
                     f", dans la limite d'un gain de {_p(c * (s.cap - 1), 0)}")
         if profil == PARTICULIER:
             phrases.append(
-                ("gain", f"A l'echeance, dans {duree}, vous recuperez au moins "
+                ("gain", f"A l'échéance, dans {duree}, vous récupérez au moins "
                          f"{_p(s.protection, 0)} de votre capital, plus {_p(c, 0)} de la hausse "
                          f"de l'indice{gain_max}."))
             if s.protection < 0.9995:
                 phrases.append(
-                    ("perte", f"Le revers : si l'indice baisse, vous perdez jusqu'a "
+                    ("perte", f"Le revers : si l'indice baisse, vous perdez jusqu'à "
                               f"{_p(1 - s.protection, 0)} de votre capital, soit "
-                              f"{G.eur(N * (1 - s.protection))}, sans avoir touche d'interets "
+                              f"{G.eur(N * (1 - s.protection))}, sans avoir touche d'intérêts "
                               f"pendant {duree}."))
             else:
                 phrases.append(
-                    ("perte", f"Le scenario de perte : si l'indice finit sous son niveau de "
-                              f"depart, vous recuperez votre capital sans rien gagner, alors "
-                              f"qu'un placement sans risque a {_p(f['r'], 1)} aurait rapporte "
+                    ("perte", f"Le scénario de perte : si l'indice finit sous son niveau de "
+                              f"départ, vous récupérez votre capital sans rien gagner, alors "
+                              f"qu'un placement sans risque à {_p(f['r'], 1)} aurait rapporte "
                               f"{G.eur(N * (math.exp(f['r'] * T) - 1))} ; et une revente avant "
-                              "l'echeance se fait au prix du marche, qui peut etre sous le "
+                              "l'échéance se fait au prix du marché, qui peut être sous le "
                               "capital."))
         elif profil == CGP:
             phrases.append(
-                ("gain", f"Protection de {_p(s.protection, 0)} du capital a l'echeance et "
-                         f"participation de {_p(c, 0)} a la hausse{gain_max}, sur {duree}."))
+                ("gain", f"Protection de {_p(s.protection, 0)} du capital à l'échéance et "
+                         f"participation de {_p(c, 0)} à la hausse{gain_max}, sur {duree}."))
             if s.protection < 0.9995:
-                perte = (f"Scenario de perte : jusqu'a {_p(1 - s.protection, 0)} du capital si "
+                perte = (f"Scénario de perte : jusqu'à {_p(1 - s.protection, 0)} du capital si "
                          "le sous-jacent finit en baisse, et une valeur de revente qui peut "
                          "passer sous la protection si les taux montent.")
             else:
-                perte = (f"Scenario de perte : aucun a l'echeance hors defaut, mais un cout "
-                         f"d'opportunite si le marche baisse (aucun interet pendant {duree}), "
+                perte = (f"Scénario de perte : aucun à l'échéance hors défaut, mais un coût "
+                         f"d'opportunité si le marché baisse (aucun intérêt pendant {duree}), "
                          "et une valeur de revente qui peut passer sous le pair si les taux "
                          "montent.")
             phrases.append(("perte", perte))
@@ -1168,13 +1168,13 @@ def pitch(s, profil, vue, f):
             phrases.append(
                 ("gain", f"Participation de {_p(c, 0)} ({_p(s.protection, 0)} de protection"
                          + ("" if s.cap >= 2.995 else f", cap {_p(s.cap, 0)}")
-                         + f") : zero-coupon au taux de financement de l'emetteur plus call "
-                           f"spread achete pour {G.eur(f['call'] - f['call_cap'])}."))
+                         + f") : zéro-coupon au taux de financement de l'émetteur plus call "
+                           f"spread acheté pour {G.eur(f['call'] - f['call_cap'])}."))
             phrases.append(
-                ("perte", (f"Perte maximale de {_p(1 - s.protection, 0)} du nominal a "
-                           "l'echeance, atteinte des que le sous-jacent finit sous son niveau "
+                ("perte", (f"Perte maximale de {_p(1 - s.protection, 0)} du nominal à "
+                           "l'échéance, atteinte dès que le sous-jacent finit sous son niveau "
                            "initial" if s.protection < 0.9995 else
-                           "Pas de perte en capital a l'echeance hors defaut ; le scenario de "
+                           "Pas de perte en capital à l'échéance hors défaut ; le scénario de "
                            "perte est le mark-to-market")
                           + f" : une hausse des taux ou du spread fait passer la valeur sous le "
                             f"pair en cours de vie (duration de l'ordre de {s.T:g} ans)."))
@@ -1182,25 +1182,25 @@ def pitch(s, profil, vue, f):
     # risque emetteur : toujours nomme
     finance = "le coupon" if s.produit != CP else "la participation"
     if profil == PARTICULIER:
-        txt = ("Votre remboursement depend aussi de l'emetteur, la banque qui emet le produit : "
-               "si elle fait faillite, " + ("meme la protection ne joue plus et " if s.produit == CP
+        txt = ("Votre remboursement dépend aussi de l'émetteur, la banque qui émet le produit : "
+               "si elle fait faillite, " + ("même la protection ne joue plus et " if s.produit == CP
                                             else "")
-               + f"vous ne recuperez qu'une partie de votre mise, de l'ordre de {rec}")
+               + f"vous ne récupérez qu'une partie de votre mise, de l'ordre de {rec}")
         txt += (f" ; c'est d'ailleurs ce risque qui finance une partie de {finance}."
                 if f["spread"] > 0 else ".")
     elif profil == CGP:
-        txt = (f"Risque emetteur : le client est creancier non garanti de la banque, avec un "
-               f"recouvrement de l'ordre de {rec} en cas de defaut")
+        txt = (f"Risque émetteur : le client est créancier non garanti de la banque, avec un "
+               f"recouvrement de l'ordre de {rec} en cas de défaut")
         txt += (f" ; les {f['spread']:,.0f} bp de spread apportent {G.eur(f['credit'])} au "
                 "budget de la structure." if f["spread"] > 0 else ".")
     else:
         if f["spread"] > 0:
-            txt = (f"Exposition au credit de l'emetteur, senior non securise : spread "
+            txt = (f"Exposition au crédit de l'émetteur, senior non sécurisé : spread "
                    f"{f['spread']:,.0f} bp, recouvrement {rec}, soit {G.eur(f['credit'])} de "
                    f"valeur sur {G.eur(N)}.")
         else:
-            txt = (f"Exposition au credit de l'emetteur, senior non securise, recouvrement "
-                   f"suppose {rec} ; le spread est a 0 bp dans cette vue de marche, chaque "
+            txt = (f"Exposition au crédit de l'émetteur, senior non sécurisé, recouvrement "
+                   f"suppose {rec} ; le spread est à 0 bp dans cette vue de marché, chaque "
                    f"point de spread se retrouverait dans {finance}.")
     phrases.append(("emetteur", txt))
 
@@ -1209,18 +1209,18 @@ def pitch(s, profil, vue, f):
         d = 0 if s.produit == CP else 2
         if f["retro"] > 0:
             sans = c + f["retro"] * 100 * f["cout_retro"]
-            phrases.append(("retro", f"La retrocession de {_p(f['retro'])} par an est incluse "
+            phrases.append(("retro", f"La rétrocession de {_p(f['retro'])} par an est incluse "
                                      f"dans le prix : sans elle, {finance} serait de "
                                      f"{_p(sans, d)}" + ("" if s.produit == CP else " par an")
                                      + "."))
         else:
-            phrases.append(("retro", f"Aucune retrocession n'est prevue : {finance} affiche "
+            phrases.append(("retro", f"Aucune rétrocession n'est prévue : {finance} affiche "
                                      "est brut de frais de distribution."))
     elif profil == INSTIT:
         frais = (f["marge"] + f["retro"]) * T * N
-        phrases.append(("liquidite", f"Valeur juste a l'emission {G.eur(N - frais)} pour "
-                                     f"{G.eur(N)} ({G.eur(frais)} de marge et retro payees "
-                                     "d'avance) ; rachat quotidien par l'emetteur, fourchette "
+        phrases.append(("liquidite", f"Valeur juste à l'émission {G.eur(N - frais)} pour "
+                                     f"{G.eur(N)} ({G.eur(frais)} de marge et rétro payées "
+                                     "d'avance) ; rachat quotidien par l'émetteur, fourchette "
                                      "de l'ordre de 1 %."))
     return {"phrases": phrases, "adequation": niveau_adequation}
 
@@ -1230,29 +1230,29 @@ def _section_pitch(mk, s):
     profil = c[0].segmented_control(
         "Profil du client", PROFILS, default=PARTICULIER, required=True, key="as_profil",
         bind="query-params",
-        help="Le meme produit ne se presente pas de la meme facon. Particulier : des euros et "
-             "des mots simples. Conseiller en gestion de patrimoine : le mecanisme, la "
-             "retrocession, l'adequation. Institutionnel : les options, les probabilites "
+        help="Le même produit ne se présente pas de la même façon. Particulier : des euros et "
+             "des mots simples. Conseiller en gestion de patrimoine : le mécanisme, la "
+             "rétrocession, l'adéquation. Institutionnel : les options, les probabilités "
              "risque-neutres, la valeur juste.")
-    vue = c[1].selectbox("Vue de marche du client", list(VUES), index=2, key="as_vue",
+    vue = c[1].selectbox("Vue de marché du client", list(VUES), index=2, key="as_vue",
                          bind="query-params",
-                         help="Ce que le client attend du marche. Le pitch dit si le produit y "
-                              "repond, et le dit aussi quand il n'y repond pas.")
+                         help="Ce que le client attend du marché. Le pitch dit si le produit y "
+                              "répond, et le dit aussi quand il n'y répond pas.")
     f = faits(mk, s)
     p = pitch(s, profil, vue, f)
     texte = " ".join(t for _, t in p["phrases"])
     with st.container(border=True):
         st.markdown(texte)
     if p["adequation"] == "oui":
-        st.success("Produit adapte a la vue du client.")
+        st.success("Produit adapté à la vue du client.")
     elif p["adequation"] == "partiel":
-        st.warning("Produit partiellement adapte : le pitch dit ce que le client abandonne.")
+        st.warning("Produit partiellement adapté : le pitch dit ce que le client abandonne.")
     else:
-        st.error("Produit mal adapte a cette vue : le pitch le dit et oriente vers autre chose.")
-    st.caption(f"{len(p['phrases'])} phrases, construites sur des modeles a partir des chiffres "
-               "des autres sections. Toujours presents : le scenario de perte chiffre et le "
-               "risque emetteur.")
-    with st.expander("Texte a copier"):
+        st.error("Produit mal adapté à cette vue : le pitch le dit et oriente vers autre chose.")
+    st.caption(f"{len(p['phrases'])} phrases, construites sur des modèles à partir des chiffres "
+               "des autres sections. Toujours présents : le scénario de perte chiffre et le "
+               "risque émetteur.")
+    with st.expander("Texte à copier"):
         st.code(texte, language=None, wrap_lines=True)
 
 
@@ -1261,31 +1261,31 @@ def _section_pitch(mk, s):
 # =====================================================================
 
 def affiche(m):
-    st.title("Atelier Sales", help="**Ce que c'est.** Les quatre gestes d'un Sales face a un "
-             "client, sur un meme produit : trouver la structure qui repond a sa demande, "
-             "expliquer ou va son argent, lui racheter le produit en cours de vie, et le lui "
-             "presenter.\n\n**Comment c'est construit.** Tout part de la vue de marche de la "
-             "barre laterale et du cadre « Structure », plus la retrocession du distributeur. "
-             "Les calculs sont ceux des pages produits (memes trajectoires, meme graine) : avec "
-             "une retro nulle, les coupons sont exactement les memes.\n\n**Pourquoi c'est le "
-             "metier.** Un client n'achete pas un payoff, il pose une contrainte : « je veux 8 % "
+    st.title("Atelier Sales", help="**Ce que c'est.** Les quatre gestes d'un Sales face à un "
+             "client, sur un même produit : trouver la structure qui répond à sa demande, "
+             "expliquer où va son argent, lui racheter le produit en cours de vie, et le lui "
+             "présenter.\n\n**Comment c'est construit.** Tout part de la vue de marché de la "
+             "barre latérale et du cadre « Structure », plus la rétrocession du distributeur. "
+             "Les calculs sont ceux des pages produits (mêmes trajectoires, même graine) : avec "
+             "une rétro nulle, les coupons sont exactement les mêmes.\n\n**Pourquoi c'est le "
+             "métier.** Un client n'achète pas un payoff, il pose une contrainte : « je veux 8 % "
              "», « je ne veux rien perdre ». Le Sales la traduit en structure, rapporte une "
-             "reponse honnete quand c'est hors d'atteinte, et sait dire ou part chaque euro, "
-             "retro comprise.\n\n**Ce qu'il faut regarder.** Dans « Le client demande », "
-             "l'arbitrage sur le graphe ; puis « Retenir cette structure » et suivre le meme "
-             "produit dans les trois autres sections. Le pitch nomme toujours le scenario de "
-             "perte et le risque emetteur.")
+             "réponse honnête quand c'est hors d'atteinte, et sait dire où part chaque euro, "
+             "rétro comprise.\n\n**Ce qu'il faut regarder.** Dans « Le client demande », "
+             "l'arbitrage sur le graphe ; puis « Retenir cette structure » et suivre le même "
+             "produit dans les trois autres sections. Le pitch nomme toujours le scénario de "
+             "perte et le risque émetteur.")
     st.caption("Le client pose une contrainte. Le Sales rapporte une structure, son prix et "
                "son risque.")
     m.bandeau_modele()
 
     produit = st.segmented_control(
         "Produit", PRODUITS, default=BRC, required=True, key="as_produit", bind="query-params",
-        help="Les trois produits que sales.py sait structurer, decomposer et racheter.")
+        help="Les trois produits que sales.py sait structurer, décomposer et racheter.")
     section = st.segmented_control(
         "Section", SECTIONS, default=DEMANDE, required=True, key="as_section",
         bind="query-params",
-        help="Seule la section choisie est calculee. Le cadre Structure est commun aux quatre.")
+        help="Seule la section choisie est calculée. Le cadre Structure est commun aux quatre.")
 
     cherche = cible = None
     if section == DEMANDE:
@@ -1296,27 +1296,27 @@ def affiche(m):
         st.caption("Worst-of simule en Black-Scholes multi-actifs, comme la page Autocall.")
 
     if section == DEMANDE:
-        st.subheader("La reponse du desk",
-                     help="Le desk balaie le parametre du plus favorable au client au moins "
-                          "favorable, sur les memes tirages, et s'arrete au premier qui respecte "
+        st.subheader("La réponse du desk",
+                     help="Le desk balaie le paramètre du plus favorable au client au moins "
+                          "favorable, sur les mêmes tirages, et s'arrête au premier qui respecte "
                           "la demande (affine par dichotomie). Rien n'est suppose monotone.")
         _section_demande(mk, s, cherche, cible)
     elif section == ARGENT:
-        st.subheader("Ou va l'argent",
-                     help="Decomposition du nominal en obligation, options, risque emetteur, "
-                          "marge et retrocession. La somme retombe exactement sur le nominal. "
+        st.subheader("Où va l'argent",
+                     help="Décomposition du nominal en obligation, options, risque émetteur, "
+                          "marge et rétrocession. La somme retombe exactement sur le nominal. "
                           "Le graphe montre le budget : ce qui le finance, ce qui le consomme.")
         _section_argent(mk, s)
     elif section == REVENTE:
         st.subheader("Revendre en cours de vie",
-                     help="Valeur des flux restants a une date donnee, avec l'historique "
-                          "(barriere touchee, observations passees) et le marche du jour. La "
-                          "decomposition change un facteur a la fois, sur les memes tirages, "
+                     help="Valeur des flux restants à une date donnée, avec l'historique "
+                          "(barrière touchée, observations passées) et le marché du jour. La "
+                          "décomposition change un facteur à la fois, sur les mêmes tirages, "
                           "et retombe exactement sur la valeur du jour.")
         _section_revente(mk, s)
     else:
         st.subheader("Pitch client",
-                     help="Trois a cinq phrases construites sur des modeles a partir du produit, "
-                          "de ses chiffres, du profil du client et de sa vue de marche. Pas d'IA : "
-                          "les memes chiffres donnent toujours le meme pitch.")
+                     help="Trois à cinq phrases construites sur des modèles à partir du produit, "
+                          "de ses chiffres, du profil du client et de sa vue de marché. Pas d'IA : "
+                          "les mêmes chiffres donnent toujours le même pitch.")
         _section_pitch(mk, s)

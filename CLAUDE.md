@@ -231,7 +231,12 @@ rétrocession distributeur. Avec rétro nulle, ses coupons redonnent **exactemen
   dans le lien.
 - Chaque curseur a un `help=` ; chaque `st.title` a un `help=` long (ce que c'est, comment c'est
   construit, pourquoi un client l'achète, quoi regarder). Tout nouvel élément doit suivre ça.
-- Textes en français sans accents dans le code (existant), en restant cohérent avec le fichier.
+- **Textes affichés en français AVEC accents** (demande de Tom du 18/10/2026 : titres, aides,
+  légendes, graphes, glossaire, questions, menu). Les commentaires et docstrings du code restent
+  sans accents. Ne jamais accentuer les identifiants : clés de widgets (`key=`), clés de
+  dictionnaires techniques, noms de colonnes des graphes (`"serie:N"`), couleurs (`"#1BAF7A"`).
+  Changer un libellé change aussi la valeur dans les liens partagés et les tests qui le
+  cherchent : mettre à jour les tests en même temps.
 
 ## Conventions graphiques (`graphiques.py`)
 

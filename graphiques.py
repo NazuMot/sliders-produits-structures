@@ -345,7 +345,7 @@ def points_morts(spots, produit, direct, max_pts=2):
 
 def payoff(spots, produit, direct, nominal, label_produit,
            titre=None, sous_titre=None, niveaux=None, ylabel="Remboursement (EUR)",
-           label_direct="S'il avait achete le sous-jacent", montrer_points_morts=True,
+           label_direct="S'il avait acheté le sous-jacent", montrer_points_morts=True,
            echantillon=None, seuil_densite=None, autres=None, niveaux_h=None, notes=None,
            depart=100.0, legende_zones=False, hauteur=HAUTEUR + 40):
     """
@@ -374,11 +374,11 @@ def payoff(spots, produit, direct, nominal, label_produit,
 
     # bande de densite sous l'axe : ou le sous-jacent finit reellement
     bande = None
-    infos = [("Ecart avec le direct", [eur(v, signe=True) for v in produit - direct])]
+    infos = [("Écart avec le direct", [eur(v, signe=True) for v in produit - direct])]
     if echantillon is not None:
         ech = np.sort(np.asarray(echantillon, float))
         p_sous = np.searchsorted(ech, spots) / max(len(ech), 1) * 100
-        infos.append(("Probabilite de finir sous ce niveau", [pct(v, 0) for v in p_sous]))
+        infos.append(("Probabilité de finir sous ce niveau", [pct(v, 0) for v in p_sous]))
         hist, bords = np.histogram(ech, bins=64, range=(spots.min(), spots.max()))
         if hist.max() > 0:
             plancher = lo - span * 0.20
@@ -389,7 +389,7 @@ def payoff(spots, produit, direct, nominal, label_produit,
                 "y1": plancher + haut_bande * hist / hist.max(),
                 "couleur": [PERTE if (seuil_densite is not None and c < seuil_densite)
                             else PRODUIT for c in 0.5 * (bords[:-1] + bords[1:])],
-                "txt": [f"{a:,.0f} a {b:,.0f}" for a, b in zip(bords[:-1], bords[1:])],
+                "txt": [f"{a:,.0f} à {b:,.0f}" for a, b in zip(bords[:-1], bords[1:])],
                 "part": [pct(p, 1) for p in part]})
             lo = plancher - span * 0.02
 
@@ -405,8 +405,8 @@ def payoff(spots, produit, direct, nominal, label_produit,
         sous_titre = [sous_titre, note] if sous_titre else note
     chart = courbes(
         spots, series, titre=titre, sous_titre=sous_titre,
-        xlabel="Niveau du sous-jacent a l'echeance", ylabel=ylabel,
-        fmt_x=lambda v: niveau(v, depart), fmt_y=eur, nom_x="Sous-jacent a l'echeance",
+        xlabel="Niveau du sous-jacent a l'échéance", ylabel=ylabel,
+        fmt_x=lambda v: niveau(v, depart), fmt_y=eur, nom_x="Sous-jacent a l'échéance",
         axe_y_eur=True, y_domaine=(lo, hi), niveaux_h=niveaux_h, notes=notes,
         lignes_infobulle=infos, hauteur=hauteur, ticks_y=ticks, nb_ticks_x=10)
 
@@ -426,11 +426,11 @@ def payoff(spots, produit, direct, nominal, label_produit,
         fond.append(alt.Chart(bande).mark_rect(opacity=0.45).encode(
             x=alt.X("a:Q", scale=ech_x), x2="b:Q", y=alt.Y("y0:Q", scale=ech_y), y2="y1:Q",
             color=alt.Color("couleur:N", scale=None),
-            tooltip=[alt.Tooltip("txt:N", title="Sous-jacent a l'echeance entre"),
-                     alt.Tooltip("part:N", title="Part des scenarios")]))
+            tooltip=[alt.Tooltip("txt:N", title="Sous-jacent a l'échéance entre"),
+                     alt.Tooltip("part:N", title="Part des scénarios")]))
         fond.append(alt.Chart(pd.DataFrame([{"x": float(spots.min()), "y": float(bande["y0"].iloc[0] + span * 0.13)}]))
                     .mark_text(align="left", baseline="bottom", dx=4, dy=-2, fontSize=10.5,
-                               color=DIRECT, text="ou le sous-jacent finit reellement")
+                               color=DIRECT, text="où le sous-jacent finit réellement")
                     .encode(x=alt.X("x:Q", scale=ech_x), y=alt.Y("y:Q", scale=ech_y)))
 
     niv = _niveaux_verticaux(niveaux, (lo if bande is None else float(bande["y0"].iloc[0]) + span * 0.20)
@@ -508,7 +508,7 @@ def trajectoires(ch, T, niveaux, couleurs, titre, sous_titre=None,
     if statuts:
         infobulle.append(alt.Tooltip("statut:N", title="Issue pour le client"))
     couches.append(alt.Chart(df).mark_line(interpolate="linear").encode(
-        x=alt.X("t:Q", scale=ech_x, axis=alt.Axis(title="Temps (annees)", tickCount=10)),
+        x=alt.X("t:Q", scale=ech_x, axis=alt.Axis(title="Temps (années)", tickCount=10)),
         y=alt.Y("y:Q", scale=ech_y, title=ylabel),
         detail="traj:N", color=alt.Color("couleur:N", scale=None),
         opacity=alt.condition(survol, alt.value(0.85), alt.value(0.15)),
@@ -571,15 +571,15 @@ def histogramme(valeurs, n_bins, titre, sous_titre=None, xlabel=None,
     df = pd.DataFrame({
         "a": bords[:-1], "b": bords[1:], "n": hist,
         "couleur": [couleur_bin(c) if couleur_bin else PRODUIT for c in centres],
-        "txt": [f"{fmt_x(a)} a {fmt_x(b)}" for a, b in zip(bords[:-1], bords[1:])],
+        "txt": [f"{fmt_x(a)} à {fmt_x(b)}" for a, b in zip(bords[:-1], bords[1:])],
         "part": [pct(h / len(v) * 100, 1) for h in hist]})
     ech_y = alt.Scale(domain=[0, hist.max() * 1.12], nice=False)
     couches = [alt.Chart(df).mark_rect(opacity=0.85).encode(
         x=alt.X("a:Q", title=xlabel, scale=alt.Scale(nice=False, zero=False)), x2="b:Q",
-        y=alt.Y("n:Q", title="Nombre de scenarios", scale=ech_y), y2=alt.datum(0),
+        y=alt.Y("n:Q", title="Nombre de scénarios", scale=ech_y), y2=alt.datum(0),
         color=alt.Color("couleur:N", scale=None),
-        tooltip=[alt.Tooltip("txt:N", title="Resultat entre"),
-                 alt.Tooltip("n:Q", title="Scenarios"),
+        tooltip=[alt.Tooltip("txt:N", title="Résultat entre"),
+                 alt.Tooltip("n:Q", title="Scénarios"),
                  alt.Tooltip("part:N", title="Part")])]
     couches += _niveaux_verticaux(niveaux, hist.max() * 1.04)
     return alt.layer(*couches).properties(title=_titre(titre, sous_titre), height=hauteur)

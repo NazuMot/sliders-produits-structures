@@ -14,26 +14,26 @@ from communs import MAX_CACHE, sim_bs, sim_bates
 
 SOUS_JACENTS = {
     "Indice des prix (SX5E)": "prix",
-    "Net return (dividendes reinvestis)": "net_return",
-    "Indice a decrement (50 points)": "decrement",
+    "Net return (dividendes réinvestis)": "net_return",
+    "Indice a décrément (50 points)": "decrement",
 }
 NOMS_SOUS_JACENT = {"prix": "l'Euro Stoxx 50 (indice des prix)",
-                    "net_return": "l'Euro Stoxx 50 dividendes reinvestis",
-                    "decrement": "l'Euro Stoxx 50 a decrement de 50 points"}
+                    "net_return": "l'Euro Stoxx 50 dividendes réinvestis",
+                    "decrement": "l'Euro Stoxx 50 à décrément de 50 points"}
 # 50 points par an sur un indice relance a 1000 = 5 points pour un spot a 100 (unite du moteur)
 DECREMENT = 5.0
 ONGLETS = {"autocall": "Autocall Phoenix", "brc": "Barrier Reverse Convertible"}
-SOURCES = ["Backtest historique", "Monte Carlo, vue de marche actuelle"]
+SOURCES = ["Backtest historique", "Monte Carlo, vue de marché actuelle"]
 
 # Une couleur = un sens, comme sur la page Autocall
-RAPPEL, TERME, PERTE = "Rappele par anticipation", "Va au terme sans perte", "Perte en capital"
-INTACTE, TOUCHEE = "Barriere intacte", "Barriere touchee, sans perte"
+RAPPEL, TERME, PERTE = "Rappelé par anticipation", "Va au terme sans perte", "Perte en capital"
+INTACTE, TOUCHEE = "Barrière intacte", "Barrière touchée, sans perte"
 COULEURS_AC = {RAPPEL: G.GAIN, TERME: G.NIVEAU, PERTE: G.PERTE}
 COULEURS_BRC = {INTACTE: G.GAIN, TOUCHEE: G.NIVEAU, PERTE: G.PERTE}
 
 # Pour dire au client dans quel contexte le pire cas a ete emis
 EPISODES = [("1999-06-01", "2001-12-31", "en pleine bulle internet"),
-            ("2007-01-01", "2008-09-30", "a la veille de la crise financiere"),
+            ("2007-01-01", "2008-09-30", "à la veille de la crise financière"),
             ("2010-01-01", "2011-12-31", "pendant la crise des dettes souveraines"),
             ("2019-06-01", "2020-02-29", "juste avant le krach du Covid")]
 
@@ -126,15 +126,15 @@ def _derive(m, sous_jacent):
         return f"taux moins dividende, {(m.r - m.q) * 100:+.2f} % par an"
     if sous_jacent == "net_return":
         return f"taux sans risque, {m.r * 100:+.2f} % par an"
-    return (f"taux sans risque moins le decrement, {(m.r - DECREMENT / 100) * 100:+.2f} % par an "
-            "au depart")
+    return (f"taux sans risque moins le décrément, {(m.r - DECREMENT / 100) * 100:+.2f} % par an "
+            "au départ")
 
 
 def _vol_modele(m, niveau_ref):
     if m.BATES:
-        return f"Bates, vol de depart {m.vol_atm * 100:.0f} %"
+        return f"Bates, vol de départ {m.vol_atm * 100:.0f} %"
     return (f"Black-Scholes, vol {M.vol_au_strike(niveau_ref, m.vol_atm, m.skew) * 100:.0f} % "
-            f"(vol ATM + skew au niveau de la barriere)")
+            f"(vol ATM + skew au niveau de la barrière)")
 
 
 # =====================================================================
@@ -221,13 +221,13 @@ def _graphe_repartition(categories, histo, mc, dates, titre, sous_titre):
     x = alt.X("cat:N", sort=list(categories), title=None,
               axis=alt.Axis(labelAngle=-40 if len(categories) > 6 else 0, labelLimit=160))
     xo = alt.XOffset("source:N", sort=SOURCES)
-    y = alt.Y("v:Q", title="Part des emissions (%)", scale=alt.Scale(domain=[0, haut], nice=False))
+    y = alt.Y("v:Q", title="Part des émissions (%)", scale=alt.Scale(domain=[0, haut], nice=False))
     survol = alt.selection_point(name="survol", on="pointerover", fields=["cat"],
                                  clear="pointerout")
     infobulle = [alt.Tooltip("cat:N", title="Issue"), alt.Tooltip("date:N", title="Date"),
                  alt.Tooltip("h:N", title=SOURCES[0]), alt.Tooltip("m:N", title=SOURCES[1]),
-                 alt.Tooltip("ch:N", title="Termine a cette date ou avant (historique)"),
-                 alt.Tooltip("cm:N", title="Termine a cette date ou avant (Monte Carlo)")]
+                 alt.Tooltip("ch:N", title="Termine à cette date ou avant (historique)"),
+                 alt.Tooltip("cm:N", title="Termine à cette date ou avant (Monte Carlo)")]
     base = alt.Chart(df)
     return alt.layer(
         base.mark_bar(cornerRadiusTopLeft=3, cornerRadiusTopRight=3).encode(
@@ -248,21 +248,21 @@ def _graphe_repartition(categories, histo, mc, dates, titre, sous_titre):
 
 def _a_ne_pas_dire(sous_jacent, n, p_capital):
     lignes = [
-        f"« Vous avez {p_capital * 100:.0f} % de chances de recuperer votre capital » : un "
-        f"backtest n'est pas une probabilite. Les {n} emissions se chevauchent ; elles ne "
-        "racontent qu'une poignee de crises (2000-2003, 2008, 2011, 2020), et rien ne dit que "
+        f"« Vous avez {p_capital * 100:.0f} % de chances de récupérer votre capital » : un "
+        f"backtest n'est pas une probabilité. Les {n} émissions se chevauchent ; elles ne "
+        "racontent qu'une poignée de crises (2000-2003, 2008, 2011, 2020), et rien ne dit que "
         "la prochaine leur ressemblera.",
-        "Choisir la date de depart qui arrange : demarrer en 2009 efface la bulle internet et "
-        "Lehman. Essaie le curseur « Premiere emission ».",
+        "Choisir la date de départ qui arrange : démarrer en 2009 efface la bulle internet et "
+        "Lehman. Essaie le curseur « Première émission ».",
         "Comparer au seul indice des prix : le client renonce aux dividendes, la comparaison "
-        "honnete est l'indice dividendes reinvestis.",
+        "honnête est l'indice dividendes réinvestis.",
         "Donner la moyenne sans le pire cas et sa date.",
-        "Oublier l'emetteur : le backtest suppose que la banque a toujours paye. Les porteurs "
-        "de produits Lehman ont recupere environ 9 cents par dollar.",
+        "Oublier l'émetteur : le backtest suppose que la banque a toujours payé. Les porteurs "
+        "de produits Lehman ont récupéré environ 9 cents par dollar.",
     ]
     if sous_jacent == "decrement":
         lignes.append("Montrer le backtest de l'indice classique pour un produit sur indice a "
-                      "decrement : les 50 points retires chaque annee pesent d'autant plus lourd "
+                      "décrément : les 50 points retires chaque année pèsent d'autant plus lourd "
                       "que l'indice baisse.")
     return lignes
 
@@ -273,7 +273,7 @@ def _discours(phrase, sous_jacent, n, p_capital):
         "**Ce qu'on peut dire au client.** " + phrase + "\n\n"
         "Le pire cas se cite avec sa date et son contexte : c'est lui qui donne la mesure du "
         "risque. On peut aussi dire combien de fois le produit a fait mieux que l'indice "
-        "dividendes reinvestis, sur la meme duree.\n\n"
+        "dividendes réinvestis, sur la même durée.\n\n"
         "**Ce qu'on ne dit pas.**\n" + interdits)
 
 
@@ -283,38 +283,38 @@ def _discours(phrase, sous_jacent, n, p_capital):
 
 def _onglet_autocall(m, sj, debut):
     c1, c2, c3 = st.columns(3)
-    T = c1.slider("Maturite maximale (annees)", 1.0, 6.0, 3.0, 0.5,
-                  help="Duree MAXIMALE : le produit est presque toujours rappele avant. Seules "
-                       "les emissions arrivees a leur terme avant octobre 2026 sont comptees.",
+    T = c1.slider("Maturité maximale (années)", 1.0, 6.0, 3.0, 0.5,
+                  help="Durée MAXIMALE : le produit est presque toujours rappelé avant. Seules "
+                       "les émissions arrivées à leur terme avant octobre 2026 sont comptées.",
                   key="bt_ac_maturite", bind="query-params")
-    freq = c1.selectbox("Frequence d'observation", ["Trimestrielle", "Semestrielle", "Annuelle"],
-                        help="Dates ou l'on regarde l'indice : rappel, coupon. Meme date du "
-                             "mois que l'emission, premier jour de cotation suivant.",
+    freq = c1.selectbox("Fréquence d'observation", ["Trimestrielle", "Semestrielle", "Annuelle"],
+                        help="Dates où l'on regarde l'indice : rappel, coupon. Même date du "
+                             "mois que l'émission, premier jour de cotation suivant.",
                         key="bt_ac_frequence", bind="query-params")
     trigger = c2.slider("Trigger de rappel (%)", 80, 110, 100, 5,
-                        help="Au-dessus a une date d'observation, le produit s'arrete : nominal "
+                        help="Au-dessus à une date d'observation, le produit s'arrête : nominal "
                              "rembourse plus le coupon.", key="bt_ac_trigger", bind="query-params")
-    bar_cp = c2.slider("Barriere de coupon (%)", 50, 100, 70, 5,
-                       help="Le coupon n'est paye que si l'indice est au-dessus a la date "
+    bar_cp = c2.slider("Barrière de coupon (%)", 50, 100, 70, 5,
+                       help="Le coupon n'est payé que si l'indice est au-dessus à la date "
                             "d'observation.", key="bt_ac_bar_coupon", bind="query-params")
-    bar_cap = c3.slider("Barriere de capital (%)", 40, 90, 60, 5,
-                        help="Observee uniquement A L'ECHEANCE. En dessous, le client encaisse "
+    bar_cap = c3.slider("Barrière de capital (%)", 40, 90, 60, 5,
+                        help="Observée uniquement A L'ÉCHÉANCE. En dessous, le client encaisse "
                              "toute la baisse.", key="bt_ac_bar_capital", bind="query-params")
-    memoire = c3.checkbox("Effet memoire", value=True,
-                          help="Un coupon manque est rattrape a la premiere date ou l'indice "
-                               "repasse au-dessus de la barriere de coupon.",
+    memoire = c3.checkbox("Effet mémoire", value=True,
+                          help="Un coupon manque est rattrapé à la première date où l'indice "
+                               "repasse au-dessus de la barrière de coupon.",
                           key="bt_ac_memoire", bind="query-params")
     k1, k2 = st.columns([2, 1])
     au_marche = k2.checkbox(
-        "Coupon de la vue de marche actuelle",
+        "Coupon de la vue de marché actuelle",
         help="Remplace le coupon fixe par celui que le desk offrirait aujourd'hui avec la barre "
-             "laterale (meme calcul que la page Autocall). Sur l'indice a decrement, le coupon "
-             "monte : on voit alors si ce supplement a paye les pertes en plus.",
+             "latérale (même calcul que la page Autocall). Sur l'indice à décrément, le coupon "
+             "monte : on voit alors si ce supplément a payé les pertes en plus.",
         key="bt_ac_coupon_marche", bind="query-params")
     coupon = k1.slider("Coupon (% par an)", 0.0, 20.0, 8.0, 0.25, disabled=au_marche,
-                       help="Coupon fixe sur tout l'historique, verse par observation au "
-                            "prorata (8 % par an = 2 % par trimestre). En realite le coupon "
-                            "suit les taux et la vol du jour d'emission.",
+                       help="Coupon fixe sur tout l'historique, versé par observation au "
+                            "prorata (8 % par an = 2 % par trimestre). En réalité le coupon "
+                            "suit les taux et la vol du jour d'émission.",
                        key="bt_ac_coupon", bind="query-params")
 
     par_an = {"Trimestrielle": 4, "Semestrielle": 2, "Annuelle": 1}[freq]
@@ -327,90 +327,90 @@ def _onglet_autocall(m, sj, debut):
                                    bar_cap / 100, memoire, m.marge, tau, m.recovery) * par_an
     coupon_pa = round(cpn_marche if au_marche else coupon / 100, 6)
     if au_marche:
-        k1.caption(f"Coupon de la vue de marche : **{_p(coupon_pa, 2)} par an** "
+        k1.caption(f"Coupon de la vue de marché : **{_p(coupon_pa, 2)} par an** "
                    f"({_p(coupon_pa / par_an, 2)} par observation).")
 
     res = _autocall(T, par_an, trigger / 100, bar_cp / 100, bar_cap / 100, memoire, coupon_pa,
                     sj, debut)
     r = res.resume
     if r["n"] == 0:
-        st.warning("Aucune emission n'est arrivee a son terme avant la fin de l'historique : "
-                   "avance la premiere emission ou raccourcis la maturite.")
+        st.warning("Aucune émission n'est arrivée à son terme avant la fin de l'historique : "
+                   "avance la première émission ou raccourcis la maturité.")
         return
 
     # --- graphe principal
     issues = np.where(res.perte, PERTE, np.where(res.rappele, RAPPEL, TERME))
     issue_txt = [
         (f"perte : {c * 100:.1f} % du nominal rendu le {_date(f)}" if p else
-         f"rappele a l'observation {k} sur {res.n_obs}, le {_date(f)}" if rp else
-         f"echeance le {_date(f)}, nominal rendu")
+         f"rappelé à l'observation {k} sur {res.n_obs}, le {_date(f)}" if rp else
+         f"échéance le {_date(f)}, nominal rendu")
         for p, rp, k, c, f in zip(res.perte, res.rappele, res.obs_fin, res.capital, res.fin)]
     details = [
-        ("Emission", [_date(e) for e in res.emission]),
+        ("Émission", [_date(e) for e in res.emission]),
         ("Issue", issue_txt),
-        ("Coupons touches", [f"{nb:.0f} coupon(s), {c * 100:.1f} % du nominal"
+        ("Coupons touchés", [f"{nb:.0f} coupon(s), {c * 100:.1f} % du nominal"
                              for nb, c in zip(res.nb_coupons, res.coupons)]),
-        ("Duree de vie", [f"{d:.2f} an" for d in res.duree]),
+        ("Durée de vie", [f"{d:.2f} an" for d in res.duree]),
         ("Sous-jacent a la fin", [f"{(s - 1) * 100:+.1f} %" for s in res.perf_fin]),
         ("Rendement du produit", [_rendement(t) for t in res.tri]),
-        ("Detention directe (div. reinvestis)", [_rendement(d) for d in res.direct]),
+        ("Détention directe (div. réinvestis)", [_rendement(d) for d in res.direct]),
         ("Produit moins direct", [f"{(t - d) * 100:+.1f} pts par an"
                                   for t, d in zip(res.tri, res.direct)]),
-        ("VSTOXX a l'emission", [f"{v:.1f}" if np.isfinite(v) else "-" for v in res.vstoxx]),
+        ("VSTOXX à l'émission", [f"{v:.1f}" if np.isfinite(v) else "-" for v in res.vstoxx]),
     ]
     i_pire = int(np.argmin(res.tri))
     serie = "net_return" if sj == "net_return" else "prix"
     graphe = _graphe_emissions(
         res, serie, issues, COULEURS_AC, details, bar_cap / 100,
-        f"{_p(r['rappel_premiere_date'], 0)} des autocalls rappeles a la 1re date, "
+        f"{_p(r['rappel_premiere_date'], 0)} des autocalls rappelés à la 1re date, "
         f"{_p(r['perte'])} en perte",
-        f"Un point par emission mensuelle depuis {debut[:4]}, colore selon l'issue. Survole un "
-        "point : trait bleu = vie du produit, tirete rouge = barriere de capital.",
+        f"Un point par émission mensuelle depuis {debut[:4]}, colore selon l'issue. Survole un "
+        "point : trait bleu = vie du produit, tireté rouge = barrière de capital.",
         i_pire, f"pire cas\n{_p(res.capital[i_pire])} rendu")
     G.affiche(graphe)
     if sj == "decrement":
-        st.caption("La courbe est l'indice des prix pour se reperer ; chaque emission est "
-                   "deroulee sur son propre indice a decrement, relance a 1000 le jour de "
-                   "l'emission.")
+        st.caption("La courbe est l'indice des prix pour se repérer ; chaque émission est "
+                   "déroulée sur son propre indice a décrément, relance à 1000 le jour de "
+                   "l'émission.")
 
     # --- statistiques cles
     c = st.columns(4)
-    c[0].metric("Rappeles a la 1re date", _p(r["rappel_premiere_date"]),
-                help="Part des emissions remboursees des la premiere observation. Le client "
-                     "touche un seul coupon et doit reinvestir : bonne nouvelle pour le "
-                     "capital, mauvaise pour le rendement espere.")
+    c[0].metric("Rappelés à la 1re date", _p(r["rappel_premiere_date"]),
+                help="Part des émissions remboursées dès la première observation. Le client "
+                     "touche un seul coupon et doit réinvestir : bonne nouvelle pour le "
+                     "capital, mauvaise pour le rendement espère.")
     c[1].metric("Pertes en capital", _p(r["perte"]),
                 f"perte moyenne {_p(r['perte_moyenne_si_perte'], 0)}" if r["perte"] else None,
                 delta_color="off", delta_arrow="off",
-                help="Part des emissions qui ont rendu moins que le nominal, et la perte "
-                     "moyenne quand il y a perte. Sous la barriere, la perte est toute la "
-                     "baisse de l'indice, pas l'ecart a la barriere.")
+                help="Part des émissions qui ont rendu moins que le nominal, et la perte "
+                     "moyenne quand il y a perte. Sous la barrière, la perte est toute la "
+                     "baisse de l'indice, pas l'écart à la barrière.")
     c[2].metric("Pire cas", f"{_p(res.capital[i_pire])} rendu",
-                f"emis le {_date(res.emission[i_pire])}", delta_color="off", delta_arrow="off",
-                help="L'emission au plus mauvais rendement. C'est le chiffre a citer en premier "
-                     "a un client, avec sa date.")
+                f"émis le {_date(res.emission[i_pire])}", delta_color="off", delta_arrow="off",
+                help="L'émission au plus mauvais rendement. C'est le chiffre à citer en premier "
+                     "à un client, avec sa date.")
     ecart = r["tri_par_annee"] - r["direct_par_annee"]
-    c[3].metric("Rendement par annee investie", _p(r["tri_par_annee"]),
+    c[3].metric("Rendement par année investie", _p(r["tri_par_annee"]),
                 f"{ecart * 100:+.1f} pt contre le direct ({_p(r['direct_par_annee'])})",
-                help="Moyenne geometrique ponderee par la duree : un rappel apres 3 mois pese "
-                     "3 mois. Direct = Euro Stoxx 50 dividendes nets reinvestis, sur exactement "
-                     "la meme periode que chaque produit.")
+                help="Moyenne géométrique pondérée par la durée : un rappel après 3 mois pèse "
+                     "3 mois. Direct = Euro Stoxx 50 dividendes nets réinvestis, sur exactement "
+                     "la même période que chaque produit.")
     c = st.columns(4)
-    c[0].metric("Duree de vie moyenne", f"{r['duree_moyenne']:.2f} ans",
+    c[0].metric("Durée de vie moyenne", f"{r['duree_moyenne']:.2f} ans",
                 help=f"Sur {T:g} ans possibles. Le rappel coupe les coupons futurs.")
     c[1].metric("Rappel anticipe", _p(r["rappel_anticipe"]),
-                help="Part des emissions rappelees avant l'echeance, a n'importe quelle date.")
-    c[2].metric("Echeance sans perte", _p(r["echeance_sans_perte"]),
-                help="Jamais rappele, mais au-dessus de la barriere de capital a l'echeance.")
-    c[3].metric("Bat la detention directe", _p(r["bat_direct"]),
-                help="Part des emissions dont le rendement depasse celui de l'indice dividendes "
-                     "reinvestis sur la meme periode. Un autocall plafonne les hausses : il "
-                     "perd souvent contre l'indice en marche haussier.")
+                help="Part des émissions rappelées avant l'échéance, à n'importe quelle date.")
+    c[2].metric("Échéance sans perte", _p(r["echeance_sans_perte"]),
+                help="Jamais rappelé, mais au-dessus de la barrière de capital à l'échéance.")
+    c[3].metric("Bat la détention directe", _p(r["bat_direct"]),
+                help="Part des émissions dont le rendement dépasse celui de l'indice dividendes "
+                     "réinvestis sur la même période. Un autocall plafonne les hausses : il "
+                     "perd souvent contre l'indice en marché haussier.")
     st.caption(
-        f"{r['n']} emissions du {_date(r['premiere_emission'])} au "
-        f"{_date(r['derniere_emission'])}, deroulees sur {NOMS_SOUS_JACENT[sj]}. Biais : seuls "
-        f"les produits termines comptent ({r['n_en_cours']} encore en cours), et des emissions "
-        "mensuelles qui se chevauchent ne sont pas des experiences independantes.")
+        f"{r['n']} émissions du {_date(r['premiere_emission'])} au "
+        f"{_date(r['derniere_emission'])}, déroulées sur {NOMS_SOUS_JACENT[sj]}. Biais : seuls "
+        f"les produits termines comptent ({r['n_en_cours']} encore en cours), et des émissions "
+        "mensuelles qui se chevauchent ne sont pas des expériences indépendantes.")
 
     # --- backtest contre Monte Carlo
     st.subheader("Historique contre Monte Carlo")
@@ -429,32 +429,32 @@ def _onglet_autocall(m, sj, debut):
     dates = [f"{(k + 1) * T / n_obs:.2f} an" for k in range(n_obs - 1)] + [f"{T:.2f} ans"] * 2
 
     c = st.columns(3)
-    c[0].metric("Coupon de la vue de marche", f"{_p(cpn_marche, 2)} p.a.",
+    c[0].metric("Coupon de la vue de marché", f"{_p(cpn_marche, 2)} p.a.",
                 help="Ce que le desk offrirait aujourd'hui pour ce produit avec la barre "
-                     "laterale (marge et spread emetteur compris).")
-    c[1].metric("Rappel a la 1re date", _p(r["rappel_premiere_date"], 0),
-                f"modele : {_p(mc[0], 0)}" if n_obs > 1 else None, delta_color="off",
+                     "latérale (marge et spread émetteur compris).")
+    c[1].metric("Rappel à la 1re date", _p(r["rappel_premiere_date"], 0),
+                f"modèle : {_p(mc[0], 0)}" if n_obs > 1 else None, delta_color="off",
                 delta_arrow="off", help="Historique, et ce que le Monte Carlo attendait.")
-    c[2].metric("Perte en capital", _p(r["perte"]), f"modele : {_p(mc[-1])}",
+    c[2].metric("Perte en capital", _p(r["perte"]), f"modèle : {_p(mc[-1])}",
                 delta_color="off", delta_arrow="off",
                 help="Historique, et ce que le Monte Carlo attendait.")
     G.affiche(_graphe_repartition(
         cats, histo, mc, dates,
-        f"Perte : {_p(r['perte'])} dans l'histoire, {_p(mc[-1])} pour le modele",
-        "Quand le produit se termine : part des emissions reelles contre part des scenarios "
-        "simules avec la vue de marche actuelle"))
+        f"Perte : {_p(r['perte'])} dans l'histoire, {_p(mc[-1])} pour le modèle",
+        "Quand le produit se termine : part des émissions réelles contre part des scénarios "
+        "simulés avec la vue de marché actuelle"))
     st.markdown(
-        f"Le Monte Carlo price sous la probabilite risque-neutre : le sous-jacent y derive au "
+        f"Le Monte Carlo price sous la probabilité risque-neutre : le sous-jacent y dérive au "
         f"{_derive(m, sj)}, avec {_vol_modele(m, bar_cap / 100)}, sans prime de risque ni "
-        "changement de regime. L'histoire, elle, alterne marches calmes et krachs. Un ecart "
-        "n'est pas une erreur du modele : le modele chiffre ce que coute la couverture "
-        "aujourd'hui, le backtest raconte une seule trajectoire passee, decoupee en fenetres.")
+        "changement de régime. L'histoire, elle, alterne marchés calmes et krachs. Un écart "
+        "n'est pas une erreur du modèle : le modèle chiffre ce que coûte la couverture "
+        "aujourd'hui, le backtest raconte une seule trajectoire passée, découpée en fenêtres.")
 
-    pire = (f"la pire, emise le {_date(res.emission[i_pire])}{_contexte(res.emission[i_pire])}, "
+    pire = (f"la pire, émise le {_date(res.emission[i_pire])}{_contexte(res.emission[i_pire])}, "
             f"aurait rendu {_p(res.capital[i_pire])} du nominal")
-    phrase = (f"« Si cet autocall avait ete emis chaque mois depuis {debut[:4]} sur "
+    phrase = (f"« Si cet autocall avait été émis chaque mois depuis {debut[:4]} sur "
               f"{NOMS_SOUS_JACENT[sj]}, {_p(r['rappel_premiere_date'], 0)} des {r['n']} "
-              f"emissions auraient ete remboursees des la premiere date avec un coupon de "
+              f"émissions auraient été remboursées dès la première date avec un coupon de "
               f"{_p(coupon_pa / par_an, 2)} (soit {_p(coupon_pa, 2)} par an), et "
               f"{_p(r['perte'])} auraient perdu du capital ; "
               f"{pire}. »")
@@ -467,30 +467,30 @@ def _onglet_autocall(m, sj, debut):
 
 def _onglet_brc(m, sj, debut):
     c1, c2, c3 = st.columns(3)
-    T = c1.slider("Maturite (annees)", 0.25, 3.0, 1.0, 0.25,
-                  help="Duree fixe : un BRC n'est jamais rappele.",
+    T = c1.slider("Maturité (années)", 0.25, 3.0, 1.0, 0.25,
+                  help="Durée fixe : un BRC n'est jamais rappelé.",
                   key="bt_brc_maturite", bind="query-params")
-    bar = c2.slider("Barriere (% du spot)", 50, 95, 70, 5,
+    bar = c2.slider("Barrière (% du spot)", 50, 95, 70, 5,
                     help="Le niveau qui ARME le risque. Le toucher ne fait pas perdre : c'est le "
-                         "strike qui decide a la fin.", key="bt_brc_barriere", bind="query-params")
+                         "strike qui décide à la fin.", key="bt_brc_barriere", bind="query-params")
     strike = c3.slider("Strike (% du spot)", 80, 110, 100, 5,
-                       help="Si la barriere a ete touchee et que l'indice finit sous le strike, "
-                            "le client recoit niveau final / strike.",
+                       help="Si la barrière a été touchée et que l'indice finit sous le strike, "
+                            "le client reçoit niveau final / strike.",
                        key="bt_brc_strike", bind="query-params")
-    continu = st.radio("Observation de la barriere",
-                       ["Continue (americaine)", "A l'echeance (europeenne)"], horizontal=True,
-                       help="Continue : chaque cloture compte (pas les plus bas en seance). A "
-                            "l'echeance : seule la derniere cloture compte.",
+    continu = st.radio("Observation de la barrière",
+                       ["Continue (américaine)", "À l'échéance (européenne)"], horizontal=True,
+                       help="Continue : chaque clôture compte (pas les plus bas en séance). À "
+                            "l'échéance : seule la dernière clôture compte.",
                        key="bt_brc_observation", bind="query-params").startswith("Continue")
     k1, k2 = st.columns([2, 1])
     au_marche = k2.checkbox(
-        "Coupon de la vue de marche actuelle",
+        "Coupon de la vue de marché actuelle",
         help="Remplace le coupon fixe par celui que le desk offrirait aujourd'hui avec la barre "
-             "laterale (meme calcul que la page BRC).",
+             "latérale (même calcul que la page BRC).",
         key="bt_brc_coupon_marche", bind="query-params")
     coupon = k1.slider("Coupon (% par an)", 0.0, 20.0, 7.0, 0.25, disabled=au_marche,
-                       help="Coupon garanti, verse a l'echeance avec le capital, fixe sur tout "
-                            "l'historique. En realite il suit les taux et la vol du jour.",
+                       help="Coupon garanti, versé à l'échéance avec le capital, fixe sur tout "
+                            "l'historique. En réalité il suit les taux et la vol du jour.",
                        key="bt_brc_coupon", bind="query-params")
 
     ch, sg = _trajectoires(m, T, bar / 100, sj)
@@ -499,84 +499,84 @@ def _onglet_brc(m, sj, debut):
                               sg, tau, m.recovery)
     coupon_pa = round(cpn_marche if au_marche else coupon / 100, 6)
     if au_marche:
-        k1.caption(f"Coupon de la vue de marche : **{_p(coupon_pa, 2)} par an**.")
+        k1.caption(f"Coupon de la vue de marché : **{_p(coupon_pa, 2)} par an**.")
 
     res = _brc(T, bar / 100, strike / 100, continu, coupon_pa, sj, debut)
     r = res.resume
     if r["n"] == 0:
-        st.warning("Aucune emission n'est arrivee a son terme avant la fin de l'historique : "
-                   "avance la premiere emission ou raccourcis la maturite.")
+        st.warning("Aucune émission n'est arrivée à son terme avant la fin de l'historique : "
+                   "avance la première émission ou raccourcis la maturité.")
         return
 
     # --- graphe principal
     issues = np.where(res.perte, PERTE, np.where(res.touche, TOUCHEE, INTACTE))
     issue_txt = [
-        (f"barriere touchee : {c * 100:.1f} % du nominal rendu + coupon" if p else
-         "barriere touchee, fin au-dessus du strike : nominal + coupon" if t else
-         "barriere intacte : nominal + coupon")
+        (f"barrière touchée : {c * 100:.1f} % du nominal rendu + coupon" if p else
+         "barrière touchée, fin au-dessus du strike : nominal + coupon" if t else
+         "barrière intacte : nominal + coupon")
         for p, t, c in zip(res.perte, res.touche, res.capital)]
     details = [
-        ("Emission", [_date(e) for e in res.emission]),
-        ("Echeance", [_date(f) for f in res.fin]),
+        ("Émission", [_date(e) for e in res.emission]),
+        ("Échéance", [_date(f) for f in res.fin]),
         ("Issue", issue_txt),
-        ("Plus bas atteint" if continu else "Niveau a l'echeance",
+        ("Plus bas atteint" if continu else "Niveau à l'échéance",
          [f"{(b - 1) * 100:+.1f} %" for b in res.plus_bas]),
-        ("Sous-jacent a l'echeance", [f"{(s - 1) * 100:+.1f} %" for s in res.perf_fin]),
+        ("Sous-jacent a l'échéance", [f"{(s - 1) * 100:+.1f} %" for s in res.perf_fin]),
         ("Rendement du produit", [_rendement(t) for t in res.tri]),
-        ("Detention directe (div. reinvestis)", [_rendement(d) for d in res.direct]),
+        ("Détention directe (div. réinvestis)", [_rendement(d) for d in res.direct]),
         ("Produit moins direct", [f"{(t - d) * 100:+.1f} pts par an"
                                   for t, d in zip(res.tri, res.direct)]),
-        ("VSTOXX a l'emission", [f"{v:.1f}" if np.isfinite(v) else "-" for v in res.vstoxx]),
+        ("VSTOXX à l'émission", [f"{v:.1f}" if np.isfinite(v) else "-" for v in res.vstoxx]),
     ]
     i_pire = int(np.argmin(res.capital))
     serie = "net_return" if sj == "net_return" else "prix"
     G.affiche(_graphe_emissions(
         res, serie, issues, COULEURS_BRC, details, bar / 100,
-        f"{_p(r['barriere_touchee'], 0)} des BRC ont vu la barriere touchee, "
+        f"{_p(r['barriere_touchee'], 0)} des BRC ont vu la barrière touchée, "
         f"{_p(r['perte'])} en perte",
-        f"Un point par emission mensuelle depuis {debut[:4]}, colore selon l'issue. Survole un "
-        "point : trait bleu = vie du produit, tirete rouge = barriere.",
+        f"Un point par émission mensuelle depuis {debut[:4]}, colore selon l'issue. Survole un "
+        "point : trait bleu = vie du produit, tireté rouge = barrière.",
         i_pire, f"pire cas\n{_p(res.capital[i_pire])} rendu"))
     if sj == "decrement":
-        st.caption("La courbe est l'indice des prix pour se reperer ; chaque emission est "
-                   "deroulee sur son propre indice a decrement, relance a 1000 le jour de "
-                   "l'emission.")
+        st.caption("La courbe est l'indice des prix pour se repérer ; chaque émission est "
+                   "déroulée sur son propre indice a décrément, relance à 1000 le jour de "
+                   "l'émission.")
 
     # --- statistiques cles
     c = st.columns(4)
-    c[0].metric("Barriere touchee", _p(r["barriere_touchee"]),
-                help="Part des emissions dont l'indice a cloture au moins une fois sous la "
-                     "barriere (ou a fini sous la barriere, en observation a l'echeance).")
+    c[0].metric("Barrière touchée", _p(r["barriere_touchee"]),
+                help="Part des émissions dont l'indice à clôture au moins une fois sous la "
+                     "barrière (ou à fini sous la barrière, en observation à l'échéance).")
     c[1].metric("Pertes en capital", _p(r["perte"]),
                 f"perte moyenne {_p(r['perte_moyenne_si_perte'], 0)}" if r["perte"] else None,
                 delta_color="off", delta_arrow="off",
-                help="Barriere touchee ET fin sous le strike. Le coupon est verse quand meme.")
+                help="Barrière touchée ET fin sous le strike. Le coupon est versé quand même.")
     c[2].metric("Pire cas", f"{_p(res.capital[i_pire])} rendu",
-                f"emis le {_date(res.emission[i_pire])}", delta_color="off", delta_arrow="off",
-                help="Capital rendu par la pire emission, hors coupon. C'est le chiffre a citer "
-                     "en premier a un client, avec sa date.")
+                f"émis le {_date(res.emission[i_pire])}", delta_color="off", delta_arrow="off",
+                help="Capital rendu par la pire émission, hors coupon. C'est le chiffre à citer "
+                     "en premier à un client, avec sa date.")
     ecart = r["tri_par_annee"] - r["direct_par_annee"]
-    c[3].metric("Rendement par annee investie", _p(r["tri_par_annee"]),
+    c[3].metric("Rendement par année investie", _p(r["tri_par_annee"]),
                 f"{ecart * 100:+.1f} pt contre le direct ({_p(r['direct_par_annee'])})",
-                help="Moyenne geometrique ponderee par la duree, coupon compris. Direct = Euro "
-                     "Stoxx 50 dividendes nets reinvestis, sur la meme periode.")
+                help="Moyenne géométrique pondérée par la durée, coupon compris. Direct = Euro "
+                     "Stoxx 50 dividendes nets réinvestis, sur la même période.")
     c = st.columns(4)
     c[0].metric("Coupon backteste", f"{_p(coupon_pa, 2)} p.a.",
-                help="Le meme coupon pour toutes les emissions.")
-    c[1].metric("Rendement median", _p(r["tri_median"]),
+                help="Le même coupon pour toutes les émissions.")
+    c[1].metric("Rendement médian", _p(r["tri_median"]),
                 f"direct : {_p(r['direct_median'])}", delta_color="off", delta_arrow="off",
-                help="L'emission du milieu : la moitie fait mieux, la moitie moins bien.")
-    c[2].metric("Bat la detention directe", _p(r["bat_direct"]),
-                help="Part des emissions dont le rendement depasse celui de l'indice dividendes "
-                     "reinvestis. Le BRC plafonne au coupon : il perd contre l'indice des que "
+                help="L'émission du milieu : la moitié fait mieux, la moitié moins bien.")
+    c[2].metric("Bat la détention directe", _p(r["bat_direct"]),
+                help="Part des émissions dont le rendement dépasse celui de l'indice dividendes "
+                     "réinvestis. Le BRC plafonne au coupon : il perd contre l'indice dès que "
                      "celui-ci monte plus que le coupon.")
-    c[3].metric("Emissions", f"{r['n']}", f"{r['n_en_cours']} en cours, non comptees",
+    c[3].metric("Émissions", f"{r['n']}", f"{r['n_en_cours']} en cours, non comptées",
                 delta_color="off", delta_arrow="off")
     st.caption(
-        f"{r['n']} emissions du {_date(r['premiere_emission'])} au "
-        f"{_date(r['derniere_emission'])}, deroulees sur {NOMS_SOUS_JACENT[sj]}, barriere "
-        f"observee sur les clotures. Biais : seuls les produits termines comptent, et des "
-        "emissions mensuelles qui se chevauchent ne sont pas des experiences independantes.")
+        f"{r['n']} émissions du {_date(r['premiere_emission'])} au "
+        f"{_date(r['derniere_emission'])}, déroulées sur {NOMS_SOUS_JACENT[sj]}, barrière "
+        f"observée sur les clôtures. Biais : seuls les produits termines comptent, et des "
+        "émissions mensuelles qui se chevauchent ne sont pas des expériences indépendantes.")
 
     # --- backtest contre Monte Carlo
     st.subheader("Historique contre Monte Carlo")
@@ -587,30 +587,30 @@ def _onglet_brc(m, sj, debut):
     mc = [p_no.mean(), ((1 - p_no) * ~sous_k).mean(), ((1 - p_no) * sous_k).mean()]
     histo = [1 - r["barriere_touchee"], r["barriere_touchee"] - r["perte"], r["perte"]]
     c = st.columns(3)
-    c[0].metric("Coupon de la vue de marche", f"{_p(cpn_marche, 2)} p.a.",
-                help="Ce que le desk offrirait aujourd'hui pour ce BRC avec la barre laterale.")
-    c[1].metric("Barriere touchee", _p(r["barriere_touchee"]), f"modele : {_p(1 - mc[0])}",
+    c[0].metric("Coupon de la vue de marché", f"{_p(cpn_marche, 2)} p.a.",
+                help="Ce que le desk offrirait aujourd'hui pour ce BRC avec la barre latérale.")
+    c[1].metric("Barrière touchée", _p(r["barriere_touchee"]), f"modèle : {_p(1 - mc[0])}",
                 delta_color="off", delta_arrow="off",
                 help="Historique, et ce que le Monte Carlo attendait (pont brownien).")
-    c[2].metric("Perte en capital", _p(r["perte"]), f"modele : {_p(mc[2])}",
+    c[2].metric("Perte en capital", _p(r["perte"]), f"modèle : {_p(mc[2])}",
                 delta_color="off", delta_arrow="off",
                 help="Historique, et ce que le Monte Carlo attendait.")
     G.affiche(_graphe_repartition(
         [INTACTE, TOUCHEE, PERTE], histo, mc, [f"{T:.2f} an"] * 3,
-        f"Perte : {_p(r['perte'])} dans l'histoire, {_p(mc[2])} pour le modele",
-        "Issue a l'echeance : part des emissions reelles contre part des scenarios simules "
-        "avec la vue de marche actuelle"))
+        f"Perte : {_p(r['perte'])} dans l'histoire, {_p(mc[2])} pour le modèle",
+        "Issue à l'échéance : part des émissions réelles contre part des scénarios simulés "
+        "avec la vue de marché actuelle"))
     st.markdown(
-        f"Le Monte Carlo price sous la probabilite risque-neutre : le sous-jacent y derive au "
+        f"Le Monte Carlo price sous la probabilité risque-neutre : le sous-jacent y dérive au "
         f"{_derive(m, sj)}, avec {_vol_modele(m, bar / 100)}, sans prime de risque ni "
-        "changement de regime. L'histoire, elle, alterne marches calmes et krachs. Un ecart "
-        "n'est pas une erreur du modele : le modele chiffre ce que coute la couverture "
-        "aujourd'hui, le backtest raconte une seule trajectoire passee, decoupee en fenetres.")
+        "changement de régime. L'histoire, elle, alterne marchés calmes et krachs. Un écart "
+        "n'est pas une erreur du modèle : le modèle chiffre ce que coûte la couverture "
+        "aujourd'hui, le backtest raconte une seule trajectoire passée, découpée en fenêtres.")
 
-    phrase = (f"« Si ce BRC avait ete emis chaque mois depuis {debut[:4]} sur "
-              f"{NOMS_SOUS_JACENT[sj]}, {_p(1 - r['perte'], 0)} des {r['n']} emissions auraient "
+    phrase = (f"« Si ce BRC avait été émis chaque mois depuis {debut[:4]} sur "
+              f"{NOMS_SOUS_JACENT[sj]}, {_p(1 - r['perte'], 0)} des {r['n']} émissions auraient "
               f"rendu le nominal plus le coupon de {_p(coupon_pa, 2)} par an, et {_p(r['perte'])} "
-              f"auraient perdu du capital ; la pire, emise le {_date(res.emission[i_pire])}"
+              f"auraient perdu du capital ; la pire, émise le {_date(res.emission[i_pire])}"
               f"{_contexte(res.emission[i_pire])}, aurait rendu {_p(res.capital[i_pire])} du "
               f"nominal plus le coupon. »")
     _discours(phrase, sj, r["n"], 1 - r["perte"])
@@ -627,20 +627,20 @@ def _change_onglet():
 
 
 def affiche(m):
-    st.title("Backtest historique", help="**Ce que c'est.** Le meme produit lance chaque mois depuis 2000 et deroule sur les vraies\nclotures de l'Euro Stoxx 50 : quand a-t-il ete rappele, combien de coupons, quelle perte,\net combien aurait rapporte l'indice sur la meme periode.\n\n**Comment c'est construit.** Clotures quotidiennes STOXX de 1986 a octobre 2026, dividendes\nnets reinvestis pour le net return et l'indice a decrement. Dates d'observation : meme date\ndu mois que l'emission. Barriere continue = chaque cloture. Seuls les produits termines\ncomptent.\n\n**Pourquoi un client le demande.** C'est la premiere question en rendez-vous : « et si\nj'avais achete ce produit par le passe ? ». Le Monte Carlo dit ce que coute le produit\naujourd'hui ; le backtest dit ce qui serait arrive.\n\n**Quoi regarder.** Le pire cas et sa date, la part de pertes, le rendement par annee\ninvestie contre la detention directe, et l'ecart entre l'histoire et le modele.")
+    st.title("Backtest historique", help="**Ce que c'est.** Le même produit lance chaque mois depuis 2000 et déroule sur les vraies\nclôtures de l'Euro Stoxx 50 : quand à-t-il été rappelé, combien de coupons, quelle perte,\net combien aurait rapporte l'indice sur la même période.\n\n**Comment c'est construit.** Clôtures quotidiennes STOXX de 1986 à octobre 2026, dividendes\nnets réinvestis pour le net return et l'indice à décrément. Dates d'observation : même date\ndu mois que l'émission. Barrière continue = chaque clôture. Seuls les produits termines\ncomptent.\n\n**Pourquoi un client le demande.** C'est la première question en rendez-vous : « et si\nj'avais achète ce produit par le passe ? ». Le Monte Carlo dit ce que coûte le produit\naujourd'hui ; le backtest dit ce qui serait arrive.\n\n**Quoi regarder.** Le pire cas et sa date, la part de pertes, le rendement par année\ninvestie contre la détention directe, et l'écart entre l'histoire et le modèle.")
     st.caption("Et si on avait vendu ce produit chaque mois depuis 2000 ?")
 
     c1, c2 = st.columns([2, 1])
     sj = SOUS_JACENTS[c1.radio(
         "Sous-jacent", list(SOUS_JACENTS), horizontal=True,
         help="Indice des prix : le SX5E classique, dividendes exclus. Net return : dividendes "
-             "nets reinvestis. Indice a decrement : dividendes reinvestis moins 50 points par "
-             "an (base 1000 le jour de l'emission, soit 5 % la premiere annee), le sous-jacent "
-             "de la plupart des autocalls vendus en France : coupon plus eleve, mais l'indice "
-             "decroche quand les dividendes reels sont sous le prelevement.",
+             "nets réinvestis. Indice a décrément : dividendes réinvestis moins 50 points par "
+             "an (base 1000 le jour de l'émission, soit 5 % la première année), le sous-jacent "
+             "de la plupart des autocalls vendus en France : coupon plus élevé, mais l'indice "
+             "décroche quand les dividendes réels sont sous le prélèvement.",
         key="bt_sous_jacent", bind="query-params")]
-    annee = c2.slider("Premiere emission", 1987, 2020, 2000, 1,
-                      help="Changer l'annee de depart change le verdict : demarrer en 2009 "
+    annee = c2.slider("Première émission", 1987, 2020, 2000, 1,
+                      help="Changer l'année de départ change le verdict : démarrer en 2009 "
                            "efface la bulle internet et la crise de 2008. C'est exactement ce "
                            "qu'un Sales ne doit pas faire pour embellir un backtest.",
                       key="bt_debut", bind="query-params")

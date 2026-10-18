@@ -10,7 +10,7 @@ import graphiques as G
 from moteur import S0
 from communs import MAX_CACHE, sim_panier
 
-CLASSIQUE, DECREMENT = "Indice classique", "Indice a decrement"
+CLASSIQUE, DECREMENT = "Indice classique", "Indice a décrément"
 
 # Garde-fou memoire. Simuler un worst-of occupe ~16 octets par sous-jacent,
 # par trajectoire et par pas (mesure) : 4 sous-jacents sur 6 ans avec 40 000
@@ -139,7 +139,7 @@ def table_worst_of(T, r, q, v_p, n_paths, n_obs, trig, bar_cp, bar_cap, memoire,
             _, _, pp = M.stats_autocall(c_, T, n_obs, trig, bar_cap)
             del c_
             lignes.append({"Sous-jacents": str(na),
-                           "Correlation": "-" if na == 1 else f"{co:.2f}",
+                           "Corrélation": "-" if na == 1 else f"{co:.2f}",
                            "Coupon annuel": f"{cp*par_an*100:,.2f}%",
                            "Proba de perte": f"{pp*100:,.1f}%"})
     return lignes
@@ -183,59 +183,59 @@ def affiche(m):
     nominal, q, r, recovery, skew = m.nominal, m.q, m.r, m.recovery, m.skew
     spread, trajectoires, vol_atm = m.spread, m.trajectoires, m.vol_atm
 
-    st.title("Autocall Phoenix", help="**Ce que c'est.** Le produit phare des desks. Coupons conditionnels, et remboursement\nanticipe automatique si le sous-jacent est au-dessus d'un niveau a une date\nd'observation.\n\n**Les trois niveaux a distinguer.**\n- **Trigger** : au-dessus, le produit s'arrete et le client est rembourse.\n- **Barriere de coupon** : au-dessus, le coupon est paye.\n- **Barriere de capital** : observee a l'echeance seulement ; en dessous, le client encaisse\n  toute la baisse.\n\n**Le piege commercial.** Le rappel anticipe coupe les coupons futurs. Regarde la duree de\nvie moyenne : le produit dure rarement jusqu'au bout.\n\n**Le worst-of.** Active plusieurs sous-jacents : le plus mauvais decide de tout. Le coupon\ngrimpe, et la probabilite de perte aussi. C'est la version reellement dominante sur les\ndesks.\n\n**Les variantes du marche.**\n- **Step-down** : le trigger baisse avec le temps, le rappel devient plus facile.\n- **Indice a decrement** : l'indice reinvestit ses dividendes et retire un montant fixe\n  chaque annee. Coupon plus haut, risque plus haut, plus de risque de dividende pour la banque.\n- **Correlation de stress** : sur un worst-of, la correlation monte dans les krachs. Le\n  desk qui l'ignore surpaie le client.\n- **Grecques du desk** : ce que la banque doit couvrir une fois le produit vendu.")
+    st.title("Autocall Phoenix", help="**Ce que c'est.** Le produit phare des desks. Coupons conditionnels, et remboursement\nanticipe automatique si le sous-jacent est au-dessus d'un niveau à une date\nd'observation.\n\n**Les trois niveaux à distinguer.**\n- **Trigger** : au-dessus, le produit s'arrête et le client est remboursé.\n- **Barrière de coupon** : au-dessus, le coupon est payé.\n- **Barrière de capital** : observée à l'échéance seulement ; en dessous, le client encaisse\n  toute la baisse.\n\n**Le piège commercial.** Le rappel anticipe coupe les coupons futurs. Regarde la durée de\nvie moyenne : le produit dure rarement jusqu'au bout.\n\n**Le worst-of.** Active plusieurs sous-jacents : le plus mauvais décide de tout. Le coupon\ngrimpe, et la probabilité de perte aussi. C'est la version réellement dominante sur les\ndesks.\n\n**Les variantes du marché.**\n- **Step-down** : le trigger baisse avec le temps, le rappel devient plus facile.\n- **Indice a décrément** : l'indice réinvestit ses dividendes et retire un montant fixe\n  chaque année. Coupon plus haut, risque plus haut, plus de risque de dividende pour la banque.\n- **Corrélation de stress** : sur un worst-of, la corrélation monte dans les krachs. Le\n  desk qui l'ignore surpaie le client.\n- **Grecques du desk** : ce que la banque doit couvrir une fois le produit vendu.")
     st.caption("Le produit phare des desks.")
     bandeau_modele()
 
     c1, c2, c3 = st.columns(3)
-    T = c1.slider("Maturite maximale (annees)", 1.0, 6.0, 3.0, 0.5,
-                  help="Duree MAXIMALE : le produit est presque toujours rappele avant.",
+    T = c1.slider("Maturité maximale (années)", 1.0, 6.0, 3.0, 0.5,
+                  help="Durée MAXIMALE : le produit est presque toujours rappelé avant.",
                   key="ac_maturite", bind="query-params")
-    freq = c1.selectbox("Frequence d'observation",
+    freq = c1.selectbox("Fréquence d'observation",
                         ["Trimestrielle", "Semestrielle", "Annuelle"],
                         key="ac_frequence", bind="query-params")
     trigger = c2.slider("Trigger de rappel (%)", 80, 110, 100, 5,
                         key="ac_trigger", bind="query-params")
-    bar_cp = c2.slider("Barriere de coupon (%)", 50, 100, 70, 5,
-                       help="Le coupon n'est paye que si le sous-jacent est au-dessus a "
+    bar_cp = c2.slider("Barrière de coupon (%)", 50, 100, 70, 5,
+                       help="Le coupon n'est payé que si le sous-jacent est au-dessus à "
                             "la date d'observation. C'est ce qui distingue un Phoenix "
                             "d'un BRC.", key="ac_bar_coupon", bind="query-params")
-    bar_cap = c3.slider("Barriere de capital (%)", 40, 90, 60, 5,
-                        help="Observee uniquement A L'ECHEANCE. Le vrai risque du produit.",
+    bar_cap = c3.slider("Barrière de capital (%)", 40, 90, 60, 5,
+                        help="Observée uniquement A L'ÉCHÉANCE. Le vrai risque du produit.",
                         key="ac_bar_capital", bind="query-params")
-    memoire = c3.checkbox("Effet memoire", value=True, key="ac_memoire", bind="query-params")
+    memoire = c3.checkbox("Effet mémoire", value=True, key="ac_memoire", bind="query-params")
 
     st.markdown("---")
     s1, s2 = st.columns(2)
     step_down = s1.checkbox(
-        "Trigger degressif (step-down)", key="ac_step_down", bind="query-params",
-        help="Le seuil de rappel baisse chaque annee. Le client sort plus souvent avec son "
-             "gain meme si le marche a un peu baisse, et va moins souvent jusqu'a "
-             "l'echeance, la ou se joue la perte en capital. Le prix : moins de coupons au "
-             "total, puisque le produit s'arrete plus tot ; le coupon par periode bouge peu, "
-             "car la banque preleve sa marge sur une vie plus courte.")
+        "Trigger dégressif (step-down)", key="ac_step_down", bind="query-params",
+        help="Le seuil de rappel baisse chaque année. Le client sort plus souvent avec son "
+             "gain même si le marché a un peu baissé, et va moins souvent jusqu'à "
+             "l'échéance, là où se joue la perte en capital. Le prix : moins de coupons au "
+             "total, puisque le produit s'arrête plus tôt ; le coupon par période bouge peu, "
+             "car la banque prélève sa marge sur une vie plus courte.")
     if step_down:
         pas_sd = s1.slider("Baisse du trigger par an (points de %)", 1, 10, 5, 1,
-                           help="5 points : 100 % la premiere annee, 95 % la deuxieme, "
-                                "90 % la troisieme...", key="ac_sd_pas", bind="query-params")
+                           help="5 points : 100 % la première année, 95 % la deuxième, "
+                                "90 % la troisième...", key="ac_sd_pas", bind="query-params")
         plancher_sd = s1.slider("Plancher du trigger (%)", 60, 100, 80, 5,
                                 help="Le trigger ne descend jamais sous ce niveau.",
                                 key="ac_sd_plancher", bind="query-params")
     indice = s2.radio(
         "Sous-jacent", [CLASSIQUE, DECREMENT], horizontal=True,
         key="ac_indice", bind="query-params",
-        help="Indice classique : un indice de prix, dont les dividendes vont a la banque. "
-             "Indice a decrement : l'indice reinvestit ses dividendes et retire chaque "
-             "annee un montant fixe de points. Tres repandu dans les autocalls vendus en "
+        help="Indice classique : un indice de prix, dont les dividendes vont à la banque. "
+             "Indice a décrément : l'indice réinvestit ses dividendes et retire chaque "
+             "année un montant fixe de points. Très répandu dans les autocalls vendus en "
              "France.")
     if indice == DECREMENT:
-        pts_dec = s2.slider("Decrement (points d'indice par an)", 10, 100, 50, 5,
-                            help="Montant fixe retire chaque annee, en points d'indice. "
-                                 "Fixe en points, pas en % : il pese plus lourd quand "
+        pts_dec = s2.slider("Décrément (points d'indice par an)", 10, 100, 50, 5,
+                            help="Montant fixe retire chaque année, en points d'indice. "
+                                 "Fixe en points, pas en % : il pèse plus lourd quand "
                                  "l'indice baisse.", key="ac_dec_points", bind="query-params")
-        niveau_dec = s2.select_slider("Niveau de l'indice a l'emission (points)",
+        niveau_dec = s2.select_slider("Niveau de l'indice à l'émission (points)",
                                       [1000, 2000, 3000, 4000, 5000], 1000,
-                                      help="Convertit le decrement en % du niveau initial : "
+                                      help="Convertit le décrément en % du niveau initial : "
                                            "50 points sur 1 000 = 5 % par an, sur 5 000 = "
                                            "1 % par an.", key="ac_dec_niveau",
                                       bind="query-params")
@@ -244,37 +244,37 @@ def affiche(m):
     w1, w2 = st.columns(2)
     n_actifs = w1.select_slider(
         "Nombre de sous-jacents (worst-of)", [1, 2, 3, 4], 1,
-        help="Le plus mauvais des sous-jacents decide de tout. C'est la structure "
-             "reellement dominante sur les desks.", key="ac_sous_jacents", bind="query-params")
+        help="Le plus mauvais des sous-jacents décide de tout. C'est la structure "
+             "réellement dominante sur les desks.", key="ac_sous_jacents", bind="query-params")
     correl = w2.slider(
-        "Correlation entre sous-jacents", 0.0, 0.95, 0.60, 0.05,
+        "Corrélation entre sous-jacents", 0.0, 0.95, 0.60, 0.05,
         disabled=(n_actifs == 1),
-        help="Le parametre de pricing dominant sur un worst-of. Correlation haute : les "
-             "actifs bougent ensemble, le panier ressemble a un actif unique, coupon "
-             "faible. Correlation basse : il y a presque toujours un trainard, coupon "
-             "eleve et risque eleve.", key="ac_correlation", bind="query-params")
+        help="Le paramètre de pricing dominant sur un worst-of. Corrélation haute : les "
+             "actifs bougent ensemble, le panier ressemble à un actif unique, coupon "
+             "faible. Corrélation basse : il y a presque toujours un traînard, coupon "
+             "élevé et risque élevé.", key="ac_correlation", bind="query-params")
     # pas de case grisee en mono sous-jacent : la case n'apparait qu'avec un panier
     stress = n_actifs > 1 and w1.checkbox(
-        "Correlation de stress (krach)", key="ac_stress", bind="query-params",
-        help="Fait de marche : dans les ventes paniques, tout baisse en meme temps et les "
-             "correlations montent. Ici, la correlation passe au niveau de krach tant que "
-             "le marche est a plus du seuil sous son plus haut.")
+        "Corrélation de stress (krach)", key="ac_stress", bind="query-params",
+        help="Fait de marché : dans les ventes paniques, tout baisse en même temps et les "
+             "corrélations montent. Ici, la corrélation passe au niveau de krach tant que "
+             "le marché est à plus du seuil sous son plus haut.")
     if stress:
         correl_stress = w1.slider(
-            "Correlation en krach", 0.0, 0.95, 0.90, 0.05,
-            help="Niveau atteint par la correlation pendant les krachs. 90 % : tout chute "
+            "Corrélation en krach", 0.0, 0.95, 0.90, 0.05,
+            help="Niveau atteint par la corrélation pendant les krachs. 90 % : tout chute "
                  "ensemble.", key="ac_correl_stress", bind="query-params")
         seuil_stress = w2.slider(
             "Seuil de krach (% sous le plus haut)", 5, 30, 10, 5,
-            help="Le marche (moyenne du panier) est en krach quand il est a plus de ce "
-                 "pourcentage sous son plus haut. A 10 %, un marche a 20-30 % de vol y passe "
-                 "plus de la moitie du temps : monte le seuil pour ne garder que les vrais "
+            help="Le marché (moyenne du panier) est en krach quand il est à plus de ce "
+                 "pourcentage sous son plus haut. À 10 %, un marché a 20-30 % de vol y passe "
+                 "plus de la moitié du temps : monte le seuil pour ne garder que les vrais "
                  "krachs.", key="ac_seuil_stress", bind="query-params")
 
     decrement = indice == DECREMENT and n_actifs == 1
     D = M.decrement_base100(pts_dec, niveau_dec) if decrement else 0.0
     if indice == DECREMENT and n_actifs > 1:
-        s2.caption("Indice a decrement : mono sous-jacent seulement. Le worst-of reste sur "
+        s2.caption("Indice a décrément : mono sous-jacent seulement. Le worst-of reste sur "
                    "des indices classiques.")
     elif decrement:
         s2.caption(f"{pts_dec} points sur un indice a {niveau_dec:,}".replace(",", " ")
@@ -305,10 +305,10 @@ def affiche(m):
         else:
             ch, _ = sim_panier(n_actifs, correl, S0, T, r, q, v_panier, n_panier)
         if BATES:
-            st.warning("Le worst-of est simule en Black-Scholes multi-actifs : un Bates "
-                       "multi-dimensionnel demanderait une matrice de correlation entre "
-                       "les volatilites de chaque actif, ce qui depasse le cadre de cet "
-                       "outil. Le mecanisme de correlation reste juste.")
+            st.warning("Le worst-of est simulé en Black-Scholes multi-actifs : un Bates "
+                       "multi-dimensionnel demanderait une matrice de corrélation entre "
+                       "les volatilités de chaque actif, ce qui dépasse le cadre de cet "
+                       "outil. Le mécanisme de corrélation reste juste.")
     elif decrement:
         ch, _ = sim_decrement(T, r, vol_atm, skew, n_paths, D, bates)
     else:
@@ -321,12 +321,12 @@ def affiche(m):
 
     mt = st.columns(4)
     mt[0].metric("Coupon par observation", f"{cpn*100:,.2f}%")
-    mt[1].metric("Equivalent annuel", f"{cpn*par_an*100:,.2f}% p.a.")
-    mt[2].metric("Duree de vie moyenne", f"{duree:,.2f} ans")
+    mt[1].metric("Équivalent annuel", f"{cpn*par_an*100:,.2f}% p.a.")
+    mt[2].metric("Durée de vie moyenne", f"{duree:,.2f} ans")
     mt[3].metric("Proba de perte en capital", f"{p_perte*100:,.1f}%")
     if n_panier < n_paths:
         st.caption(f"Worst-of calcule sur {entier(n_panier)} trajectoires au lieu de "
-                   f"{entier(n_paths)}, pour tenir dans la memoire du serveur.")
+                   f"{entier(n_paths)}, pour tenir dans la mémoire du serveur.")
 
     produit = (nominal, n_obs, trig, bar_cp / 100, bar_cap / 100, memoire, marge)
 
@@ -337,12 +337,12 @@ def affiche(m):
         st.table([{"Seuil de rappel": nom,
                    "Coupon annuel": f"{x['coupon']*par_an*100:,.2f}%",
                    "Rappel anticipe": f"{x['p_rappel']*100:,.1f}%",
-                   "Duree de vie": f"{x['duree']:,.2f} ans",
+                   "Durée de vie": f"{x['duree']:,.2f} ans",
                    "Proba de perte": f"{x['p_perte']*100:,.1f}%"}
-                  for nom, x in ((f"Fixe a {trigger} %", fixe),
+                  for nom, x in ((f"Fixe à {trigger} %", fixe),
                                  (f"Step-down {trigger} % -> {bas_sd*100:,.0f} %", deg))])
         st.caption("Le step-down rend le rappel plus facile avec le temps : le client sort plus "
-                   "souvent avec son gain et va moins souvent a l'echeance, la ou se joue la "
+                   "souvent avec son gain et va moins souvent à l'échéance, là où se joue la "
                    f"perte. Effet sur le coupon : {fixe['coupon']*par_an*100:,.2f} % -> "
                    f"{cpn*par_an*100:,.2f} % par an.")
 
@@ -354,70 +354,70 @@ def affiche(m):
         st.table([{"Sous-jacent": nom,
                    "Coupon annuel": f"{x['coupon']*par_an*100:,.2f}%",
                    "Proba de perte": f"{x['p_perte']*100:,.1f}%",
-                   "Duree de vie": f"{x['duree']:,.2f} ans",
-                   "Niveau moyen a l'echeance": f"{x['forward']:,.1f}"}
+                   "Durée de vie": f"{x['duree']:,.2f} ans",
+                   "Niveau moyen à l'échéance": f"{x['forward']:,.1f}"}
                   for nom, x in ((f"Indice classique (dividende {q*100:,.2f} %)", cl),
-                                 (f"Decrement {D:,.2f} % du niveau courant", pc),
-                                 (f"Decrement {pts_dec} points (= {D:,.2f} % au depart)", po))])
-        st.caption("Memes tirages et meme vue de marche pour les trois lignes"
+                                 (f"Décrément {D:,.2f} % du niveau courant", pc),
+                                 (f"Décrément {pts_dec} points (= {D:,.2f} % au départ)", po))])
+        st.caption("Mêmes tirages et même vue de marché pour les trois lignes"
                    + (f", sur {entier(n_cmp)} trajectoires" if n_cmp < n_paths else "")
-                   + ". La ligne du milieu isole l'effet niveau (decrement contre dividende), "
-                     "la derniere ajoute l'effet points.")
+                   + ". La ligne du milieu isole l'effet niveau (décrément contre dividende), "
+                     "la dernière ajoute l'effet points.")
         if po["coupon"] > cl["coupon"]:
-            phrase = ("« Le coupon est plus eleve parce que l'indice retire chaque annee un "
-                      "montant fixe superieur aux dividendes ; c'est aussi pour ca que le risque "
-                      "monte : ce montant fixe pese plus lourd quand le marche baisse. »")
+            phrase = ("« Le coupon est plus élevé parce que l'indice retire chaque année un "
+                      "montant fixe supérieur aux dividendes ; c'est aussi pour ça que le risque "
+                      "monte : ce montant fixe pèse plus lourd quand le marché baisse. »")
         else:
-            phrase = ("« Ici le decrement retire moins que les dividendes : l'indice monte plus "
+            phrase = ("« Ici le décrément retire moins que les dividendes : l'indice monte plus "
                       "vite que l'indice de prix et le coupon baisse. Le risque, lui, monte "
-                      "quand meme : le montant fixe pese plus lourd quand le marche baisse. »")
+                      "quand même : le montant fixe pèse plus lourd quand le marché baisse. »")
         st.info(
             f"**En une phrase pour le client** : {phrase}\n\n"
             f"**Pourquoi le coupon bouge.** L'indice classique perd {q*100:,.2f} % par an de "
-            f"dividendes, l'indice a decrement {D:,.2f} % au depart. Niveau moyen a "
-            f"l'echeance : {cl['forward']:,.1f} contre {po['forward']:,.1f}. Plus ce niveau est "
-            "bas, moins le produit est rappele et plus le put que le client vend vaut cher : "
+            f"dividendes, l'indice à décrément {D:,.2f} % au départ. Niveau moyen à "
+            f"l'échéance : {cl['forward']:,.1f} contre {po['forward']:,.1f}. Plus ce niveau est "
+            "bas, moins le produit est rappelé et plus le put que le client vend vaut cher : "
             f"coupon {cl['coupon']*par_an*100:,.2f} % -> {po['coupon']*par_an*100:,.2f} % par an. "
-            "Et la banque n'a plus de risque de dividende a couvrir.\n\n"
-            f"**Pourquoi la perte monte.** {pts_dec} points pesent {D:,.1f} % du niveau de "
-            f"depart, {2*D:,.1f} % quand l'indice a perdu la moitie de sa valeur : le "
-            "decrement accelere la chute exactement dans les scenarios ou se joue la perte "
-            "en capital. A poids egal au depart, la proba de perte passe de "
-            f"{pc['p_perte']*100:,.1f} % (decrement en %) a "
-            f"{po['p_perte']*100:,.1f} % (decrement en points).")
+            "Et la banque n'a plus de risque de dividende à couvrir.\n\n"
+            f"**Pourquoi la perte monte.** {pts_dec} points pèsent {D:,.1f} % du niveau de "
+            f"départ, {2*D:,.1f} % quand l'indice a perdu la moitié de sa valeur : le "
+            "décrément accélère la chute exactement dans les scénarios où se joue la perte "
+            "en capital. À poids égal au départ, la proba de perte passe de "
+            f"{pc['p_perte']*100:,.1f} % (décrément en %) à "
+            f"{po['p_perte']*100:,.1f} % (décrément en points).")
 
     # --- correlation de stress : le message contre-intuitif
     if stress:
         res = compare_stress(n_actifs, correl, correl_stress, seuil_stress / 100, T, r, q,
                              v_panier, n_panier, produit, spread, recovery)
         co, sr, ha = res["constante"], res["stress"], res["haute"]
-        st.table([{"Correlation": nom,
+        st.table([{"Corrélation": nom,
                    "Coupon annuel": f"{x['coupon']*par_an*100:,.2f}%",
                    "Proba de perte": f"{x['p_perte']*100:,.1f}%",
-                   "Duree de vie": f"{x['duree']:,.2f} ans"}
+                   "Durée de vie": f"{x['duree']:,.2f} ans"}
                   for nom, x in ((f"Constante {correl*100:,.0f} %", co),
                                  (f"{correl*100:,.0f} %, {correl_stress*100:,.0f} % en krach", sr),
                                  (f"Constante {correl_stress*100:,.0f} %", ha))])
         ecart = (co["coupon"] - sr["coupon"]) * par_an * 100
         if ecart > 0:
             st.info(
-                "**Le sens est contre-intuitif : la correlation de krach fait BAISSER le coupon "
+                "**Le sens est contre-intuitif : la corrélation de krach fait BAISSER le coupon "
                 f"et la perte.** Coupon {co['coupon']*par_an*100:,.2f} % -> "
                 f"{sr['coupon']*par_an*100:,.2f} % par an, proba de perte "
                 f"{co['p_perte']*100:,.1f} % -> {sr['p_perte']*100:,.1f} %. Quand tout chute "
                 "ensemble, le plus mauvais des sous-jacents est moins mauvais : moins de "
                 "dispersion, donc le put worst-of que le client vend vaut moins.\n\n"
-                f"**Pour le desk** : pricer en correlation constante, c'est surpayer le client "
-                f"de {ecart:,.2f} points par an, et perdre quand la correlation monte en krach. "
-                "C'est le skew de correlation : un desk le facture, ou il le subit.")
+                f"**Pour le desk** : pricer en corrélation constante, c'est surpayer le client "
+                f"de {ecart:,.2f} points par an, et perdre quand la corrélation monte en krach. "
+                "C'est le skew de corrélation : un desk le facture, ou il le subit.")
         else:
             st.info(
-                "**Ici la correlation de krach est plus basse que la correlation normale** : "
+                "**Ici la corrélation de krach est plus basse que la corrélation normale** : "
                 "plus de dispersion dans les krachs, donc un put worst-of plus cher et un "
                 f"coupon plus haut ({co['coupon']*par_an*100:,.2f} % -> "
-                f"{sr['coupon']*par_an*100:,.2f} % par an). Le marche fait l'inverse : les "
-                "correlations montent dans les krachs.")
-        st.caption(f"Marche en krach (plus de {seuil_stress} % sous son plus haut) "
+                f"{sr['coupon']*par_an*100:,.2f} % par an). Le marché fait l'inverse : les "
+                "corrélations montent dans les krachs.")
+        st.caption(f"Marché en krach (plus de {seuil_stress} % sous son plus haut) "
                    f"{part_stress*100:,.0f} % du temps. Les vols individuelles restent fixes : "
                    "dans un vrai krach, la hausse de vol s'ajoute et fait mal.")
 
@@ -433,8 +433,8 @@ def affiche(m):
         if rappel_a is not None:
             j = indices[rappel_a]
             couleurs.append(G.GAIN)
-            statuts.append(f"rappele a l'observation {rappel_a + 1} ({tt[j]:,.2f} an) : "
-                           "nominal rembourse + coupon")
+            statuts.append(f"rappelé à l'observation {rappel_a + 1} ({tt[j]:,.2f} an) : "
+                           "nominal remboursé + coupon")
             t_fin.append(tt[j])
             rappels.append({"t": tt[j], "y": float(chem[j]), "couleur": G.GAIN})
         elif chem[-1] < bar_cap / 100 * S0:
@@ -443,11 +443,11 @@ def affiche(m):
             t_fin.append(T)
         else:
             couleurs.append(G.NIVEAU)
-            statuts.append("va au terme sans perte : nominal rembourse")
+            statuts.append("va au terme sans perte : nominal remboursé")
             t_fin.append(T)
-    niveaux = [(bar_cp / 100 * S0, f"barriere coupon  {bar_cp/100*S0:,.0f}", G.ACCENT,
+    niveaux = [(bar_cp / 100 * S0, f"barrière coupon  {bar_cp/100*S0:,.0f}", G.ACCENT,
                 T * 0.62),
-               (bar_cap / 100 * S0, f"barriere capital  {bar_cap/100*S0:,.0f}", G.PERTE)]
+               (bar_cap / 100 * S0, f"barrière capital  {bar_cap/100*S0:,.0f}", G.PERTE)]
     if escalier_visible:
         paliers = [s * S0 for s in seuils[:-1]]
         # reperes invisibles : l'echelle du graphe contient tout l'escalier
@@ -458,20 +458,20 @@ def affiche(m):
     sous_titre = ("Les traits verticaux sont les dates d'observation. Survole une trajectoire "
                   "pour voir son issue.")
     if escalier_visible:
-        sous_titre = (f"Le trigger descend de {pas_sd} points par an jusqu'a "
+        sous_titre = (f"Le trigger descend de {pas_sd} points par an jusqu'à "
                       f"{min(paliers):,.0f}. " + sous_titre)
     graphe = G.trajectoires(
         ch, T, niveaux,
-        couleurs, f"Duree de vie moyenne : {duree:,.2f} ans sur {T:,.1f} possibles",
+        couleurs, f"Durée de vie moyenne : {duree:,.2f} ans sur {T:,.1f} possibles",
         sous_titre,
         ylabel="Worst-of du panier" if n_actifs > 1 else "Sous-jacent", n_max=60,
         zone_sous=bar_cap / 100 * S0, statuts=statuts, t_fin=t_fin, points=rappels,
         dates_v=[tt[j] for j in indices[:-1]],
-        legende=[("Rappele par anticipation", G.GAIN), ("Perte en capital", G.PERTE),
+        legende=[("Rappelé par anticipation", G.GAIN), ("Perte en capital", G.PERTE),
                  ("Va au terme sans perte", G.NIVEAU)])
     if escalier_visible:
         graphe = escalier(graphe, [tt[j] for j in indices[:-1]], paliers,
-                          f"trigger degressif  {paliers[0]:,.0f} -> {paliers[-1]:,.0f}", T)
+                          f"trigger dégressif  {paliers[0]:,.0f} -> {paliers[-1]:,.0f}", T)
     G.affiche(graphe)
 
     # --- graphe 2 : quand le produit se termine
@@ -486,21 +486,21 @@ def affiche(m):
 
     cumul = np.cumsum(probas) * 100
     infos = [("Date", [f"{tt[j]:,.2f} an" for j in indices[:-1]] + [f"{T:,.2f} an"]),
-             ("Termine a cette date ou avant", [G.pct(v, 0) for v in cumul])]
+             ("Termine à cette date ou avant", [G.pct(v, 0) for v in cumul])]
     if step_down:
         infos.insert(1, ("Trigger de rappel", [f"{s*100:,.0f} %" for s in seuils[:-1]] + ["-"]))
     graphe = G.barres(
         labels, np.array(probas) * 100, couleurs,
-        f"{(1-probas[-1])*100:,.0f}% des scenarios se terminent avant l'echeance",
-        "Chaque rappel anticipe coupe tous les coupons restants", "Probabilite (%)",
+        f"{(1-probas[-1])*100:,.0f}% des scénarios se terminent avant l'échéance",
+        "Chaque rappel anticipe coupe tous les coupons restants", "Probabilité (%)",
         nom_x="Observation", infos=infos)
     G.affiche(graphe)
 
     # --- grecques du desk
     if st.checkbox("Grecques du desk", key="ac_voir_grecques", bind="query-params",
                    help="Ce que la banque doit couvrir une fois le produit vendu : ses "
-                        "sensibilites sont l'oppose de celles du client. Calcul par chocs "
-                        "sur 10 000 trajectoires, memes tirages a chaque choc."):
+                        "sensibilités sont l'opposé de celles du client. Calcul par chocs "
+                        "sur 10 000 trajectoires, mêmes tirages à chaque choc."):
         g = grecques_desk(T, r, 0.0 if decrement else q, v_panier if n_actifs > 1 else v_bs,
                           n_obs, trig, bar_cp / 100, bar_cap / 100, memoire, float(cpn),
                           nominal, n_actifs, correl if n_actifs > 1 else 0.0,
@@ -515,77 +515,77 @@ def affiche(m):
              f"Vendre {-g['couverture']*100:,.0f} % du nominal en sous-jacent, et ajuster "
              "chaque jour."),
             ("Gamma", f"{g['gamma']:+,.3f} EUR par point, par point",
-             lecture(g["gamma"], "Long gamma : il rachete quand le marche baisse et revend "
-                                 "quand il monte. Il gagne si le marche bouge beaucoup.",
-                     "Court gamma : il vend quand le marche baisse et rachete quand il monte. "
-                     "Il perd si le marche bouge beaucoup.")),
+             lecture(g["gamma"], "Long gamma : il rachète quand le marché baisse et revend "
+                                 "quand il monte. Il gagne si le marché bouge beaucoup.",
+                     "Court gamma : il vend quand le marché baisse et rachète quand il monte. "
+                     "Il perd si le marché bouge beaucoup.")),
             ("Vega", f"{g['vega']:+,.2f} EUR par point de vol",
              lecture(g["vega"], "Long vega : le client lui a vendu la protection sous la "
-                                "barriere. Il revend de la vol longue sur le marche.",
-                     "Court vega : il rachete de la vol sur le marche.")),
+                                "barrière. Il revend de la vol longue sur le marché.",
+                     "Court vega : il rachète de la vol sur le marché.")),
         ]
         if n_actifs > 1:
-            lignes.append(("Correlation", f"{g['correlation']:+,.2f} EUR par point de correlation",
+            lignes.append(("Corrélation", f"{g['correlation']:+,.2f} EUR par point de corrélation",
                            lecture(g["correlation"],
-                                   "Long correlation : il gagne si les actifs bougent ensemble.",
-                                   "Court correlation : le put worst-of qu'il detient vaut moins "
-                                   "quand tout chute ensemble. Presque impossible a couvrir "
-                                   "sur le marche.")))
+                                   "Long corrélation : il gagne si les actifs bougent ensemble.",
+                                   "Court corrélation : le put worst-of qu'il détient vaut moins "
+                                   "quand tout chute ensemble. Presque impossible à couvrir "
+                                   "sur le marché.")))
         lignes += [
             ("Dividende", f"{g['dividende'] + 0.0:+,.2f} EUR par point de dividende",
              lecture(g["dividende"], "Long dividendes : moins de dividendes = forward plus haut "
-                                     "= produit plus cher a servir. Il vend des dividendes "
+                                     "= produit plus cher à servir. Il vend des dividendes "
                                      "futurs pour se couvrir.",
-                     "Court dividendes : il rachete des dividendes futurs pour se couvrir.",
-                     "Aucun risque : l'indice a decrement reinvestit ses dividendes. C'est sa "
-                     "raison d'etre pour la banque.")),
+                     "Court dividendes : il rachète des dividendes futurs pour se couvrir.",
+                     "Aucun risque : l'indice à décrément réinvestit ses dividendes. C'est sa "
+                     "raison d'être pour la banque.")),
             ("Rho", f"{g['rho']:+,.2f} EUR par point de taux",
              lecture(g["rho"], "Gagne si les taux montent : la partie obligataire du produit "
                                "vaut moins pour le client.",
                      "Perd si les taux montent.")),
             ("Theta", f"{g['theta']:+,.2f} EUR par jour",
-             lecture(g["theta"], "Gagne a marche inchange, chaque jour qui passe.",
-                     "Perd a marche inchange, chaque jour qui passe : le prix de son gamma et "
+             lecture(g["theta"], "Gagne à marché inchangé, chaque jour qui passe.",
+                     "Perd à marché inchangé, chaque jour qui passe : le prix de son gamma et "
                      "de son vega.")),
         ]
         st.table([{"Grecque": a, "Desk": b, "Ce que le desk fait": c} for a, b, c in lignes])
         texte = ("**Pourquoi le desk est long vega et long dividendes.** En vendant l'autocall, "
-                 "la banque a achete au client une protection contre la baisse (le put sous la "
-                 "barriere de capital), payee par les coupons. Elle gagne si la vol monte, et "
-                 "si les dividendes montent (forward plus bas, rappels plus rares a financer). "
+                 "la banque a acheté au client une protection contre la baisse (le put sous la "
+                 "barrière de capital), payée par les coupons. Elle gagne si la vol monte, et "
+                 "si les dividendes montent (forward plus bas, rappels plus rares à financer). "
                  "Pour se couvrir, les desks revendent de la vol longue et des dividendes "
-                 "futurs : c'est pour ca que les dividendes futurs cotent sous leur valeur "
-                 "attendue. En 2020, l'annulation des dividendes a coute cher a tous les desks "
+                 "futurs : c'est pour ça que les dividendes futurs cotent sous leur valeur "
+                 "attendue. En 2020, l'annulation des dividendes à coûte cher à tous les desks "
                  "d'autocalls.")
         if decrement:
-            texte += ("\n\n**Sur l'indice a decrement**, la sensibilite au dividende disparait : "
-                      "la banque ne porte plus ce risque, et le client recoit un coupon plus "
-                      "haut en echange.")
+            texte += ("\n\n**Sur l'indice à décrément**, la sensibilité au dividende disparaît : "
+                      "la banque ne porte plus ce risque, et le client reçoit un coupon plus "
+                      "haut en échange.")
         if n_actifs > 1:
-            texte += ("\n\n**Pourquoi il est court correlation.** Le client lui a vendu un put "
+            texte += ("\n\n**Pourquoi il est court corrélation.** Le client lui a vendu un put "
                       "sur le plus mauvais des sous-jacents, qui vaut le plus quand les actifs "
-                      "se dispersent. Si la correlation monte (krach), ce put perd de sa "
+                      "se dispersent. Si la corrélation monte (krach), ce put perd de sa "
                       "valeur et le desk perd. Ce risque se couvre mal : il reste dans les "
                       "livres de la banque.")
         st.info(texte)
         st.caption(f"Valeur du produit pour le client : {G.eur(g['pv_client'])} pour "
-                   f"{G.eur(nominal)} de nominal, hors risque emetteur. Point de vue du desk : "
-                   "l'oppose des sensibilites du client.")
+                   f"{G.eur(nominal)} de nominal, hors risque émetteur. Point de vue du desk : "
+                   "l'opposé des sensibilités du client.")
 
     if st.checkbox("Effet du nombre de sous-jacents", key="ac_voir_worst_of", bind="query-params"):
         v_p = vol_atm if BATES else v_bs
         st.table(table_worst_of(T, r, q, v_p, n_paths, n_obs, trig, bar_cp / 100,
                                 bar_cap / 100, memoire, marge, nominal, par_an))
         st.caption("Lis les deux colonnes ensemble. Le coupon double entre un mono "
-                   "sous-jacent et un worst-of decorrele — et la probabilite de perte "
-                   "aussi. Un client qui ne regarde que le coupon ne voit qu'une moitie "
+                   "sous-jacent et un worst-of décorrélé — et la probabilité de perte "
+                   "aussi. Un client qui ne regarde que le coupon ne voit qu'une moitié "
                    "du produit.")
 
     st.info(
-        f"**Duree de vie moyenne : {duree:,.2f} ans sur {T:,.1f} possibles.** Le rappel "
-        "anticipe coupe les coupons futurs. Un client qui compare le coupon affiche a un "
-        "rendement obligataire se trompe : il ne le touchera peut-etre qu'une ou deux fois."
-        + ("\n\n**Sur un worst-of, le coupon spectaculaire a une contrepartie simple** : "
+        f"**Durée de vie moyenne : {duree:,.2f} ans sur {T:,.1f} possibles.** Le rappel "
+        "anticipe coupe les coupons futurs. Un client qui compare le coupon affiche à un "
+        "rendement obligataire se trompe : il ne le touchera peut-être qu'une ou deux fois."
+        + ("\n\n**Sur un worst-of, le coupon spectaculaire à une contrepartie simple** : "
            "il faut que TOUS les sous-jacents tiennent, pas un seul. Plus ils sont "
-           "decorreles, plus il est probable qu'au moins un decroche."
+           "décorrélés, plus il est probable qu'au moins un décroche."
            if n_actifs > 1 else ""))

@@ -282,15 +282,15 @@ def brc_barriere(mk, coupon_cible, T, strike=1.0, continu=True, bornes=(0.40, No
         lambda b: _coupon_brc_sur(sims, mk, T, b, strike, continu),
         _grille(bornes[0], haut, 0.05), coupon_cible)
     if ok and borne:
-        msg = (f"Cible depassee : meme avec une barriere a {_pct(x)}, le coupon est de "
+        msg = (f"Cible dépassée : même avec une barrière a {_pct(x)}, le coupon est de "
                f"{_pct(fx, 2)} p.a.")
     elif ok:
-        msg = (f"Barriere a {_pct(x)} pour un coupon de {_pct(fx, 2)} p.a. "
+        msg = (f"Barrière a {_pct(x)} pour un coupon de {_pct(fx, 2)} p.a. "
                f"({T:g} an(s), strike {_pct(strike, 0)}).")
     else:
-        msg = (f"Impossible : {_pct(coupon_cible, 2)} p.a. n'est pas atteignable a {T:g} an(s) "
-               f"et strike {_pct(strike, 0)}. Au mieux {_pct(fx, 2)} p.a., avec une barriere "
-               f"a {_pct(x)}. Pour aller plus haut : allonger la maturite ou monter le strike.")
+        msg = (f"Impossible : {_pct(coupon_cible, 2)} p.a. n'est pas atteignable à {T:g} an(s) "
+               f"et strike {_pct(strike, 0)}. Au mieux {_pct(fx, 2)} p.a., avec une barrière "
+               f"à {_pct(x)}. Pour aller plus haut : allonger la maturité ou monter le strike.")
     return Reponse(ok, "barriere", x, fx, coupon_cible, msg, pts)
 
 
@@ -309,15 +309,15 @@ def brc_strike(mk, coupon_cible, T, barriere, continu=True, bornes=(None, 1.20))
         lambda k: _coupon_brc_sur(sims, mk, T, barriere, k, continu),
         _grille(bas, bornes[1], 0.05), coupon_cible)
     if ok and borne:
-        msg = (f"Cible depassee : meme avec un strike a {_pct(x)}, le coupon est de "
+        msg = (f"Cible dépassée : même avec un strike à {_pct(x)}, le coupon est de "
                f"{_pct(fx, 2)} p.a.")
     elif ok:
-        msg = (f"Strike a {_pct(x)} pour un coupon de {_pct(fx, 2)} p.a. "
-               f"({T:g} an(s), barriere {_pct(barriere, 0)}).")
+        msg = (f"Strike à {_pct(x)} pour un coupon de {_pct(fx, 2)} p.a. "
+               f"({T:g} an(s), barrière {_pct(barriere, 0)}).")
     else:
         msg = (f"Impossible : {_pct(coupon_cible, 2)} p.a. n'est pas atteignable avec une "
-               f"barriere a {_pct(barriere, 0)}. Au mieux {_pct(fx, 2)} p.a. avec un strike a "
-               f"{_pct(x)}. Pour aller plus haut : remonter la barriere.")
+               f"barrière a {_pct(barriere, 0)}. Au mieux {_pct(fx, 2)} p.a. avec un strike à "
+               f"{_pct(x)}. Pour aller plus haut : remonter la barrière.")
     return Reponse(ok, "strike", x, fx, coupon_cible, msg, pts)
 
 
@@ -340,15 +340,15 @@ def brc_maturite(mk, coupon_cible, barriere, strike=1.0, continu=True, grille=No
     ok = [p for p in pts if p[1] >= coupon_cible]
     if ok:
         T, c = ok[0]
-        msg = (f"Maturite minimale {T:g} an(s) : coupon {_pct(c, 2)} p.a. avec une barriere "
-               f"a {_pct(barriere, 0)}.")
+        msg = (f"Maturité minimale {T:g} an(s) : coupon {_pct(c, 2)} p.a. avec une barrière "
+               f"à {_pct(barriere, 0)}.")
         if T == grille[0]:
-            msg = f"Cible depassee des la maturite la plus courte ({T:g} an) : {_pct(c, 2)} p.a."
+            msg = f"Cible dépassée dès la maturité la plus courte ({T:g} an) : {_pct(c, 2)} p.a."
         return Reponse(True, "maturite", T, c, coupon_cible, msg, pts)
     T, c = max(pts, key=lambda p: p[1])
-    msg = (f"Impossible : {_pct(coupon_cible, 2)} p.a. n'est atteint a aucune maturite avec une "
-           f"barriere a {_pct(barriere, 0)}. Au mieux {_pct(c, 2)} p.a. a {T:g} an(s). "
-           "Pour aller plus haut : remonter la barriere ou le strike.")
+    msg = (f"Impossible : {_pct(coupon_cible, 2)} p.a. n'est atteint à aucune maturité avec une "
+           f"barrière a {_pct(barriere, 0)}. Au mieux {_pct(c, 2)} p.a. à {T:g} an(s). "
+           "Pour aller plus haut : remonter la barrière ou le strike.")
     return Reponse(False, "maturite", T, c, coupon_cible, msg, pts)
 
 
@@ -371,15 +371,15 @@ def autocall_barriere_capital(mk, coupon_cible_pa, T, par_an, trigger=1.0, bar_c
                                                 memoire),
         _grille(bornes[0], bornes[1], 0.05), coupon_cible_pa)
     if ok and borne:
-        msg = (f"Cible depassee : meme avec une barriere de capital a {_pct(x)}, le coupon est "
+        msg = (f"Cible dépassée : même avec une barrière de capital à {_pct(x)}, le coupon est "
                f"de {_pct(fx, 2)} p.a.")
     elif ok:
-        msg = (f"Barriere de capital a {_pct(x)} pour {_pct(fx, 2)} p.a. "
+        msg = (f"Barrière de capital à {_pct(x)} pour {_pct(fx, 2)} p.a. "
                f"({_pct(fx / par_an, 2)} par observation).")
     else:
         msg = (f"Impossible : {_pct(coupon_cible_pa, 2)} p.a. n'est pas atteignable. Au mieux "
-               f"{_pct(fx, 2)} p.a. avec une barriere de capital a {_pct(x)}. Pour aller plus "
-               "haut : remonter la barriere de coupon, passer en worst-of, ou allonger.")
+               f"{_pct(fx, 2)} p.a. avec une barrière de capital à {_pct(x)}. Pour aller plus "
+               "haut : remonter la barrière de coupon, passer en worst-of, ou allonger.")
     return Reponse(ok, "barriere_capital", x, fx, coupon_cible_pa, msg, pts)
 
 
@@ -403,13 +403,13 @@ def autocall_trigger(mk, coupon_cible_pa, T, par_an, bar_coupon=0.70, bar_capita
                                                  bar_capital, memoire),
         _grille(bornes[0], bornes[1], 0.05), coupon_cible_pa)
     if ok and borne:
-        msg = (f"Cible depassee : meme avec un trigger a {_pct(x)}, le coupon est de "
+        msg = (f"Cible dépassée : même avec un trigger à {_pct(x)}, le coupon est de "
                f"{_pct(fx, 2)} p.a.")
     elif ok:
-        msg = f"Trigger a {_pct(x)} pour {_pct(fx, 2)} p.a."
+        msg = f"Trigger à {_pct(x)} pour {_pct(fx, 2)} p.a."
     else:
         msg = (f"Impossible : {_pct(coupon_cible_pa, 2)} p.a. n'est pas atteignable en jouant "
-               f"sur le trigger. Au mieux {_pct(fx, 2)} p.a. avec un trigger a {_pct(x)}.")
+               f"sur le trigger. Au mieux {_pct(fx, 2)} p.a. avec un trigger à {_pct(x)}.")
     return Reponse(ok, "trigger", x, fx, coupon_cible_pa, msg, pts)
 
 
@@ -428,20 +428,20 @@ def cp_protection(mk, participation_cible, T, cap=3.0, bornes=(0.70, 1.0)):
     pts = [(p, participation_cp(mk, T, p, cap)) for p in _grille(bornes[1], bornes[0], 0.025)]
     if prot >= bornes[1]:
         p = participation_cp(mk, T, bornes[1], cap)
-        msg = (f"Cible depassee : avec {_pct(bornes[1], 0)} de protection, la participation est "
-               f"deja de {_pct(p, 0)}.")
+        msg = (f"Cible dépassée : avec {_pct(bornes[1], 0)} de protection, la participation est "
+               f"déjà de {_pct(p, 0)}.")
         return Reponse(True, "protection", bornes[1], p, participation_cible, msg, pts)
     if prot < bornes[0]:
         p = participation_cp(mk, T, bornes[0], cap)
-        il_faudrait = (f" Il faudrait descendre a {_pct(prot)} de protection." if prot > 0
+        il_faudrait = (f" Il faudrait descendre à {_pct(prot)} de protection." if prot > 0
                        else "")
         msg = (f"Impossible : {_pct(participation_cible, 0)} de participation demanderait une "
                f"protection sous {_pct(bornes[0], 0)}.{il_faudrait} Au mieux "
                f"{_pct(p, 0)} avec {_pct(bornes[0], 0)} de protection. Pour aller plus haut : "
-               "mettre un cap ou allonger la maturite.")
+               "mettre un cap ou allonger la maturité.")
         return Reponse(False, "protection", bornes[0], p, participation_cible, msg, pts)
     p = participation_cp(mk, T, prot, cap)
-    msg = (f"Protection a {_pct(prot)} pour {_pct(p, 0)} de participation : le client accepte "
+    msg = (f"Protection à {_pct(prot)} pour {_pct(p, 0)} de participation : le client accepte "
            f"de perdre au plus {_pct(1 - prot)}.")
     return Reponse(True, "protection", prot, p, participation_cible, msg, pts)
 
@@ -456,18 +456,18 @@ def cp_cap(mk, participation_cible, T, protection=1.0, bornes=(1.05, 3.0)):
     """
     pts = [(c, participation_cp(mk, T, protection, c)) for c in _grille(bornes[1], bornes[0], 0.05)]
     if _budget_cp(mk, T, protection) <= 0:
-        msg = (f"Impossible : a ce niveau de taux, garantir {_pct(protection, 0)} du nominal "
-               "coute plus que le budget, frais compris. Aucun cap n'y change rien : baisser la "
-               "protection, allonger la maturite ou reduire les frais.")
+        msg = (f"Impossible : à ce niveau de taux, garantir {_pct(protection, 0)} du nominal "
+               "coûte plus que le budget, frais compris. Aucun cap n'y change rien : baisser la "
+               "protection, allonger la maturité ou réduire les frais.")
         return Reponse(False, "cap", bornes[1], 0.0, participation_cible, msg, pts)
     haut = participation_cp(mk, T, protection, bornes[1])
     if haut >= participation_cible:
-        msg = f"Pas besoin de cap : sans cap, la participation est deja de {_pct(haut, 0)}."
+        msg = f"Pas besoin de cap : sans cap, la participation est déjà de {_pct(haut, 0)}."
         return Reponse(True, "cap", bornes[1], haut, participation_cible, msg, pts)
     bas = participation_cp(mk, T, protection, bornes[0])
     if bas < participation_cible:
-        msg = (f"Impossible : meme avec un cap a {_pct(bornes[0], 0)}, la participation "
-               f"plafonne a {_pct(bas, 0)}.")
+        msg = (f"Impossible : même avec un cap à {_pct(bornes[0], 0)}, la participation "
+               f"plafonne à {_pct(bas, 0)}.")
         return Reponse(False, "cap", bornes[0], bas, participation_cible, msg, pts)
     a, b = bornes[0], bornes[1]          # f(a) >= cible > f(b) ; la participation baisse avec le cap
     for _ in range(40):
@@ -477,7 +477,7 @@ def cp_cap(mk, participation_cible, T, protection=1.0, bornes=(1.05, 3.0)):
         else:
             b = mil
     p = participation_cp(mk, T, protection, a)
-    msg = (f"Cap a {_pct(a)} pour {_pct(p, 0)} de participation : gain maximum de "
+    msg = (f"Cap à {_pct(a)} pour {_pct(p, 0)} de participation : gain maximum de "
            f"{_pct(p * (a - 1.0))} du nominal.")
     return Reponse(True, "cap", a, p, participation_cible, msg, pts)
 
@@ -526,10 +526,10 @@ def _frais(mk, T, autres):
     marge = N - autres - retro
     return [
         Ligne("marge", "Marge banque", marge,
-              "Prelevee d'avance sur le budget option, invisible dans le payoff."),
-        Ligne("retro", "Retrocession distributeur", retro,
-              "Payee d'avance au reseau qui place le produit. Deux reseaux, deux retros, "
-              "deux coupons differents sur le meme produit."),
+              "Prélevée d'avance sur le budget option, invisible dans le payoff."),
+        Ligne("retro", "Rétrocession distributeur", retro,
+              "Payée d'avance au réseau qui place le produit. Deux réseaux, deux rétros, "
+              "deux coupons différents sur le même produit."),
     ]
 
 
@@ -642,15 +642,15 @@ def cascade_brc(mk, T, barriere, strike=1.0, continu=True):
                              sg, tau, mk.recovery))
     c = _composantes_brc(ch, sg, T, mk, barriere, strike, continu, cpn * T, False, tau)
     lignes = [
-        Ligne("zc", "Obligation zero-coupon (taux sans risque)", c["zc"],
-              "Ce qu'il faut placer aujourd'hui pour rendre le nominal a l'echeance."),
-        Ligne("coupons", "Coupons verses au client", c["coupons"],
+        Ligne("zc", "Obligation zéro-coupon (taux sans risque)", c["zc"],
+              "Ce qu'il faut placer aujourd'hui pour rendre le nominal à l'échéance."),
+        Ligne("coupons", "Coupons versés au client", c["coupons"],
               "Valeur actuelle du coupon garanti."),
         Ligne("put", "Put down-and-in vendu par le client", -c["put"],
               "La prime d'assurance que la banque paie au client : c'est elle qui finance "
               "le coupon."),
-        Ligne("credit", "Risque emetteur porte par le client", c["credit"],
-              "Ce que vaut le risque de defaut de la banque. Plus le spread est eleve, plus "
+        Ligne("credit", "Risque émetteur porte par le client", c["credit"],
+              "Ce que vaut le risque de défaut de la banque. Plus le spread est élevé, plus "
               "cette ligne finance de coupon."),
     ]
     lignes += _frais(mk, T, sum(l.montant for l in lignes))
@@ -684,19 +684,19 @@ def cascade_autocall(mk, T, par_an, trigger, bar_coupon, bar_capital, memoire=Tr
     args = (ch, T, obs, mk, trigger, bar_coupon, bar_capital, memoire)
     c = _composantes_autocall(*args, cpn, 0, tau)
     lignes = [
-        Ligne("zc", "Obligation zero-coupon (taux sans risque)", c["zc"],
-              "Ce qu'il faut placer aujourd'hui pour rendre le nominal a l'echeance maximale."),
-        Ligne("rappel", "Remboursement anticipe", c["rappel"],
-              "Le nominal rendu plus tot quand le produit est rappele vaut plus que le meme "
-              "nominal a l'echeance."),
-        Ligne("coupons", "Coupons conditionnels achetes", c["coupons"],
-              "Valeur des coupons, qui ne tombent que si le sous-jacent tient la barriere de "
-              "coupon et s'arretent au rappel."),
+        Ligne("zc", "Obligation zéro-coupon (taux sans risque)", c["zc"],
+              "Ce qu'il faut placer aujourd'hui pour rendre le nominal à l'échéance maximale."),
+        Ligne("rappel", "Remboursement anticipé", c["rappel"],
+              "Le nominal rendu plus tôt quand le produit est rappelé vaut plus que le même "
+              "nominal à l'échéance."),
+        Ligne("coupons", "Coupons conditionnels achetés", c["coupons"],
+              "Valeur des coupons, qui ne tombent que si le sous-jacent tient la barrière de "
+              "coupon et s'arrêtent au rappel."),
         Ligne("put", "Put down-and-in vendu par le client", -c["put"],
-              "La barriere de capital : le client assure la banque contre une forte baisse a "
-              "l'echeance. C'est la principale source du coupon."),
-        Ligne("credit", "Risque emetteur porte par le client", c["credit"],
-              "Ce que vaut le risque de defaut de la banque."),
+              "La barrière de capital : le client assure la banque contre une forte baisse à "
+              "l'échéance. C'est la principale source du coupon."),
+        Ligne("credit", "Risque émetteur porte par le client", c["credit"],
+              "Ce que vaut le risque de défaut de la banque."),
     ]
     lignes += _frais(mk, duree, sum(l.montant for l in lignes))
     pente = _composantes_autocall(*args, cpn + 0.01, 0, tau)["pv"] - c["pv"]
@@ -722,15 +722,15 @@ def cascade_cp(mk, T, protection=1.0, cap=3.0):
     zc_rf = protection * N * math.exp(-mk.r * T)
     zc_fin = protection * N * math.exp(-(mk.r + mk.spread / 10000.0) * T)
     lignes = [
-        Ligne("zc", "Obligation zero-coupon (taux sans risque)", zc_rf,
+        Ligne("zc", "Obligation zéro-coupon (taux sans risque)", zc_rf,
               f"Ce qu'il faut placer aujourd'hui pour rendre {_pct(protection, 0)} du nominal."),
-        Ligne("credit", "Risque emetteur porte par le client", zc_fin - zc_rf,
-              "La banque actualise a son propre taux de financement : la garantie coute moins "
-              "cher, parce que le client porte le risque de defaut."),
-        Ligne("call", f"Call 100% achete (x {_pct(part, 0)})", part * call * N,
-              "Le moteur de la participation a la hausse."),
+        Ligne("credit", "Risque émetteur porte par le client", zc_fin - zc_rf,
+              "La banque actualise à son propre taux de financement : la garantie coûte moins "
+              "cher, parce que le client porte le risque de défaut."),
+        Ligne("call", f"Call 100% achète (x {_pct(part, 0)})", part * call * N,
+              "Le moteur de la participation à la hausse."),
         Ligne("cap", "Call au cap vendu", -part * call_cap * N,
-              "Le client renonce aux tres fortes hausses ; la prime revient dans le budget."),
+              "Le client renonce aux très fortes hausses ; la prime revient dans le budget."),
     ]
     lignes += _frais(mk, T, sum(l.montant for l in lignes))
     infos = {"participation": part, "zc_taux_financement": zc_fin,
@@ -771,7 +771,7 @@ class ValeurSecondaire:
 
 def _verifie_date(t, T):
     if not 0.0 <= t < T:
-        raise ValueError("la date doit etre comprise entre l'emission et l'echeance")
+        raise ValueError("la date doit être comprise entre l'émission et l'échéance")
 
 
 def _decompose(valorise, mk_e, mk_j, t, niveau, etat, etat_neuf):
@@ -784,11 +784,11 @@ def _decompose(valorise, mk_e, mk_j, t, niveau, etat, etat_neuf):
     mk_vt = _prend(mk_j, mk_v, CHAMPS_TAUX)
     mk_vtc = _prend(mk_j, mk_vt, CHAMPS_CREDIT)
     v0 = valorise(mk_e, 0.0, 1.0, etat_neuf)
-    etapes = [("Temps ecoule", mk_e, 1.0, etat_neuf),
+    etapes = [("Temps écoulé", mk_e, 1.0, etat_neuf),
               ("Sous-jacent", mk_e, niveau, etat),
-              ("Volatilite", mk_v, niveau, etat),
+              ("Volatilité", mk_v, niveau, etat),
               ("Taux et dividende", mk_vt, niveau, etat),
-              ("Spread emetteur", mk_vtc, niveau, etat)]
+              ("Spread émetteur", mk_vtc, niveau, etat)]
     deco, prec, res = [], v0["pv"], v0
     for nom, mk, niv, et in etapes:
         res = valorise(mk, t, niv, et)
@@ -800,9 +800,9 @@ def _decompose(valorise, mk_e, mk_j, t, niveau, etat, etat_neuf):
 def _resultat(valeur, v0, coupons, deco, infos, fourchette, N, debut):
     demi = 0.5 * fourchette * N
     effets = ", ".join(f"{nom.lower()} {e:+,.0f}" for nom, e in deco)
-    msg = (f"{debut}Valeur {valeur:,.0f} EUR ({_pct(valeur / N)} du nominal). La banque rachete "
-           f"a {valeur - demi:,.0f} EUR. Depuis l'emission ({v0:,.0f} EUR apres marge et "
-           f"retro) : {effets}.")
+    msg = (f"{debut}Valeur {valeur:,.0f} EUR ({_pct(valeur / N)} du nominal). La banque rachète "
+           f"à {valeur - demi:,.0f} EUR. Depuis l'émission ({v0:,.0f} EUR après marge et "
+           f"rétro) : {effets}.")
     return ValeurSecondaire(valeur, valeur - demi, valeur + demi, v0, coupons, deco, infos,
                             msg, N)
 
@@ -889,13 +889,13 @@ def valeur_secondaire_autocall(mk_emission, mk_jour, T, par_an, trigger, bar_cou
     passees = sum(1 for k in range(n_obs) if (k + 1) * (T / n_obs) <= t + 1e-9)
     if niveaux_observes is not None:
         if len(niveaux_observes) != passees:
-            raise ValueError(f"{passees} observation(s) passee(s) a cette date, "
+            raise ValueError(f"{passees} observation(s) passée(s) à cette date, "
                              f"{len(niveaux_observes)} niveau(x) fourni(s)")
         etat = etat_autocall(niveaux_observes, trigger, bar_coupon, memoire)
         if not etat["vivant"]:
             cp = etat["coupons_verses"] * coupon * N
-            msg = (f"Produit rappele a l'observation {etat['rappel_obs']} : nominal rendu, "
-                   f"{cp:,.0f} EUR de coupons encaisses. Il n'y a plus rien a racheter.")
+            msg = (f"Produit rappelé à l'observation {etat['rappel_obs']} : nominal rendu, "
+                   f"{cp:,.0f} EUR de coupons encaissés. Il n'y a plus rien a racheter.")
             ch_e, _ = mk_emission.panier(n_actifs, correlation, T, bar_capital)
             vie = float(M.stats_autocall(ch_e, T, n_obs, trigger, bar_capital)[0])
             del ch_e
@@ -916,7 +916,7 @@ def valeur_secondaire_autocall(mk_emission, mk_jour, T, par_an, trigger, bar_cou
     infos = {"coupon_obs": coupon, "observations_passees": passees,
              "coupons_manques": manques, "proba_perte": res["proba_perte"],
              "proba_rappel_prochaine": res["proba_rappel_prochaine"]}
-    debut = f"{cp:,.0f} EUR de coupons deja encaisses. " if cp else ""
+    debut = f"{cp:,.0f} EUR de coupons déjà encaissés. " if cp else ""
     return _resultat(res["pv"], v0, cp, deco, infos, fourchette, N, debut)
 
 

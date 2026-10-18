@@ -408,24 +408,24 @@ def affiche_resume(res):
         print(f"Autocall {p['T']:g} ans, {res.n_obs} observations, trigger {p['trigger']:.0%}, "
               f"coupon {p['bar_cp']:.0%}, capital {p['bar_cap']:.0%}, "
               f"{p['coupon_pa']:.1%} p.a., sous-jacent {res.sous_jacent}")
-        print(f"  {r['n']} emissions de {r['premiere_emission']} a {r['derniere_emission']} "
-              f"({r['n_en_cours']} encore en cours, non comptees)")
-        print("  fin a chaque observation :",
+        print(f"  {r['n']} émissions de {r['premiere_emission']} à {r['derniere_emission']} "
+              f"({r['n_en_cours']} encore en cours, non comptées)")
+        print("  fin à chaque observation :",
               " ".join(f"{v * 100:.0f}" for v in r["fin_par_observation"]), "(%)")
-        print(f"  rappel a la 1re date {_pct(r['rappel_premiere_date'])} | rappel anticipe "
-              f"{_pct(r['rappel_anticipe'])} | echeance sans perte {_pct(r['echeance_sans_perte'])}"
+        print(f"  rappel à la 1re date {_pct(r['rappel_premiere_date'])} | rappel anticipe "
+              f"{_pct(r['rappel_anticipe'])} | échéance sans perte {_pct(r['echeance_sans_perte'])}"
               f" | perte {_pct(r['perte'])} (moyenne {_pct(r['perte_moyenne_si_perte'])})")
     else:
-        print(f"BRC {p['T']:g} an(s), barriere {p['barriere']:.0%} "
-              f"{'continue' if p['continu'] else 'a l echeance'}, strike {p['strike']:.0%}, "
+        print(f"BRC {p['T']:g} an(s), barrière {p['barriere']:.0%} "
+              f"{'continue' if p['continu'] else 'à l échéance'}, strike {p['strike']:.0%}, "
               f"{p['coupon_pa']:.1%} p.a., sous-jacent {res.sous_jacent}")
-        print(f"  {r['n']} emissions de {r['premiere_emission']} a {r['derniere_emission']}")
-        print(f"  barriere touchee {_pct(r['barriere_touchee'])} | perte {_pct(r['perte'])} "
+        print(f"  {r['n']} émissions de {r['premiere_emission']} à {r['derniere_emission']}")
+        print(f"  barrière touchée {_pct(r['barriere_touchee'])} | perte {_pct(r['perte'])} "
               f"(moyenne {_pct(r['perte_moyenne_si_perte'])})")
-    print(f"  rendement par annee investie {_pct(r['tri_par_annee'])} vs detention directe "
+    print(f"  rendement par année investie {_pct(r['tri_par_annee'])} vs détention directe "
           f"{_pct(r['direct_par_annee'])} (medianes {_pct(r['tri_median'])} vs "
           f"{_pct(r['direct_median'])}) ; bat l'indice dans {_pct(r['bat_direct'])} des cas")
-    print(f"  pire cas : emis le {r['pire_emission']}, capital rendu {_pct(r['pire_capital'])}, "
+    print(f"  pire cas : émis le {r['pire_emission']}, capital rendu {_pct(r['pire_capital'])}, "
           f"rendement {_pct(r['pire_tri'])} par an")
 
 
