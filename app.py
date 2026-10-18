@@ -15,6 +15,7 @@ import streamlit as st
 from barre import barre_laterale
 from vues import (accueil, comparateur, tracker, capital_protection, brc, autocall,
                   bonus, twin_win, laboratoire, grecques, couverture, glossaire)
+from vues import entrainement
 
 st.set_page_config(page_title="Sliders Produits Structures", layout="wide")
 
@@ -32,6 +33,7 @@ PAGES = {
     "Laboratoire modele": laboratoire,
     "Les grecques en mouvement": grecques,
     "Cout de couverture": couverture,
+    "Entrainement": entrainement,
     "Glossaire": glossaire,
 }
 
