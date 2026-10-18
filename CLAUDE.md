@@ -250,8 +250,13 @@ l'appli en local.
    tolérée. Une nouvelle fonctionnalité derrière un réglage s'ajoute au script.
 3. Si un chiffre de référence change volontairement : mettre à jour le script et ce fichier,
    en expliquant pourquoi.
-4. Après le push, GitHub relance le même script (onglet Actions du dépôt) : vérifier qu'il est vert.
-5. Si un graphe a changé : le rendre en PNG et le regarder avant de pousser.
+4. **Avant le push, changer la ligne « Publication du ... » de `requirements.txt`** (date et heure).
+   Sinon Streamlit Cloud ne recharge que les fichiers nouveaux et garde en mémoire les anciennes
+   versions des fichiers modifiés (constaté le 18/10/2026 : accueil et barre latérale restés
+   anciens alors que les nouvelles pages étaient en ligne). Vérifier ensuite sur le site qu'un
+   texte modifié apparaît bien.
+5. Après le push, GitHub relance le même script (onglet Actions du dépôt) : vérifier qu'il est vert.
+6. Si un graphe a changé : le rendre en PNG et le regarder avant de pousser.
 6. Commit clair en français, push sur `main`. Dire à Tom en une phrase ce qui a changé et
    qu'il peut recharger le site d'ici 1 à 2 minutes.
 
