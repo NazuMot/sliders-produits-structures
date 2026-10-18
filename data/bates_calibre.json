@@ -4,6 +4,7 @@
  "spot": 6204.23,
  "calibre_le": "2026-10-18",
  "n_options": 122,
+ "unites": "v0 et theta en variance ; curseurs dans les unites de la barre laterale (vol_atm = racine de v0 en %, theta_v = racine de theta en %, mu_j et sig_j en %)",
  "parametres": {
   "v0": 0.026209,
   "theta": 0.038062,
@@ -17,20 +18,86 @@
  "curseurs": {
   "vol_atm": 16.0,
   "theta_v": 20.0,
-  "kappa": 1.6,
-  "xi": 0.7,
-  "rho": -0.65,
-  "lam": 0.0,
-  "mu_j": -30.0,
-  "sig_j": 35.0
+  "kappa": 0.8,
+  "xi": 0.6,
+  "rho": -0.6,
+  "lam": 0.1,
+  "mu_j": -22.0,
+  "sig_j": 26.0
  },
  "feller": 0.247,
  "erreur_pts_vol": {
   "moyenne_quadratique": 0.774,
   "moyenne_absolue": 0.635,
   "max": 1.937,
-  "moyenne_quadratique_curseurs": 3.2
+  "moyenne_quadratique_curseurs": 0.908,
+  "max_curseurs": 2.991
  },
+ "par_echeance": [
+  {
+   "echeance": "2026-11-20",
+   "maturite": 0.0959,
+   "n": 8,
+   "moyenne_quadratique": 0.787,
+   "moyenne_quadratique_curseurs": 1.244
+  },
+  {
+   "echeance": "2026-12-18",
+   "maturite": 0.1726,
+   "n": 11,
+   "moyenne_quadratique": 0.72,
+   "moyenne_quadratique_curseurs": 1.103
+  },
+  {
+   "echeance": "2027-03-19",
+   "maturite": 0.4219,
+   "n": 13,
+   "moyenne_quadratique": 0.968,
+   "moyenne_quadratique_curseurs": 1.386
+  },
+  {
+   "echeance": "2027-06-18",
+   "maturite": 0.6712,
+   "n": 15,
+   "moyenne_quadratique": 1.037,
+   "moyenne_quadratique_curseurs": 1.218
+  },
+  {
+   "echeance": "2027-12-17",
+   "maturite": 1.1699,
+   "n": 15,
+   "moyenne_quadratique": 0.888,
+   "moyenne_quadratique_curseurs": 0.823
+  },
+  {
+   "echeance": "2028-12-15",
+   "maturite": 2.1671,
+   "n": 15,
+   "moyenne_quadratique": 0.655,
+   "moyenne_quadratique_curseurs": 0.62
+  },
+  {
+   "echeance": "2029-12-21",
+   "maturite": 3.1836,
+   "n": 15,
+   "moyenne_quadratique": 0.416,
+   "moyenne_quadratique_curseurs": 0.388
+  },
+  {
+   "echeance": "2030-12-20",
+   "maturite": 4.1808,
+   "n": 15,
+   "moyenne_quadratique": 0.558,
+   "moyenne_quadratique_curseurs": 0.463
+  },
+  {
+   "echeance": "2031-12-19",
+   "maturite": 5.1781,
+   "n": 15,
+   "moyenne_quadratique": 0.755,
+   "moyenne_quadratique_curseurs": 0.643
+  }
+ ],
  "par_option": [
   {
    "echeance": "2026-11-20",
@@ -38,7 +105,8 @@
    "strike_pct": 0.6931,
    "type": "P",
    "vol_marche": 0.4678,
-   "vol_modele": 0.4798
+   "vol_modele": 0.4798,
+   "vol_curseurs": 0.4833
   },
   {
    "echeance": "2026-11-20",
@@ -46,7 +114,8 @@
    "strike_pct": 0.7495,
    "type": "P",
    "vol_marche": 0.3993,
-   "vol_modele": 0.4054
+   "vol_modele": 0.4054,
+   "vol_curseurs": 0.4162
   },
   {
    "echeance": "2026-11-20",
@@ -54,7 +123,8 @@
    "strike_pct": 0.8019,
    "type": "P",
    "vol_marche": 0.3399,
-   "vol_modele": 0.3383
+   "vol_modele": 0.3383,
+   "vol_curseurs": 0.3515
   },
   {
    "echeance": "2026-11-20",
@@ -62,7 +132,8 @@
    "strike_pct": 0.8502,
    "type": "P",
    "vol_marche": 0.2885,
-   "vol_modele": 0.2831
+   "vol_modele": 0.2831,
+   "vol_curseurs": 0.2934
   },
   {
    "echeance": "2026-11-20",
@@ -70,7 +141,8 @@
    "strike_pct": 0.8986,
    "type": "P",
    "vol_marche": 0.2363,
-   "vol_modele": 0.238
+   "vol_modele": 0.238,
+   "vol_curseurs": 0.2428
   },
   {
    "echeance": "2026-11-20",
@@ -78,7 +150,8 @@
    "strike_pct": 0.951,
    "type": "P",
    "vol_marche": 0.187,
-   "vol_modele": 0.1975
+   "vol_modele": 0.1975,
+   "vol_curseurs": 0.1988
   },
   {
    "echeance": "2026-11-20",
@@ -86,7 +159,8 @@
    "strike_pct": 0.9993,
    "type": "P",
    "vol_marche": 0.1501,
-   "vol_modele": 0.1612
+   "vol_modele": 0.1612,
+   "vol_curseurs": 0.1638
   },
   {
    "echeance": "2026-11-20",
@@ -94,7 +168,8 @@
    "strike_pct": 1.0517,
    "type": "C",
    "vol_marche": 0.1254,
-   "vol_modele": 0.1321
+   "vol_modele": 0.1321,
+   "vol_curseurs": 0.1389
   },
   {
    "echeance": "2026-12-18",
@@ -102,7 +177,8 @@
    "strike_pct": 0.5964,
    "type": "P",
    "vol_marche": 0.4917,
-   "vol_modele": 0.4818
+   "vol_modele": 0.4818,
+   "vol_curseurs": 0.4679
   },
   {
    "echeance": "2026-12-18",
@@ -110,7 +186,8 @@
    "strike_pct": 0.6528,
    "type": "P",
    "vol_marche": 0.4362,
-   "vol_modele": 0.4284
+   "vol_modele": 0.4284,
+   "vol_curseurs": 0.4247
   },
   {
    "echeance": "2026-12-18",
@@ -118,7 +195,8 @@
    "strike_pct": 0.7011,
    "type": "P",
    "vol_marche": 0.3927,
-   "vol_modele": 0.3833
+   "vol_modele": 0.3833,
+   "vol_curseurs": 0.3857
   },
   {
    "echeance": "2026-12-18",
@@ -126,7 +204,8 @@
    "strike_pct": 0.7495,
    "type": "P",
    "vol_marche": 0.3486,
-   "vol_modele": 0.3401
+   "vol_modele": 0.3401,
+   "vol_curseurs": 0.3457
   },
   {
    "echeance": "2026-12-18",
@@ -134,7 +213,8 @@
    "strike_pct": 0.7978,
    "type": "P",
    "vol_marche": 0.3056,
-   "vol_modele": 0.3003
+   "vol_modele": 0.3003,
+   "vol_curseurs": 0.3063
   },
   {
    "echeance": "2026-12-18",
@@ -142,7 +222,8 @@
    "strike_pct": 0.8502,
    "type": "P",
    "vol_marche": 0.2608,
-   "vol_modele": 0.2614
+   "vol_modele": 0.2614,
+   "vol_curseurs": 0.2659
   },
   {
    "echeance": "2026-12-18",
@@ -150,7 +231,8 @@
    "strike_pct": 0.8986,
    "type": "P",
    "vol_marche": 0.2217,
-   "vol_modele": 0.2283
+   "vol_modele": 0.2283,
+   "vol_curseurs": 0.2313
   },
   {
    "echeance": "2026-12-18",
@@ -158,7 +240,8 @@
    "strike_pct": 0.951,
    "type": "P",
    "vol_marche": 0.1835,
-   "vol_modele": 0.193
+   "vol_modele": 0.193,
+   "vol_curseurs": 0.1954
   },
   {
    "echeance": "2026-12-18",
@@ -166,7 +249,8 @@
    "strike_pct": 0.9993,
    "type": "P",
    "vol_marche": 0.1541,
-   "vol_modele": 0.1587
+   "vol_modele": 0.1587,
+   "vol_curseurs": 0.1624
   },
   {
    "echeance": "2026-12-18",
@@ -174,7 +258,8 @@
    "strike_pct": 1.0517,
    "type": "C",
    "vol_marche": 0.1331,
-   "vol_modele": 0.1305
+   "vol_modele": 0.1305,
+   "vol_curseurs": 0.1373
   },
   {
    "echeance": "2026-12-18",
@@ -182,7 +267,8 @@
    "strike_pct": 1.1001,
    "type": "C",
    "vol_marche": 0.1241,
-   "vol_modele": 0.1318
+   "vol_modele": 0.1318,
+   "vol_curseurs": 0.1395
   },
   {
    "echeance": "2027-03-19",
@@ -190,7 +276,8 @@
    "strike_pct": 0.5964,
    "type": "P",
    "vol_marche": 0.3885,
-   "vol_modele": 0.3691
+   "vol_modele": 0.3691,
+   "vol_curseurs": 0.3586
   },
   {
    "echeance": "2027-03-19",
@@ -198,7 +285,8 @@
    "strike_pct": 0.6447,
    "type": "P",
    "vol_marche": 0.3556,
-   "vol_modele": 0.3446
+   "vol_modele": 0.3446,
+   "vol_curseurs": 0.3384
   },
   {
    "echeance": "2027-03-19",
@@ -206,7 +294,8 @@
    "strike_pct": 0.6931,
    "type": "P",
    "vol_marche": 0.3235,
-   "vol_modele": 0.3202
+   "vol_modele": 0.3202,
+   "vol_curseurs": 0.3175
   },
   {
    "echeance": "2027-03-19",
@@ -214,7 +303,8 @@
    "strike_pct": 0.7495,
    "type": "P",
    "vol_marche": 0.2877,
-   "vol_modele": 0.2918
+   "vol_modele": 0.2918,
+   "vol_curseurs": 0.2922
   },
   {
    "echeance": "2027-03-19",
@@ -222,7 +312,8 @@
    "strike_pct": 0.7978,
    "type": "P",
    "vol_marche": 0.2591,
-   "vol_modele": 0.2673
+   "vol_modele": 0.2673,
+   "vol_curseurs": 0.2695
   },
   {
    "echeance": "2027-03-19",
@@ -230,7 +321,8 @@
    "strike_pct": 0.8502,
    "type": "P",
    "vol_marche": 0.2297,
-   "vol_modele": 0.2404
+   "vol_modele": 0.2404,
+   "vol_curseurs": 0.2438
   },
   {
    "echeance": "2027-03-19",
@@ -238,7 +330,8 @@
    "strike_pct": 0.8986,
    "type": "P",
    "vol_marche": 0.2043,
-   "vol_modele": 0.2149
+   "vol_modele": 0.2149,
+   "vol_curseurs": 0.2189
   },
   {
    "echeance": "2027-03-19",
@@ -246,7 +339,8 @@
    "strike_pct": 0.951,
    "type": "P",
    "vol_marche": 0.1792,
-   "vol_modele": 0.1862
+   "vol_modele": 0.1862,
+   "vol_curseurs": 0.1902
   },
   {
    "echeance": "2027-03-19",
@@ -254,7 +348,8 @@
    "strike_pct": 0.9993,
    "type": "P",
    "vol_marche": 0.1596,
-   "vol_modele": 0.1592
+   "vol_modele": 0.1592,
+   "vol_curseurs": 0.1628
   },
   {
    "echeance": "2027-03-19",
@@ -262,7 +357,8 @@
    "strike_pct": 1.0517,
    "type": "C",
    "vol_marche": 0.144,
-   "vol_modele": 0.1345
+   "vol_modele": 0.1345,
+   "vol_curseurs": 0.1387
   },
   {
    "echeance": "2027-03-19",
@@ -270,7 +366,8 @@
    "strike_pct": 1.1001,
    "type": "C",
    "vol_marche": 0.1348,
-   "vol_modele": 0.1264
+   "vol_modele": 0.1264,
+   "vol_curseurs": 0.1332
   },
   {
    "echeance": "2027-03-19",
@@ -278,7 +375,8 @@
    "strike_pct": 1.1484,
    "type": "C",
    "vol_marche": 0.1295,
-   "vol_modele": 0.1307
+   "vol_modele": 0.1307,
+   "vol_curseurs": 0.1389
   },
   {
    "echeance": "2027-03-19",
@@ -286,7 +384,8 @@
    "strike_pct": 1.2008,
    "type": "C",
    "vol_marche": 0.1272,
-   "vol_modele": 0.141
+   "vol_modele": 0.141,
+   "vol_curseurs": 0.1491
   },
   {
    "echeance": "2027-06-18",
@@ -294,7 +393,8 @@
    "strike_pct": 0.5964,
    "type": "P",
    "vol_marche": 0.3508,
-   "vol_modele": 0.3335
+   "vol_modele": 0.3335,
+   "vol_curseurs": 0.327
   },
   {
    "echeance": "2027-06-18",
@@ -302,7 +402,8 @@
    "strike_pct": 0.6447,
    "type": "P",
    "vol_marche": 0.3229,
-   "vol_modele": 0.3135
+   "vol_modele": 0.3135,
+   "vol_curseurs": 0.3097
   },
   {
    "echeance": "2027-06-18",
@@ -310,7 +411,8 @@
    "strike_pct": 0.6931,
    "type": "P",
    "vol_marche": 0.2963,
-   "vol_modele": 0.2932
+   "vol_modele": 0.2932,
+   "vol_curseurs": 0.2919
   },
   {
    "echeance": "2027-06-18",
@@ -318,7 +420,8 @@
    "strike_pct": 0.7575,
    "type": "P",
    "vol_marche": 0.2634,
-   "vol_modele": 0.2656
+   "vol_modele": 0.2656,
+   "vol_curseurs": 0.2671
   },
   {
    "echeance": "2027-06-18",
@@ -326,7 +429,8 @@
    "strike_pct": 0.8059,
    "type": "P",
    "vol_marche": 0.2407,
-   "vol_modele": 0.2445
+   "vol_modele": 0.2445,
+   "vol_curseurs": 0.2474
   },
   {
    "echeance": "2027-06-18",
@@ -334,7 +438,8 @@
    "strike_pct": 0.8462,
    "type": "P",
    "vol_marche": 0.2229,
-   "vol_modele": 0.2265
+   "vol_modele": 0.2265,
+   "vol_curseurs": 0.2302
   },
   {
    "echeance": "2027-06-18",
@@ -342,7 +447,8 @@
    "strike_pct": 0.9026,
    "type": "P",
    "vol_marche": 0.1999,
-   "vol_modele": 0.2008
+   "vol_modele": 0.2008,
+   "vol_curseurs": 0.2047
   },
   {
    "echeance": "2027-06-18",
@@ -350,7 +456,8 @@
    "strike_pct": 0.951,
    "type": "P",
    "vol_marche": 0.1819,
-   "vol_modele": 0.1783
+   "vol_modele": 0.1783,
+   "vol_curseurs": 0.1818
   },
   {
    "echeance": "2027-06-18",
@@ -358,7 +465,8 @@
    "strike_pct": 0.9993,
    "type": "P",
    "vol_marche": 0.1663,
-   "vol_modele": 0.1564
+   "vol_modele": 0.1564,
+   "vol_curseurs": 0.1589
   },
   {
    "echeance": "2027-06-18",
@@ -366,7 +474,8 @@
    "strike_pct": 1.0477,
    "type": "C",
    "vol_marche": 0.1548,
-   "vol_modele": 0.1379
+   "vol_modele": 0.1379,
+   "vol_curseurs": 0.1403
   },
   {
    "echeance": "2027-06-18",
@@ -374,7 +483,8 @@
    "strike_pct": 1.096,
    "type": "C",
    "vol_marche": 0.1463,
-   "vol_modele": 0.1282
+   "vol_modele": 0.1282,
+   "vol_curseurs": 0.1331
   },
   {
    "echeance": "2027-06-18",
@@ -382,7 +492,8 @@
    "strike_pct": 1.1524,
    "type": "C",
    "vol_marche": 0.1404,
-   "vol_modele": 0.1289
+   "vol_modele": 0.1289,
+   "vol_curseurs": 0.1367
   },
   {
    "echeance": "2027-06-18",
@@ -390,7 +501,8 @@
    "strike_pct": 1.2008,
    "type": "C",
    "vol_marche": 0.1374,
-   "vol_modele": 0.1347
+   "vol_modele": 0.1347,
+   "vol_curseurs": 0.1435
   },
   {
    "echeance": "2027-06-18",
@@ -398,7 +510,8 @@
    "strike_pct": 1.2572,
    "type": "C",
    "vol_marche": 0.1357,
-   "vol_modele": 0.1438
+   "vol_modele": 0.1438,
+   "vol_curseurs": 0.1524
   },
   {
    "echeance": "2027-06-18",
@@ -406,7 +519,8 @@
    "strike_pct": 1.3056,
    "type": "C",
    "vol_marche": 0.1364,
-   "vol_modele": 0.1523
+   "vol_modele": 0.1523,
+   "vol_curseurs": 0.1601
   },
   {
    "echeance": "2027-12-17",
@@ -414,7 +528,8 @@
    "strike_pct": 0.5964,
    "type": "P",
    "vol_marche": 0.312,
-   "vol_modele": 0.3019
+   "vol_modele": 0.3019,
+   "vol_curseurs": 0.2995
   },
   {
    "echeance": "2027-12-17",
@@ -422,7 +537,8 @@
    "strike_pct": 0.6528,
    "type": "P",
    "vol_marche": 0.2872,
-   "vol_modele": 0.283
+   "vol_modele": 0.283,
+   "vol_curseurs": 0.2818
   },
   {
    "echeance": "2027-12-17",
@@ -430,7 +546,8 @@
    "strike_pct": 0.7011,
    "type": "P",
    "vol_marche": 0.2673,
-   "vol_modele": 0.2667
+   "vol_modele": 0.2667,
+   "vol_curseurs": 0.2668
   },
   {
    "echeance": "2027-12-17",
@@ -438,7 +555,8 @@
    "strike_pct": 0.7495,
    "type": "P",
    "vol_marche": 0.2487,
-   "vol_modele": 0.2504
+   "vol_modele": 0.2504,
+   "vol_curseurs": 0.2516
   },
   {
    "echeance": "2027-12-17",
@@ -446,7 +564,8 @@
    "strike_pct": 0.7978,
    "type": "P",
    "vol_marche": 0.2312,
-   "vol_modele": 0.234
+   "vol_modele": 0.234,
+   "vol_curseurs": 0.2361
   },
   {
    "echeance": "2027-12-17",
@@ -454,7 +573,8 @@
    "strike_pct": 0.8462,
    "type": "P",
    "vol_marche": 0.215,
-   "vol_modele": 0.2174
+   "vol_modele": 0.2174,
+   "vol_curseurs": 0.22
   },
   {
    "echeance": "2027-12-17",
@@ -462,7 +582,8 @@
    "strike_pct": 0.9026,
    "type": "P",
    "vol_marche": 0.198,
-   "vol_modele": 0.198
+   "vol_modele": 0.198,
+   "vol_curseurs": 0.2006
   },
   {
    "echeance": "2027-12-17",
@@ -470,7 +591,8 @@
    "strike_pct": 0.951,
    "type": "P",
    "vol_marche": 0.1847,
-   "vol_modele": 0.1814
+   "vol_modele": 0.1814,
+   "vol_curseurs": 0.1835
   },
   {
    "echeance": "2027-12-17",
@@ -478,7 +600,8 @@
    "strike_pct": 0.9993,
    "type": "P",
    "vol_marche": 0.1728,
-   "vol_modele": 0.1654
+   "vol_modele": 0.1654,
+   "vol_curseurs": 0.1665
   },
   {
    "echeance": "2027-12-17",
@@ -486,7 +609,8 @@
    "strike_pct": 1.0477,
    "type": "C",
    "vol_marche": 0.1632,
-   "vol_modele": 0.1507
+   "vol_modele": 0.1507,
+   "vol_curseurs": 0.151
   },
   {
    "echeance": "2027-12-17",
@@ -494,7 +618,8 @@
    "strike_pct": 1.096,
    "type": "C",
    "vol_marche": 0.1555,
-   "vol_modele": 0.1391
+   "vol_modele": 0.1391,
+   "vol_curseurs": 0.1399
   },
   {
    "echeance": "2027-12-17",
@@ -502,7 +627,8 @@
    "strike_pct": 1.1444,
    "type": "C",
    "vol_marche": 0.1496,
-   "vol_modele": 0.1324
+   "vol_modele": 0.1324,
+   "vol_curseurs": 0.1355
   },
   {
    "echeance": "2027-12-17",
@@ -510,7 +636,8 @@
    "strike_pct": 1.1927,
    "type": "C",
    "vol_marche": 0.145,
-   "vol_modele": 0.1306
+   "vol_modele": 0.1306,
+   "vol_curseurs": 0.1365
   },
   {
    "echeance": "2027-12-17",
@@ -518,7 +645,8 @@
    "strike_pct": 1.2572,
    "type": "C",
    "vol_marche": 0.1402,
-   "vol_modele": 0.1333
+   "vol_modele": 0.1333,
+   "vol_curseurs": 0.1416
   },
   {
    "echeance": "2027-12-17",
@@ -526,7 +654,8 @@
    "strike_pct": 1.3056,
    "type": "C",
    "vol_marche": 0.1389,
-   "vol_modele": 0.1374
+   "vol_modele": 0.1374,
+   "vol_curseurs": 0.1465
   },
   {
    "echeance": "2028-12-15",
@@ -534,7 +663,8 @@
    "strike_pct": 0.5964,
    "type": "P",
    "vol_marche": 0.2826,
-   "vol_modele": 0.2699
+   "vol_modele": 0.2699,
+   "vol_curseurs": 0.2701
   },
   {
    "echeance": "2028-12-15",
@@ -542,7 +672,8 @@
    "strike_pct": 0.6528,
    "type": "P",
    "vol_marche": 0.2637,
-   "vol_modele": 0.2558
+   "vol_modele": 0.2558,
+   "vol_curseurs": 0.2559
   },
   {
    "echeance": "2028-12-15",
@@ -550,7 +681,8 @@
    "strike_pct": 0.7011,
    "type": "P",
    "vol_marche": 0.2483,
-   "vol_modele": 0.2441
+   "vol_modele": 0.2441,
+   "vol_curseurs": 0.2442
   },
   {
    "echeance": "2028-12-15",
@@ -558,7 +690,8 @@
    "strike_pct": 0.7575,
    "type": "P",
    "vol_marche": 0.2316,
-   "vol_modele": 0.2305
+   "vol_modele": 0.2305,
+   "vol_curseurs": 0.231
   },
   {
    "echeance": "2028-12-15",
@@ -566,7 +699,8 @@
    "strike_pct": 0.7978,
    "type": "P",
    "vol_marche": 0.2205,
-   "vol_modele": 0.221
+   "vol_modele": 0.221,
+   "vol_curseurs": 0.2216
   },
   {
    "echeance": "2028-12-15",
@@ -574,7 +708,8 @@
    "strike_pct": 0.8462,
    "type": "P",
    "vol_marche": 0.2083,
-   "vol_modele": 0.2097
+   "vol_modele": 0.2097,
+   "vol_curseurs": 0.2104
   },
   {
    "echeance": "2028-12-15",
@@ -582,7 +717,8 @@
    "strike_pct": 0.9026,
    "type": "P",
    "vol_marche": 0.1955,
-   "vol_modele": 0.1966
+   "vol_modele": 0.1966,
+   "vol_curseurs": 0.1973
   },
   {
    "echeance": "2028-12-15",
@@ -590,7 +726,8 @@
    "strike_pct": 0.951,
    "type": "P",
    "vol_marche": 0.1859,
-   "vol_modele": 0.1857
+   "vol_modele": 0.1857,
+   "vol_curseurs": 0.1861
   },
   {
    "echeance": "2028-12-15",
@@ -598,7 +735,8 @@
    "strike_pct": 0.9993,
    "type": "P",
    "vol_marche": 0.1774,
-   "vol_modele": 0.1752
+   "vol_modele": 0.1752,
+   "vol_curseurs": 0.1751
   },
   {
    "echeance": "2028-12-15",
@@ -606,7 +744,8 @@
    "strike_pct": 1.0477,
    "type": "C",
    "vol_marche": 0.1696,
-   "vol_modele": 0.1653
+   "vol_modele": 0.1653,
+   "vol_curseurs": 0.1645
   },
   {
    "echeance": "2028-12-15",
@@ -614,7 +753,8 @@
    "strike_pct": 1.096,
    "type": "C",
    "vol_marche": 0.1627,
-   "vol_modele": 0.1562
+   "vol_modele": 0.1562,
+   "vol_curseurs": 0.155
   },
   {
    "echeance": "2028-12-15",
@@ -622,7 +762,8 @@
    "strike_pct": 1.1444,
    "type": "C",
    "vol_marche": 0.157,
-   "vol_modele": 0.1486
+   "vol_modele": 0.1486,
+   "vol_curseurs": 0.1476
   },
   {
    "echeance": "2028-12-15",
@@ -630,7 +771,8 @@
    "strike_pct": 1.1927,
    "type": "C",
    "vol_marche": 0.1523,
-   "vol_modele": 0.1427
+   "vol_modele": 0.1427,
+   "vol_curseurs": 0.1428
   },
   {
    "echeance": "2028-12-15",
@@ -638,7 +780,8 @@
    "strike_pct": 1.2572,
    "type": "C",
    "vol_marche": 0.1476,
-   "vol_modele": 0.1378
+   "vol_modele": 0.1378,
+   "vol_curseurs": 0.1406
   },
   {
    "echeance": "2028-12-15",
@@ -646,7 +789,8 @@
    "strike_pct": 1.3056,
    "type": "C",
    "vol_marche": 0.1449,
-   "vol_modele": 0.1364
+   "vol_modele": 0.1364,
+   "vol_curseurs": 0.1411
   },
   {
    "echeance": "2029-12-21",
@@ -654,7 +798,8 @@
    "strike_pct": 0.5964,
    "type": "P",
    "vol_marche": 0.2648,
-   "vol_modele": 0.2537
+   "vol_modele": 0.2537,
+   "vol_curseurs": 0.2547
   },
   {
    "echeance": "2029-12-21",
@@ -662,7 +807,8 @@
    "strike_pct": 0.6528,
    "type": "P",
    "vol_marche": 0.2489,
-   "vol_modele": 0.2425
+   "vol_modele": 0.2425,
+   "vol_curseurs": 0.2429
   },
   {
    "echeance": "2029-12-21",
@@ -670,7 +816,8 @@
    "strike_pct": 0.7011,
    "type": "P",
    "vol_marche": 0.2361,
-   "vol_modele": 0.2333
+   "vol_modele": 0.2333,
+   "vol_curseurs": 0.2334
   },
   {
    "echeance": "2029-12-21",
@@ -678,7 +825,8 @@
    "strike_pct": 0.7575,
    "type": "P",
    "vol_marche": 0.2224,
-   "vol_modele": 0.2229
+   "vol_modele": 0.2229,
+   "vol_curseurs": 0.2229
   },
   {
    "echeance": "2029-12-21",
@@ -686,7 +834,8 @@
    "strike_pct": 0.7978,
    "type": "P",
    "vol_marche": 0.2135,
-   "vol_modele": 0.2157
+   "vol_modele": 0.2157,
+   "vol_curseurs": 0.2156
   },
   {
    "echeance": "2029-12-21",
@@ -694,7 +843,8 @@
    "strike_pct": 0.8543,
    "type": "P",
    "vol_marche": 0.2021,
-   "vol_modele": 0.2057
+   "vol_modele": 0.2057,
+   "vol_curseurs": 0.2056
   },
   {
    "echeance": "2029-12-21",
@@ -702,7 +852,8 @@
    "strike_pct": 0.9026,
    "type": "P",
    "vol_marche": 0.1933,
-   "vol_modele": 0.1974
+   "vol_modele": 0.1974,
+   "vol_curseurs": 0.1972
   },
   {
    "echeance": "2029-12-21",
@@ -710,7 +861,8 @@
    "strike_pct": 0.951,
    "type": "P",
    "vol_marche": 0.1854,
-   "vol_modele": 0.1894
+   "vol_modele": 0.1894,
+   "vol_curseurs": 0.189
   },
   {
    "echeance": "2029-12-21",
@@ -718,7 +870,8 @@
    "strike_pct": 0.9993,
    "type": "P",
    "vol_marche": 0.1784,
-   "vol_modele": 0.1816
+   "vol_modele": 0.1816,
+   "vol_curseurs": 0.1809
   },
   {
    "echeance": "2029-12-21",
@@ -726,7 +879,8 @@
    "strike_pct": 1.0477,
    "type": "C",
    "vol_marche": 0.1719,
-   "vol_modele": 0.1742
+   "vol_modele": 0.1742,
+   "vol_curseurs": 0.1731
   },
   {
    "echeance": "2029-12-21",
@@ -734,7 +888,8 @@
    "strike_pct": 1.096,
    "type": "C",
    "vol_marche": 0.166,
-   "vol_modele": 0.1672
+   "vol_modele": 0.1672,
+   "vol_curseurs": 0.1658
   },
   {
    "echeance": "2029-12-21",
@@ -742,7 +897,8 @@
    "strike_pct": 1.1444,
    "type": "C",
    "vol_marche": 0.1608,
-   "vol_modele": 0.1608
+   "vol_modele": 0.1608,
+   "vol_curseurs": 0.1592
   },
   {
    "echeance": "2029-12-21",
@@ -750,7 +906,8 @@
    "strike_pct": 1.1927,
    "type": "C",
    "vol_marche": 0.1564,
-   "vol_modele": 0.1552
+   "vol_modele": 0.1552,
+   "vol_curseurs": 0.1537
   },
   {
    "echeance": "2029-12-21",
@@ -758,7 +915,8 @@
    "strike_pct": 1.2572,
    "type": "C",
    "vol_marche": 0.1517,
-   "vol_modele": 0.149
+   "vol_modele": 0.149,
+   "vol_curseurs": 0.1484
   },
   {
    "echeance": "2029-12-21",
@@ -766,7 +924,8 @@
    "strike_pct": 1.3056,
    "type": "C",
    "vol_marche": 0.1488,
-   "vol_modele": 0.1454
+   "vol_modele": 0.1454,
+   "vol_curseurs": 0.146
   },
   {
    "echeance": "2030-12-20",
@@ -774,7 +933,8 @@
    "strike_pct": 0.5964,
    "type": "P",
    "vol_marche": 0.255,
-   "vol_modele": 0.2447
+   "vol_modele": 0.2447,
+   "vol_curseurs": 0.2462
   },
   {
    "echeance": "2030-12-20",
@@ -782,7 +942,8 @@
    "strike_pct": 0.6528,
    "type": "P",
    "vol_marche": 0.2409,
-   "vol_modele": 0.2354
+   "vol_modele": 0.2354,
+   "vol_curseurs": 0.2361
   },
   {
    "echeance": "2030-12-20",
@@ -790,7 +951,8 @@
    "strike_pct": 0.7011,
    "type": "P",
    "vol_marche": 0.2298,
-   "vol_modele": 0.2278
+   "vol_modele": 0.2278,
+   "vol_curseurs": 0.2281
   },
   {
    "echeance": "2030-12-20",
@@ -798,7 +960,8 @@
    "strike_pct": 0.7575,
    "type": "P",
    "vol_marche": 0.218,
-   "vol_modele": 0.2193
+   "vol_modele": 0.2193,
+   "vol_curseurs": 0.2192
   },
   {
    "echeance": "2030-12-20",
@@ -806,7 +969,8 @@
    "strike_pct": 0.8059,
    "type": "P",
    "vol_marche": 0.2088,
-   "vol_modele": 0.2123
+   "vol_modele": 0.2123,
+   "vol_curseurs": 0.212
   },
   {
    "echeance": "2030-12-20",
@@ -814,7 +978,8 @@
    "strike_pct": 0.8543,
    "type": "P",
    "vol_marche": 0.2004,
-   "vol_modele": 0.2055
+   "vol_modele": 0.2055,
+   "vol_curseurs": 0.205
   },
   {
    "echeance": "2030-12-20",
@@ -822,7 +987,8 @@
    "strike_pct": 0.9026,
    "type": "P",
    "vol_marche": 0.1927,
-   "vol_modele": 0.1989
+   "vol_modele": 0.1989,
+   "vol_curseurs": 0.1983
   },
   {
    "echeance": "2030-12-20",
@@ -830,7 +996,8 @@
    "strike_pct": 0.951,
    "type": "P",
    "vol_marche": 0.1859,
-   "vol_modele": 0.1926
+   "vol_modele": 0.1926,
+   "vol_curseurs": 0.1918
   },
   {
    "echeance": "2030-12-20",
@@ -838,7 +1005,8 @@
    "strike_pct": 0.9993,
    "type": "P",
    "vol_marche": 0.1797,
-   "vol_modele": 0.1864
+   "vol_modele": 0.1864,
+   "vol_curseurs": 0.1855
   },
   {
    "echeance": "2030-12-20",
@@ -846,7 +1014,8 @@
    "strike_pct": 1.0477,
    "type": "P",
    "vol_marche": 0.174,
-   "vol_modele": 0.1805
+   "vol_modele": 0.1805,
+   "vol_curseurs": 0.1793
   },
   {
    "echeance": "2030-12-20",
@@ -854,7 +1023,8 @@
    "strike_pct": 1.096,
    "type": "C",
    "vol_marche": 0.1688,
-   "vol_modele": 0.1749
+   "vol_modele": 0.1749,
+   "vol_curseurs": 0.1735
   },
   {
    "echeance": "2030-12-20",
@@ -862,7 +1032,8 @@
    "strike_pct": 1.1444,
    "type": "C",
    "vol_marche": 0.164,
-   "vol_modele": 0.1696
+   "vol_modele": 0.1696,
+   "vol_curseurs": 0.168
   },
   {
    "echeance": "2030-12-20",
@@ -870,7 +1041,8 @@
    "strike_pct": 1.1927,
    "type": "C",
    "vol_marche": 0.1598,
-   "vol_modele": 0.1647
+   "vol_modele": 0.1647,
+   "vol_curseurs": 0.163
   },
   {
    "echeance": "2030-12-20",
@@ -878,7 +1050,8 @@
    "strike_pct": 1.2572,
    "type": "C",
    "vol_marche": 0.1551,
-   "vol_modele": 0.1588
+   "vol_modele": 0.1588,
+   "vol_curseurs": 0.1573
   },
   {
    "echeance": "2030-12-20",
@@ -886,7 +1059,8 @@
    "strike_pct": 1.2894,
    "type": "C",
    "vol_marche": 0.1531,
-   "vol_modele": 0.1562
+   "vol_modele": 0.1562,
+   "vol_curseurs": 0.1549
   },
   {
    "echeance": "2031-12-19",
@@ -894,7 +1068,8 @@
    "strike_pct": 0.5964,
    "type": "P",
    "vol_marche": 0.2483,
-   "vol_modele": 0.2387
+   "vol_modele": 0.2387,
+   "vol_curseurs": 0.2406
   },
   {
    "echeance": "2031-12-19",
@@ -902,7 +1077,8 @@
    "strike_pct": 0.6528,
    "type": "P",
    "vol_marche": 0.2357,
-   "vol_modele": 0.2308
+   "vol_modele": 0.2308,
+   "vol_curseurs": 0.2318
   },
   {
    "echeance": "2031-12-19",
@@ -910,7 +1086,8 @@
    "strike_pct": 0.7011,
    "type": "P",
    "vol_marche": 0.2258,
-   "vol_modele": 0.2243
+   "vol_modele": 0.2243,
+   "vol_curseurs": 0.2248
   },
   {
    "echeance": "2031-12-19",
@@ -918,7 +1095,8 @@
    "strike_pct": 0.7575,
    "type": "P",
    "vol_marche": 0.2152,
-   "vol_modele": 0.2172
+   "vol_modele": 0.2172,
+   "vol_curseurs": 0.2172
   },
   {
    "echeance": "2031-12-19",
@@ -926,7 +1104,8 @@
    "strike_pct": 0.8059,
    "type": "P",
    "vol_marche": 0.207,
-   "vol_modele": 0.2113
+   "vol_modele": 0.2113,
+   "vol_curseurs": 0.211
   },
   {
    "echeance": "2031-12-19",
@@ -934,7 +1113,8 @@
    "strike_pct": 0.8543,
    "type": "P",
    "vol_marche": 0.1995,
-   "vol_modele": 0.2056
+   "vol_modele": 0.2056,
+   "vol_curseurs": 0.2051
   },
   {
    "echeance": "2031-12-19",
@@ -942,7 +1122,8 @@
    "strike_pct": 0.9026,
    "type": "P",
    "vol_marche": 0.1927,
-   "vol_modele": 0.2002
+   "vol_modele": 0.2002,
+   "vol_curseurs": 0.1994
   },
   {
    "echeance": "2031-12-19",
@@ -950,7 +1131,8 @@
    "strike_pct": 0.951,
    "type": "P",
    "vol_marche": 0.1865,
-   "vol_modele": 0.1949
+   "vol_modele": 0.1949,
+   "vol_curseurs": 0.194
   },
   {
    "echeance": "2031-12-19",
@@ -958,7 +1140,8 @@
    "strike_pct": 0.9993,
    "type": "P",
    "vol_marche": 0.1809,
-   "vol_modele": 0.1898
+   "vol_modele": 0.1898,
+   "vol_curseurs": 0.1888
   },
   {
    "echeance": "2031-12-19",
@@ -966,7 +1149,8 @@
    "strike_pct": 1.0477,
    "type": "P",
    "vol_marche": 0.1758,
-   "vol_modele": 0.1849
+   "vol_modele": 0.1849,
+   "vol_curseurs": 0.1837
   },
   {
    "echeance": "2031-12-19",
@@ -974,7 +1158,8 @@
    "strike_pct": 1.096,
    "type": "C",
    "vol_marche": 0.171,
-   "vol_modele": 0.1802
+   "vol_modele": 0.1802,
+   "vol_curseurs": 0.1789
   },
   {
    "echeance": "2031-12-19",
@@ -982,7 +1167,8 @@
    "strike_pct": 1.1444,
    "type": "C",
    "vol_marche": 0.1665,
-   "vol_modele": 0.1758
+   "vol_modele": 0.1758,
+   "vol_curseurs": 0.1743
   },
   {
    "echeance": "2031-12-19",
@@ -990,7 +1176,8 @@
    "strike_pct": 1.1927,
    "type": "C",
    "vol_marche": 0.1625,
-   "vol_modele": 0.1716
+   "vol_modele": 0.1716,
+   "vol_curseurs": 0.17
   },
   {
    "echeance": "2031-12-19",
@@ -998,7 +1185,8 @@
    "strike_pct": 1.2572,
    "type": "C",
    "vol_marche": 0.158,
-   "vol_modele": 0.1664
+   "vol_modele": 0.1664,
+   "vol_curseurs": 0.1648
   },
   {
    "echeance": "2031-12-19",
@@ -1006,7 +1194,8 @@
    "strike_pct": 1.2894,
    "type": "C",
    "vol_marche": 0.156,
-   "vol_modele": 0.164
+   "vol_modele": 0.164,
+   "vol_curseurs": 0.1624
   }
  ]
 }

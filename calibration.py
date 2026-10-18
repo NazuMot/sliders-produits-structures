@@ -334,7 +334,7 @@ DEPARTS = [
 ]
 
 
-def calibre(o=None, departs=DEPARTS, verbeux=True):
+def calibre(o=None, departs=DEPARTS, verbeux=True, fixes=None):
     """
     Cherche les 8 parametres de Bates qui reproduisent le mieux la surface.
 
@@ -347,18 +347,29 @@ def calibre(o=None, departs=DEPARTS, verbeux=True):
     frequents et petits, ou rares et violents, peuvent produire des smiles
     proches. On garde le meilleur, puis on relance le simplexe dessus
     jusqu'a ce qu'il ne gagne plus rien.
+
+    fixes : parametres imposes (ex. {"lam": 0.1}), les autres sont calibres.
     """
     o = charge_options() if o is None else o
+    fixes = fixes or {}
+    libres = [i for i, n in enumerate(NOMS) if n not in fixes]
     vega = vega_b76(o["F"], o["K"], o["T"], o["DF"], o["vol"])
     surface = Surface(o["F"], o["K"], o["T"], o["DF"], o["call"])
 
+    def complet(x):
+        p = _vers_params(np.zeros(len(NOMS)))
+        p[libres] = _vers_params(_insere(x, libres))[libres]
+        for n, v in fixes.items():
+            p[NOMS.index(n)] = v
+        return p
+
     def critere(x):
-        e = (surface.prix(_vers_params(x)) - o["prix"]) / vega
+        e = (surface.prix(complet(x)) - o["prix"]) / vega
         return float(np.mean(e * e)) if np.all(np.isfinite(e)) else 1e6
 
     meilleur = None
     for k, p0 in enumerate(departs):
-        x, fx, nev = nelder_mead(critere, _vers_libre(p0), max_eval=3000)
+        x, fx, nev = nelder_mead(critere, _vers_libre(_vecteur(p0))[libres], max_eval=3000)
         if verbeux:
             print(f"  depart {k + 1} : erreur moyenne {math.sqrt(fx) * 100:.3f} pt de vol "
                   f"({nev} evaluations)")
@@ -372,7 +383,13 @@ def calibre(o=None, departs=DEPARTS, verbeux=True):
             x, fx = x2, fx2
         if gain < 1e-9:
             break
-    return dict(zip(NOMS, (float(v) for v in _vers_params(x))))
+    return dict(zip(NOMS, (float(v) for v in complet(x))))
+
+
+def _insere(x, libres):
+    plein = np.zeros(len(NOMS))
+    plein[libres] = x
+    return plein
 
 
 def vers_curseurs(p):
@@ -397,32 +414,101 @@ def depuis_curseurs(c):
             "mu_j": c["mu_j"] / 100, "sig_j": c["sig_j"] / 100}
 
 
-def ecrit_resultat(p, o, chemin=FICHIER_PARAMS):
+# pas, minimum, maximum de chaque curseur Bates (barre.py)
+GRILLE = {"vol_atm": (1.0, 8.0, 70.0), "theta_v": (1.0, 10.0, 50.0), "kappa": (0.2, 0.2, 6.0),
+          "xi": (0.05, 0.05, 1.5), "rho": (0.05, -0.95, 0.0), "lam": (0.1, 0.0, 2.0),
+          "mu_j": (1.0, -30.0, 5.0), "sig_j": (1.0, 1.0, 40.0)}
+
+
+def calibre_curseurs(p, o=None, verbeux=True):
+    """
+    Meilleur reglage atteignable avec les curseurs. Arrondir chaque
+    parametre au cran le plus proche ne suffit pas : une frequence de sauts
+    de 0,04 par an s'arrondit a 0 et le skew court disparait (3 a 4 points
+    de vol d'ecart sur les echeances de 1 a 2 mois).
+
+    Methode : on recalibre les 7 autres parametres a frequence de sauts
+    imposee sur la grille (0 ; 0,1 ; 0,2 ; 0,3), on arrondit, puis on
+    deplace un curseur a la fois, de 1 a 3 crans, tant que l'ecart de vol
+    implicite (exact, cette fois) baisse. On garde le meilleur.
+    """
+    o = charge_options() if o is None else o
+    surface = Surface(o["F"], o["K"], o["T"], o["DF"], o["call"])
+
+    def critere(c):
+        prix = surface.prix(depuis_curseurs(c))
+        vol = vol_implicite_b76(prix, o["F"], o["K"], o["T"], o["DF"], o["call"], iterations=40)
+        e = np.where(np.isfinite(vol), vol - o["vol"], 0.5)
+        return float(np.mean(e * e))
+
+    departs = [vers_curseurs(p)]
+    for lam in (0.1, 0.2, 0.3):
+        p_lam = calibre(o, departs=[dict(p, lam=lam)], verbeux=False, fixes={"lam": lam})
+        departs.append(vers_curseurs(p_lam))
+    meilleur = None
+    for c in departs:
+        fc = critere(c)
+        while True:
+            essais = []
+            for nom, (pas, bas, haut) in GRILLE.items():
+                for crans in (-3, -2, -1, 1, 2, 3):
+                    v = round(c[nom] + crans * pas, 4)
+                    if bas - 1e-9 <= v <= haut + 1e-9:
+                        essai = dict(c, **{nom: v})
+                        essais.append((critere(essai), essai))
+            f_mieux, c_mieux = min(essais, key=lambda e: e[0])
+            if f_mieux >= fc - 1e-12:
+                break
+            c, fc = c_mieux, f_mieux
+        if verbeux:
+            print(f"  grille des curseurs (lam={c['lam']:.1f}) : "
+                  f"erreur moyenne {math.sqrt(fc) * 100:.3f} pt de vol")
+        if meilleur is None or fc < meilleur[1]:
+            meilleur = (c, fc)
+    return meilleur[0]
+
+
+def ecrit_resultat(p, o, curs=None, chemin=FICHIER_PARAMS):
     vol, ecart = erreur_vols(p, o)
-    curs = vers_curseurs(p)
-    _, ecart_c = erreur_vols(depuis_curseurs(curs), o)
-    ok = np.isfinite(ecart)
+    curs = calibre_curseurs(p, o, verbeux=False) if curs is None else curs
+    vol_c, ecart_c = erreur_vols(depuis_curseurs(curs), o)
+    ok = np.isfinite(ecart) & np.isfinite(ecart_c)
+
+    def rmse(e):
+        return round(float(np.sqrt(np.mean(e ** 2))), 3)
+
+    par_echeance = []
+    for ech in np.unique(o["echeance"]):
+        m = ok & (o["echeance"] == ech)
+        par_echeance.append({"echeance": str(ech), "maturite": round(float(o["T"][m][0]), 4),
+                             "n": int(m.sum()), "moyenne_quadratique": rmse(ecart[m]),
+                             "moyenne_quadratique_curseurs": rmse(ecart_c[m])})
     res = {
         "source": "Eurex OESX, prix de reglement officiels (data/options_eurostoxx50.csv)",
         "date_marche": o["date_marche"],
         "spot": o["spot"],
         "calibre_le": dt.date.today().isoformat(),
         "n_options": int(ok.sum()),
+        "unites": "v0 et theta en variance ; curseurs dans les unites de la barre laterale "
+                  "(vol_atm = racine de v0 en %, theta_v = racine de theta en %, mu_j et sig_j en %)",
         "parametres": {k: round(v, 6) for k, v in p.items()},
         "curseurs": curs,
         "feller": round(2 * p["kappa"] * p["theta"] / p["xi"] ** 2, 3),
         "erreur_pts_vol": {
-            "moyenne_quadratique": round(float(np.sqrt(np.mean(ecart[ok] ** 2))), 3),
+            "moyenne_quadratique": rmse(ecart[ok]),
             "moyenne_absolue": round(float(np.mean(np.abs(ecart[ok]))), 3),
             "max": round(float(np.max(np.abs(ecart[ok]))), 3),
-            "moyenne_quadratique_curseurs": round(float(np.sqrt(np.nanmean(ecart_c ** 2))), 3),
+            "moyenne_quadratique_curseurs": rmse(ecart_c[ok]),
+            "max_curseurs": round(float(np.max(np.abs(ecart_c[ok]))), 3),
         },
+        "par_echeance": par_echeance,
         "par_option": [
             {"echeance": str(o["echeance"][i]), "maturite": round(float(o["T"][i]), 4),
              "strike_pct": round(float(o["strike_pct"][i]), 4),
              "type": "C" if o["call"][i] else "P",
              "vol_marche": round(float(o["vol"][i]), 4),
-             "vol_modele": round(float(vol[i]), 4) if ok[i] else None}
+             "vol_modele": round(float(vol[i]), 4) if ok[i] else None,
+             "vol_curseurs": round(float(vol_c[i]), 4) if ok[i] else None}
             for i in range(len(vol))],
     }
     with open(chemin, "w") as f:
@@ -468,7 +554,7 @@ if __name__ == "__main__":
           f"(spot {o['spot']})")
     t = time.time()
     p = calibre(o)
-    res = ecrit_resultat(p, o)
+    res = ecrit_resultat(p, o, calibre_curseurs(p, o))
     print(f"  {time.time() - t:.0f} s")
     print("Parametres :", {k: round(v, 4) for k, v in p.items()})
     print("Curseurs   :", res["curseurs"])
