@@ -78,12 +78,27 @@ BORNES = {
 # Telechargement (meme methode que scripts/recupere_donnees.py)
 # ---------------------------------------------------------------------
 
+# www.stoxx.com n'envoie pas toute sa chaine de certificats : son intermediaire est signe
+# par une ancienne racine Comodo, absente des serveurs Linux de GitHub (le Mac, lui, complete
+# la chaine). On ajoute aux certificats du systeme l'intermediaire publie par SSL.com, signe
+# par sa racine 2022 du magasin Mozilla. La verification TLS reste complete.
+INTERMEDIAIRES = os.path.join(RACINE, "scripts", "certificats", "intermediaires.pem")
+
+
+def contexte_tls():
+    ctx = ssl.create_default_context()
+    if os.path.exists(INTERMEDIAIRES):
+        ctx.load_verify_locations(INTERMEDIAIRES)
+    return ctx
+
+
 def telecharge(url, essais=4):
     attente = 5
+    ctx = contexte_tls()
     for k in range(essais):
         try:
             req = urllib.request.Request(url, headers={"User-Agent": UA})
-            with urllib.request.urlopen(req, timeout=60) as rep:
+            with urllib.request.urlopen(req, timeout=60, context=ctx) as rep:
                 return rep.read()
         except urllib.error.HTTPError as e:
             if e.code in (429, 500, 502, 503, 504) and k < essais - 1:

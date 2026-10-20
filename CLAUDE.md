@@ -182,7 +182,12 @@ rétrocession distributeur. Avec rétro nulle, ses coupons redonnent **exactemen
   12 mois (SX5T contre SX5E, point d'il y a un an lu dans `data/eurostoxx50.csv` : refaire la
   photo des données au moins une fois par an), et `habituel` : médianes et rang du jour depuis
   le 06/09/2004. Bornes de vraisemblance ; une source en panne garde sa valeur de la veille
-  (`anciens`) ; aucune source -> sortie en erreur, fichier inchangé.
+  (`anciens`) ; aucune source -> sortie en erreur, fichier inchangé ; mêmes données que la
+  veille -> fichier inchangé (pas de commit). www.stoxx.com envoie une chaîne de certificats
+  incomplète que Linux ne sait pas compléter : `scripts/certificats/intermediaires.pem`
+  (intermédiaire SSL.com signé par sa racine 2022) est ajouté aux certificats du système, la
+  vérification TLS reste complète. Constaté le 20/10/2026 sur GitHub ; si STOXX change de
+  certificat, refaire ce fichier depuis l'adresse « CA Issuers » du certificat du site.
 - Tâche GitHub `marche_du_jour.yml` : lundi-vendredi 13 h 30 UTC, données de la veille (à cette
   heure, courbe BCE, €STR, STOXX sont tous publiés à la même date). Commit du bot sur `main`,
   qui ne relance pas les tests (jeton GITHUB_TOKEN). Un dépôt public sans activité 60 jours

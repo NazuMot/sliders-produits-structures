@@ -248,6 +248,13 @@ controle("Script : une source en panne garde la valeur de la veille, avec sa dat
 controle("Script : pas de nouveau fichier si seules l'heure de génération change",
          R.inchange({**sortie, "genere_le": "autre heure"}, json.loads(json.dumps(sortie)))
          and not R.inchange(sortie, {**sortie, "date_donnees": "2026-10-16"}))
+try:
+    ctx = R.contexte_tls()
+    ok = any("SSL.com TLS Issuing RSA CA R1" in str(c.get("subject"))
+             for c in ctx.get_ca_certs())
+except Exception as e:  # noqa: BLE001
+    ok = False
+controle("Script : certificat intermédiaire de STOXX chargé (serveurs Linux de GitHub)", ok)
 serie = [(i, 100 * math.exp(0.01 * (i % 2))) for i in range(64)]
 v = R.vol_realisee(serie, 63)
 controle("Script : vol réalisée annualisée (rendements de +/-1 % par jour -> ~15,9 %)",
