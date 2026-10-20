@@ -554,7 +554,10 @@ def affiche(m):
                f"{hab['valeurs']['taux']:.2f} %, dividende {hab['valeurs']['dividende']:.2f} %, "
                f"vol {hab['valeurs']['vol']:.0f} %. Les deux avec skew {DJ.SKEW:.1f}, spread "
                f"{DJ.SPREAD} bp et les autres réglages de la barre latérale.")
-    m.bandeau_modele()
+    # pas le bandeau des pages produits : il cite la vol de la barre laterale, pas celle du jour
+    st.caption("Pricing sous Bates : vol de départ du jour, autres paramètres de la barre "
+               "latérale." if m.BATES else "Pricing sous Black-Scholes + skew, en volatilité "
+               "locale.")
 
     lignes = []
     for i, p in enumerate(ORDRE):
