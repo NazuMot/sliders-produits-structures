@@ -8,7 +8,7 @@ import streamlit as st
 from barre import barre_laterale
 from vues import (accueil, comparateur, atelier_sales, tracker, capital_protection, brc,
                   autocall, bonus, twin_win, discount, backtest, laboratoire, grecques,
-                  couverture, entrainement, glossaire)
+                  couverture, entrainement, glossaire, aujourdhui)
 
 # Pour ajouter une page : un fichier dans vues/ avec une fonction affiche(m),
 # puis une entree ici et dans ETAPES. L'ordre du dictionnaire est celui du menu.
@@ -22,6 +22,7 @@ PAGES = {
     "5 - Bonus Certificate": bonus,
     "6 - Twin-Win": twin_win,
     "7 - Discount Certificate": discount,
+    "Que vendre aujourd'hui ?": aujourdhui,
     "Atelier Sales": atelier_sales,
     "Entraînement": entrainement,
     "Glossaire": glossaire,
@@ -35,7 +36,8 @@ PAGES = {
 ETAPES = {
     "Commencer": ["Accueil", "Comparateur des produits"],
     "Comprendre les produits": [p for p in PAGES if p[0].isdigit()],
-    "Vendre et s'entraîner": ["Atelier Sales", "Entraînement", "Glossaire"],
+    "Vendre et s'entraîner": ["Que vendre aujourd'hui ?", "Atelier Sales", "Entraînement",
+                              "Glossaire"],
     "Côté desk": ["Backtest historique", "Laboratoire modèle", "Les grecques en mouvement",
                   "Coût de couverture"],
 }

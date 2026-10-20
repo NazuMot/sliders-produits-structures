@@ -1,0 +1,53 @@
+# Photo du marche du jour pour la page « Que vendre aujourd'hui ? ».
+# Chaque jour ouvre a 13 h 30 UTC (15 h 30 a Paris l'ete) : la cloture de la veille,
+# le VSTOXX, l'ESTR et la courbe des taux de la BCE de la veille sont alors publies.
+# Ecrit data/marche_du_jour.json et le committe sur main : Streamlit Cloud le recharge.
+# Une source en panne garde sa valeur de la veille ; aucune source -> croix rouge, rien
+# n'est committe. Relance a la main : onglet Actions, « Marché du jour », Run workflow.
+name: Marché du jour
+
+on:
+  schedule:
+    - cron: "30 13 * * 1-5"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: marche-du-jour
+  cancel-in-progress: false
+
+jobs:
+  photo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python scripts/recupere_marche_du_jour.py
+      # le fichier doit se relire comme l'appli le lit, sans retomber sur les valeurs par defaut
+      - run: |
+          python -c "
+          import donnees_du_jour as D
+          d = D.charge(); r = D.reglages_du_jour(d)
+          assert r['date'] and all(r['origine'].values()), r
+          print('Scénario Aujourd hui :', r['valeurs'], 'données du', r['date'])"
+      - name: Commit sur main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/marche_du_jour.json
+          if git diff --cached --quiet; then
+            echo "Rien de nouveau."
+            exit 0
+          fi
+          date=$(python -c "import json; print(json.load(open('data/marche_du_jour.json'))['date_donnees'])")
+          git commit -m "Marché du jour : données du $date"
+          for essai in 1 2 3; do
+            git pull --rebase origin main && git push origin HEAD:main && exit 0
+            sleep 10
+          done
+          exit 1
