@@ -245,6 +245,9 @@ controle("Script : une source en panne garde la valeur de la veille, avec sa dat
          and sortie["champs"]["taux_3_ans"]["valeur"] == 3.0
          and sortie["habituel"]["vstoxx"]["mediane"] == 19.6
          and sortie["date_donnees"] == "2026-10-19", json.dumps(sortie)[:200])
+controle("Script : pas de nouveau fichier si seules l'heure de génération change",
+         R.inchange({**sortie, "genere_le": "autre heure"}, json.loads(json.dumps(sortie)))
+         and not R.inchange(sortie, {**sortie, "date_donnees": "2026-10-16"}))
 serie = [(i, 100 * math.exp(0.01 * (i % 2))) for i in range(64)]
 v = R.vol_realisee(serie, 63)
 controle("Script : vol réalisée annualisée (rendements de +/-1 % par jour -> ~15,9 %)",

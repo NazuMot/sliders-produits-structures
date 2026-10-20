@@ -332,6 +332,13 @@ def assemble(champs, habituel, precedent):
     }
 
 
+def inchange(sortie, precedent):
+    """Memes donnees que le fichier precedent (seule l'heure de generation differe)."""
+    def sans_heure(d):
+        return {k: v for k, v in d.items() if k != "genere_le"}
+    return json.loads(json.dumps(sans_heure(sortie))) == sans_heure(precedent)
+
+
 def main():
     try:
         precedent = json.load(open(FICHIER, encoding="utf-8"))
@@ -345,6 +352,10 @@ def main():
         print("Aucune source n'a répondu : fichier inchangé.")
         return 1
     sortie = assemble(champs, habituel, precedent)
+    if inchange(sortie, precedent):
+        print(f"Rien de nouveau depuis les données du {sortie['date_donnees']} : fichier "
+              "inchangé.")
+        return 0
     with open(FICHIER, "w", encoding="utf-8") as f:
         json.dump(sortie, f, ensure_ascii=False, indent=1)
         f.write("\n")
