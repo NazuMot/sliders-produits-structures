@@ -1,8 +1,14 @@
 {
  "date_donnees": "2026-10-19",
- "genere_le": "2026-10-20 11:24 UTC",
+ "genere_le": "2026-10-20 11:32 UTC",
  "habituel_depuis": "2004-09-06",
- "anciens": [],
+ "anciens": [
+  "dividende",
+  "eurostoxx50",
+  "vol_realisee_1m",
+  "vol_realisee_3m",
+  "vstoxx"
+ ],
  "champs": {
   "dividende": {
    "valeur": 2.1879,
