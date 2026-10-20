@@ -4,15 +4,53 @@ from types import SimpleNamespace
 
 import streamlit as st
 
+import donnees_du_jour as DJ
 from moteur import S0
 from communs import sim_lv, sim_bates, sim_defaut
+
+
+AUJOURDHUI = "Aujourd'hui"
+
+# D'ou vient chaque reglage du scenario « Aujourd'hui » (None = donnee absente)
+ORIGINES = {
+    "vstoxx": "VSTOXX, vol implicite 30 jours, STOXX",
+    "vol_realisee_3m": "vol réalisée 3 mois de l'Euro Stoxx 50, faute de VSTOXX",
+    "vol_realisee_1m": "vol réalisée 1 mois de l'Euro Stoxx 50, faute de VSTOXX",
+    "taux_3_ans": "taux AAA 3 ans de la zone euro, BCE",
+    "taux_2_ans": "taux AAA 2 ans de la zone euro, BCE, faute du 3 ans",
+    "taux_5_ans": "taux AAA 5 ans de la zone euro, BCE, faute du 3 ans",
+    "estr": "€STR, BCE, faute de courbe des taux",
+    "euribor_3m": "Euribor 3 mois, BCE, faute de courbe des taux",
+    "dividende": "dividende net des 12 derniers mois, STOXX",
+    None: "valeur par défaut, donnée absente",
+}
+
+
+def scenario_du_jour(d=None):
+    """Le scenario « Aujourd'hui », relu dans data/marche_du_jour.json a chaque appel."""
+    d = DJ.charge() if d is None else d
+    reg = DJ.reglages_du_jour(d)
+    v, o = reg["valeurs"], reg["origine"]
+    date = DJ.date_fr(reg["date"])
+    if date is None:
+        texte = ("Fichier du marché du jour introuvable : réglages par défaut pour le taux, "
+                 "le dividende et la vol.")
+    else:
+        texte = (f"Données du {date}. Taux {v['taux']:.2f} % ({ORIGINES[o['taux']]}), "
+                 f"dividende {v['dividende']:.2f} % ({ORIGINES[o['dividende']]}), vol ATM "
+                 f"{v['vol']:.0f} % ({ORIGINES[o['vol']]}).")
+    texte += (f" Skew {DJ.SKEW:.1f} et spread émetteur {DJ.SPREAD} bp : valeurs de la photo "
+              "Eurex d'octobre 2026, pas du jour.")
+    return {"texte": texte, "valeurs": v}
 
 
 # Conditions de marche typiques, en un clic. Ordres de grandeur pour un indice actions
 # europeen : vol d'apres le VSTOXX de data/eurostoxx50.csv (ramenee a une maturite de
 # quelques annees, plus basse que la vol 30 jours en crise), taux et dividendes de la zone
 # euro (plancher a 0 du curseur quand les taux etaient negatifs), spread d'une banque.
+# « Aujourd'hui » est relu dans data/marche_du_jour.json a chaque affichage.
 SCENARIOS = {
+    AUJOURDHUI: scenario_du_jour(),
     "Réglages par défaut": {
         "texte": "Le point de départ de l'appli.",
         "valeurs": {"taux": 3.0, "dividende": 2.5, "vol": 22.0, "skew": 2.0, "vol_lt": 24.0,
@@ -53,6 +91,8 @@ def _applique_scenario():
     nom = st.session_state.scenario
     if nom is None:
         return
+    if nom == AUJOURDHUI:
+        SCENARIOS[AUJOURDHUI] = scenario_du_jour()
     for cle, valeur in SCENARIOS[nom]["valeurs"].items():
         st.session_state[cle] = valeur
     st.session_state.scenario_applique = nom
@@ -61,6 +101,7 @@ def _applique_scenario():
 
 def barre_laterale():
     """Affiche la barre laterale et renvoie tous les reglages de marche."""
+    SCENARIOS[AUJOURDHUI] = scenario_du_jour()
     st.sidebar.markdown("---")
     st.sidebar.title("Paramètres de marché")
 
@@ -70,7 +111,8 @@ def barre_laterale():
         help="Charge en un clic des conditions de marché typiques : taux, dividende, "
              "volatilité, skew et spread émetteur. C'est un point de départ : tu peux "
              "ensuite bouger chaque curseur librement. Compare par exemple le capital "
-             "garanti en 2021 et en 2023.")
+             "garanti en 2021 et en 2023. « Aujourd'hui » prend le dernier marché "
+             "enregistré (taux BCE, VSTOXX, dividende), mis à jour chaque jour ouvré.")
     applique = st.session_state.get("scenario_applique")
     if applique:
         st.sidebar.caption(f"**{applique}** : {SCENARIOS[applique]['texte']} Point de "

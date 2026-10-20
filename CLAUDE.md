@@ -34,13 +34,15 @@ Tom (compte `NazuMot`). **Tout push sur `main` redéploie automatiquement le sit
 | `sales.py` | Outils du Sales : reverse enquiry, où va l'argent, marché secondaire (calcul seul) |
 | `backtest.py`, `calibration.py`, `data/` | Données réelles : backtest Euro Stoxx 50, calibrage Bates sur Eurex |
 | `scripts/recupere_donnees.py` | Refait la photo des données (jamais appelé par l'appli) |
+| `donnees_du_jour.py`, `scripts/recupere_marche_du_jour.py` | Marché du jour : lecture sans planter / photo quotidienne (voir « Marché du jour ») |
 | `tests/verifie.py` | Vérification complète (toutes les pages, deux modèles, chiffres de référence) |
 | `tests/valide_*.py` | Validation chiffrée du moteur, de `sales.py` et des données réelles |
-| `.github/workflows/tests.yml` | Relance les quatre scripts de tests sur GitHub à chaque push |
+| `.github/workflows/tests.yml` | Relance tous les scripts de tests sur GitHub à chaque push |
+| `.github/workflows/marche_du_jour.yml` | Chaque jour ouvré : écrit et committe `data/marche_du_jour.json` |
 
 ## Pages (menu par étapes en haut de la barre latérale, `PAGES` et `ETAPES` dans `principal.py`)
 
-Accueil · Comparateur des produits · Atelier Sales · 1 Tracker · 2 Capital Protection ·
+Accueil · Comparateur des produits · Que vendre aujourd'hui ? · Atelier Sales · 1 Tracker · 2 Capital Protection ·
 3 Barrier Reverse Convertible (+ case wrong-way risk) · 4 Autocall Phoenix (worst-of 1 à 4
 sous-jacents, step-down, indice à décrément, corrélation de stress, grecques du desk) · 5 Bonus
 Certificate · 6 Twin-Win · 7 Discount Certificate · Backtest historique · Laboratoire modèle
@@ -64,7 +66,7 @@ est testée automatiquement.
 
 ## Barre latérale (vue de marché unique pour toutes les pages)
 
-Conditions de marché en un clic (`SCENARIOS` dans `barre.py` : défaut, octobre 2026, 2017,
+Conditions de marché en un clic (`SCENARIOS` dans `barre.py` : Aujourd'hui, défaut, octobre 2026, 2017,
 taux zéro 2020-2021, Covid, automne 2008, 2022-2023 ; vols d'après le VSTOXX de `data/`). Le
 sélecteur est une action : il écrit les curseurs via `st.session_state` puis revient à vide ; ce
 sont les curseurs, liés au lien, qui gardent les valeurs. `.streamlit/config.toml` coupe
@@ -170,6 +172,40 @@ rétrocession distributeur. Avec rétro nulle, ses coupons redonnent **exactemen
   clôtures quotidiennes ; coupon fixe sur tout l'historique ; émissions qui se chevauchent ;
   saut moyen calibré sur la borne -30 % du curseur ; Feller violé (biais du pas hebdomadaire
   ~0,2 pt sur les calls hors de la monnaie).
+
+## Marché du jour (20/10/2026, demande de Tom)
+
+- `scripts/recupere_marche_du_jour.py` (bibliothèque standard seulement) écrit
+  `data/marche_du_jour.json` : Euro Stoxx 50 (STOXX `h_3msx5e.txt`, contrôlé contre Yahoo à
+  0,5 %), VSTOXX (`h_v2tx.txt`), vol réalisée 1 et 3 mois, €STR, Euribor 3 mois (moyenne
+  mensuelle), taux de dépôt (contrôle de l'€STR), taux AAA 1/2/3/5 ans (API BCE), dividende net
+  12 mois (SX5T contre SX5E, point d'il y a un an lu dans `data/eurostoxx50.csv` : refaire la
+  photo des données au moins une fois par an), et `habituel` : médianes et rang du jour depuis
+  le 06/09/2004. Bornes de vraisemblance ; une source en panne garde sa valeur de la veille
+  (`anciens`) ; aucune source -> sortie en erreur, fichier inchangé.
+- Tâche GitHub `marche_du_jour.yml` : lundi-vendredi 13 h 30 UTC, données de la veille (à cette
+  heure, courbe BCE, €STR, STOXX sont tous publiés à la même date). Commit du bot sur `main`,
+  qui ne relance pas les tests (jeton GITHUB_TOKEN). Un dépôt public sans activité 60 jours
+  voit ses tâches planifiées suspendues : les commits du bot comptent.
+- `donnees_du_jour.py` (sans streamlit, sans texte affiché) : `charge()` ne lève jamais
+  (fichier absent, illisible, valeurs fausses -> `{}`), `reglages_du_jour` (vol : VSTOXX >
+  réalisée 3 mois > 1 mois ; taux : AAA 3 ans > 2 ans > 5 ans > €STR > Euribor ; repli sur les
+  valeurs par défaut ; arrondi aux crans des curseurs ; skew 2,5 et spread 50 bp de la photo
+  Eurex, vol long terme = vol + 3), `reglages_habituels` (médianes, vol réalisée contre vol
+  réalisée). Variable `SLIDERS_MARCHE_DU_JOUR` pour les tests.
+- `barre.py` : scénario `AUJOURDHUI` relu à chaque affichage (`scenario_du_jour()`), libellés
+  des sources dans `ORIGINES`.
+- Page `vues/aujourdhui.py` (clés `aj_*`) : `conditions(mk)` refait les appels des pages
+  produits (CP 5 ans, BRC 1 an 70 %, autocall 3 ans trimestriel 100/70/60, Bonus 2 ans 70 %,
+  Twin-Win 2 ans 65 %, Discount 1 an cap 100) avec `sales.Marche` ; `analyse` : jour, habituel,
+  effet de chaque paramètre pris seul ; verdict à +/- 10 % ; graphe en barres (jour en % de
+  l'habituel) ; réponse d'entretien en 4 phrases ; boutons « Ouvrir un produit » (marché du
+  jour + réglages par défaut de la page). **Si une page produit change sa façon d'appeler le
+  moteur, adapter `conditions()`** : `tests/verifie_aujourdhui.py` compare les six chiffres
+  aux pages produits sous les deux modèles.
+- Chiffres du 19/10/2026 (BS + skew) : taux 3 ans 3,10 % (médiane 1,09 %), VSTOXX 18,9 %
+  (médiane 19,6 %), dividende net 2,19 % (médiane 2,62 %) ; capital garanti 73 % contre 25 %
+  habituellement, BRC 7,23 % contre 6,19 %, autocall 8,59 % contre 7,83 %.
 
 ## Pages enrichies
 

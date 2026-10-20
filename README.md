@@ -21,6 +21,7 @@ l'émetteur, et l'on voit immédiatement ce qui change pour le client.
 | Page | Ce qu'on y voit |
 |---|---|
 | **Comparateur** | Les structures principales côte à côte, sous la même vue de marché |
+| **Que vendre aujourd'hui ?** | Le marché du jour (taux BCE, VSTOXX, dividende), ce que chaque produit offre avec lui contre un marché habituel, et la réponse à donner en entretien |
 | **Atelier Sales** | Partir de la demande du client (« 8 % de coupon, la barrière la plus basse possible »), voir où va l'argent (marge, rétrocession), revendre en cours de vie, générer un pitch adapté au client |
 | **1 à 7** | Tracker, Capital Protection, Barrier Reverse Convertible, Autocall Phoenix (worst-of, step-down, indice à décrément, corrélation de stress, grecques du desk), Bonus, Twin-Win, Discount |
 | **Backtest historique** | Le produit émis chaque mois sur l'Euro Stoxx 50 depuis 2000 : rappels, pertes, pire cas |
@@ -31,7 +32,7 @@ l'émetteur, et l'on voit immédiatement ce qui change pour le client.
 | **Glossaire** | Le vocabulaire du métier, avec recherche |
 
 Tous les graphes sont interactifs : au survol, une infobulle donne les valeurs à cet endroit.
-Les conditions de marché se chargent en un clic (2008, Covid, taux zéro, 2022…), et l'adresse
+Les conditions de marché se chargent en un clic (aujourd'hui, 2008, Covid, taux zéro, 2022…), et l'adresse
 du site garde tous les réglages : la copier suffit pour partager exactement ce que l'on voit.
 
 ![Trajectoires d'un autocall](docs/autocall.png)
@@ -45,6 +46,10 @@ du site garde tous les réglages : la copier suffit pour partager exactement ce 
   crédit (avec une option de wrong-way risk), **paniers worst-of** avec corrélation de stress.
 - **Données réelles figées dans le dépôt** : Euro Stoxx 50 quotidien depuis 1986 (prix et
   dividendes réinvestis), photo de prix d'options Eurex, paramètres de Bates calibrés.
+- **Marché du jour** : chaque jour ouvré, une tâche GitHub (`.github/workflows/marche_du_jour.yml`)
+  relève l'Euro Stoxx 50 et le VSTOXX (fichiers officiels STOXX), l'€STR, l'Euribor et la
+  courbe des taux AAA de la zone euro (BCE), et committe `data/marche_du_jour.json`. L'appli
+  lit le dernier fichier, sans appel réseau.
 - Monte Carlo en `float32` et pas hebdomadaires, pour tenir dans l'hébergement gratuit.
 
 ![Arbitrage protection contre coupon](docs/arbitrage.png)
