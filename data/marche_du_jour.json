@@ -1,17 +1,17 @@
 {
- "date_donnees": "2026-10-23",
- "genere_le": "2026-10-23 17:55 UTC",
+ "date_donnees": "2026-10-26",
+ "genere_le": "2026-10-26 19:28 UTC",
  "habituel_depuis": "2004-09-06",
  "anciens": [],
  "champs": {
   "dividende": {
-   "valeur": 2.2277,
-   "date": "2026-10-23",
+   "valeur": 2.244,
+   "date": "2026-10-26",
    "source": "https://www.stoxx.com/document/Indices/Current/HistoricalData/h_3msx5t.txt + data/eurostoxx50.csv"
   },
   "estr": {
    "valeur": 2.442,
-   "date": "2026-10-22",
+   "date": "2026-10-23",
    "source": "https://data-api.ecb.europa.eu/service/data/EST/B.EU000A2X2A25.WT"
   },
   "euribor_3m": {
@@ -20,74 +20,74 @@
    "source": "https://data-api.ecb.europa.eu/service/data/FM/M.U2.EUR.RT.MM.EURIBOR3MD_.HSTA"
   },
   "eurostoxx50": {
-   "valeur": 6068.22,
-   "date": "2026-10-23",
+   "valeur": 6116.23,
+   "date": "2026-10-26",
    "source": "https://www.stoxx.com/document/Indices/Current/HistoricalData/h_3msx5e.txt",
-   "controle_yahoo": 6068.22
+   "controle_yahoo": 6116.23
   },
   "taux_1_an": {
-   "valeur": 2.8697,
-   "date": "2026-10-22",
+   "valeur": 2.8535,
+   "date": "2026-10-23",
    "source": "https://data-api.ecb.europa.eu/service/data/YC/B.U2.EUR.4F.G_N_A.SV_C_YM.SR_1Y"
   },
   "taux_2_ans": {
-   "valeur": 3.0075,
-   "date": "2026-10-22",
+   "valeur": 2.9835,
+   "date": "2026-10-23",
    "source": "https://data-api.ecb.europa.eu/service/data/YC/B.U2.EUR.4F.G_N_A.SV_C_YM.SR_2Y"
   },
   "taux_3_ans": {
-   "valeur": 3.0579,
-   "date": "2026-10-22",
+   "valeur": 3.0324,
+   "date": "2026-10-23",
    "source": "https://data-api.ecb.europa.eu/service/data/YC/B.U2.EUR.4F.G_N_A.SV_C_YM.SR_3Y"
   },
   "taux_5_ans": {
-   "valeur": 3.1333,
-   "date": "2026-10-22",
+   "valeur": 3.1104,
+   "date": "2026-10-23",
    "source": "https://data-api.ecb.europa.eu/service/data/YC/B.U2.EUR.4F.G_N_A.SV_C_YM.SR_5Y"
   },
   "taux_depot_bce": {
    "valeur": 2.5,
-   "date": "2026-10-23",
+   "date": "2026-10-26",
    "source": "https://data-api.ecb.europa.eu/service/data/FM/D.U2.EUR.4F.KR.DFR.LEV"
   },
   "vol_realisee_1m": {
-   "valeur": 14.0066,
-   "date": "2026-10-23",
+   "valeur": 14.2211,
+   "date": "2026-10-26",
    "source": "https://www.stoxx.com/document/Indices/Current/HistoricalData/h_3msx5e.txt",
    "jours": 21
   },
   "vol_realisee_3m": {
-   "valeur": 12.1185,
-   "date": "2026-10-23",
+   "valeur": 12.1738,
+   "date": "2026-10-26",
    "source": "https://www.stoxx.com/document/Indices/Current/HistoricalData/h_3msx5e.txt",
    "jours": 63
   },
   "vstoxx": {
-   "valeur": 20.414,
-   "date": "2026-10-22",
+   "valeur": 21.9152,
+   "date": "2026-10-23",
    "source": "https://www.stoxx.com/document/Indices/Current/HistoricalData/h_v2tx.txt"
   }
  },
  "habituel": {
   "dividende": {
    "mediane": 2.6202,
-   "rang": 0.1171,
+   "rang": 0.1192,
    "n": 5621
   },
   "taux_3_ans": {
-   "mediane": 1.0872,
-   "rang": 0.8747,
-   "n": 5658
+   "mediane": 1.0877,
+   "rang": 0.8722,
+   "n": 5659
   },
   "vol_realisee_3m": {
    "mediane": 16.4843,
-   "rang": 0.1923,
+   "rang": 0.1975,
    "n": 5621
   },
   "vstoxx": {
-   "mediane": 19.5903,
-   "rang": 0.5517,
-   "n": 5637
+   "mediane": 19.5927,
+   "rang": 0.6327,
+   "n": 5638
   }
  }
 }
